@@ -1,0 +1,393 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Beauty Products
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Headland+One&family=Marcellus&display=swap" rel="stylesheet">
+  <style>
+
+    .p{
+      font-family:"font-'Marcellus', serif";
+     font-weight: 100;
+    }
+.h3{
+  font-family:"font-'Marcellus', serif";
+  font-weight: 100;
+  font-size: small;
+}
+
+   .full-page {
+    height: 100vh;
+    
+   }
+  </style>
+ </head>
+ <body class="font-'Marcellus', serif;">  
+ 
+   <!--header section-->
+   <%-include('../../views/partials/user/header')%>
+
+
+  <!-- Hero Section -->
+  <section class="relative full-page">
+   <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/home1.jpg" width="1920"/>
+   <div class="container mx-auto relative text-left text-white flex items-center h-full">
+    <div>
+      <p style="font-size: small; position: relative; left: 1px; top: -21px;" >NEW IN TOWN</p>
+     <h1 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:64px; position: relative; left:1 px" class= "text-4xl font-bold  mb-4">
+      The New Beauty
+     </h1>
+     <h1 style=" top: 5px; font-family:'Marcellus', serif;font-weight: bolder;font-size:64px; position: relative; left: 1px" class= "text-4xl font-bold  mb-4">
+      Collection
+     </h1>
+     <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+      This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
+     </p>
+     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+      Shop Now
+     </a>
+    </div>
+   </div>
+  </section>
+  <!-- Brands Section -->
+  <section class="bg-white py-10">
+    <h2 class="text-3xl text-center font-bold mb-10" style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif">
+      Popular Brands
+     </h2>
+   <div class="container mx-auto flex justify-around items-center">
+    <img alt="Brand 1" height="50" src="./images/brand1.png" width="100"/>
+    <img alt="Brand 2" height="50" src="./images/brand2.png" width="100"/>
+    <img alt="Brand 3" height="50" src="./images/brand3.png" width="100"/>
+    <img alt="Brand 4" height="50" src="./images/brand4.png" width="100"/>
+    <img alt="Brand 4" height="50" src="./images/brand5.png" width="100"/>
+    <img alt="Brand 4" height="50" src="./images/brand6.jpeg" width="100"/>
+    <img alt="Brand 4" height="50" src="./images/brand7.png" width="100"/>
+    
+   </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="bg-gray-100 py-20">
+    <div class="container mx-auto text-center max-w-screen-lg">
+     <h2 style="font-family:'Headland One', serif;font-weight: bolder;" class= " text-3xl font-bold mb-10">
+      Shop by Category
+     </h2>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div style="width: 348; position: relative; left: -62px;" class="bg-white p-6 rounded shadow-md">
+       <img alt="Sunscreen" class="mb-4" height="200" src="./images/sunscreen.jpg" width="300"/>
+       <h3 class="text-xl font-bold mb-2">
+        Sunscreen
+       </h3>
+       <a class="text-blue-500" href="#">
+        Shop Now
+       </a>
+      </div>
+      <div  style="width: 348; position: relative; left: -29px;" class="bg-white p-6 rounded shadow-md">
+       <img style="width: 234px; position: relative; left: 37px;" alt="Moisturizer and Serums" class="mb-4" height="200" src="./images/home3.jpg" width="300"/>
+       <h3 class="text-xl font-bold mb-2">
+        Moisturizer and Serums
+       </h3>
+       <a class="text-blue-500" href="#">
+        Shop Now
+       </a>
+      </div>
+      <div  style="width: 348; position: relative; left: 6px;" class="bg-white p-6 rounded shadow-md">
+       <img alt="Face Wash and Cleansers" class="mb-4" height="200" src="./images/Facewash cream.jpg" width="300"/>
+       <h3 class="text-xl font-bold mb-2">
+        Face Wash and Cleansers
+       </h3>
+       <a class="text-blue-500" href="#">
+        Shop Now
+       </a>
+      </div>
+     </div>
+    </div>
+   </section>
+
+  <!-- Trending Now Section -->
+  <section class="bg-white py-20">
+   <div class="container mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-10" style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif">
+     Trending Now
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+     <div class="bg-gray-100 p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Product 1" class="mb-4" height="300" src="./images/trending1.jpg" width="200"/>
+      <h3 class="text-xl mb-2">
+       Body Moisturizer
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $29.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+      Shop Now
+      </a>
+     </div>
+     <div class="bg-gray-100 p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Product 2" class="mb-4" height="300" src="./images/trending2.jpg" width="200"/>
+      <h3 class="text-xl  mb-2">
+      Face Cream
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $39.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Now
+      </a>
+     </div>
+     <div class="bg-gray-100 p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Product 3" class="mb-4" height="300" src="./images/trending3.jpg" width="200"/>
+      <h3 class="text-xl mb-2">
+       Cleanser
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $49.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Now
+      </a>
+     </div>
+     <div class="bg-gray-100 p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Product 4" class="mb-4" height="300" src="./images/trending4.jpg" width="200"/>
+      <h3 class="text-xl  mb-2">
+       Facewash
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $59.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Now
+      </a>
+     </div>
+    </div>
+   </div>
+  </section>
+  <!-- Best Selling Section -->
+  <section class="bg-gray-100 py-20">
+   <div class="container mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-10" style= " font-weight: 500; font-style:normal; font-family:'Headland One', serif">
+     Best Selling
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+     <div class="bg-white p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Best Selling Product 1" class="mb-4" height="300" src="./images/bestselling1.png" width="200"/>
+      <h3 class="text-xl mb-2">
+      De construct SPF 50++ Sunscreen
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $29.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Nowt
+      </a>
+     </div>
+     <div class="bg-white p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Best Selling Product 2" class="mb-4" height="300" src="./images/best2.png" width="200"/>
+      <h3 class="text-xl mb-2">
+       Advance Snail Musin Essence
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $39.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+      Shop Now
+      </a>
+     </div>
+     <div class="bg-white p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Best Selling Product 3" class="mb-4" height="300" src="./images/best3.webp" width="200"/>
+      <h3 class="text-xl  mb-2">
+      Lakme Blush & Glow Face Wash
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $49.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Now
+      </a>
+     </div>
+     <div class="bg-white p-6 rounded shadow-md">
+      <img style="position: relative;" alt="Best Selling Product 4" class="mb-4" height="300" src="./images/best4.webp" width="200"/>
+      <h3 class="text-xl mb-2">
+       Vitamin C Serum & Moisturizer
+      </h3>
+      <p class="text-gray-700 mb-2">
+       $59.99
+      </p>
+      <a class="bg-black text-white py-2 px-4 rounded" href="#">
+        Shop Now
+      </a>
+     </div>
+    </div>
+   </div>
+  </section>
+  <!-- Featured Section -->
+  <section class="relative full-page">
+   <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/bg-03.jpg" width="1920"/>
+   <div class="container mx-auto relative text-left text-white flex items-center h-full">
+    <div>
+      <p style="font-size: small; position: relative; left: 1px; top: -21px;" >New collection</p>
+    <h4 style=" font-family:'Marcellus', serif;  font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+      The beauty collection
+    </h4>
+    <h4 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+      that makes all the
+    </h4>
+
+    <h4 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+      difference!
+    </h4>
+     
+    <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+      This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
+     </p>
+     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+      Shop Now
+     </a>
+    </div>
+   </div>
+  </section>
+  <!-- Reviews Section -->
+  <section class="bg-white py-20">
+   <div class="container mx-auto">
+    <h2 style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif" class="text-3xl  mb-10 text-center">
+     Customer Reviews
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-gray-100 p-6 rounded shadow-md">
+      <p  class="text-gray-700 mb-4 text-2xl">
+       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
+      </p>
+     </div>
+     <div class="grid grid-cols-1 gap-6">
+      <div class="bg-gray-100 p-6 rounded shadow-md">
+       <p class="text-gray-700 mb-4">
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
+       </p>
+       
+       <div class="flex justify-center">
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+       </div>
+       <p >James Oliver</p>
+      </div>
+      <div class="bg-gray-100 p-6 rounded shadow-md">
+       <p class="text-gray-700 mb-4">
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
+       </p>
+       <div class="flex justify-center">
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+       </div>
+       <p >James Oliver</p>
+      </div>
+      <div class="bg-gray-100 p-6 rounded shadow-md">
+       <p class="text-gray-700 mb-4">
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
+       </p>
+       <div class="flex justify-center">
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+        <i class="fas fa-star text-yellow-500">
+        </i>
+       </div>
+       <p >James Oliver</p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section>
+  <!-- Featured Section 2 -->
+  <section >
+   <div class="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+    <div class="text-center md:text-left">
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; top: 9px; left: -58px" class="text-3xl font-bold mb-4">
+        The Ultimate
+      </h2>
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; top: 13px; left: 14px" class="text-3xl font-bold mb-4">
+        Skincare
+      </h2>
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; left: 60px" class="text-3xl font-bold mb-4">
+        Regime
+      </h2>
+      
+      <p style="position: relative; left: 17px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+        Find your unique style.
+       </p>
+       <a style="font-family:'Marcellus', serif; position: relative; left: 60px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+        Shop Now
+       </a>
+    </div>
+    <div class="text-center">
+      <img style="position: relative; top: -47px;" alt="Beauty products collection" class="h-full object-cover w-full inset-0" height="1080" src="./images/bg-02.jpg" width="1920"/>
+    </div>
+   </div>
+  </section>
+
+    <div style="position: relative; top: -42px;" class="container mx-auto py-10">
+      <div class="text-center mb-8">
+        <h2 class="text-gray-800 text-lg font-semibold">WHY CHOOSE US</h2>
+        <hr class="w-16 mx-auto border-t-2 border-gray-300 mt-2"/>
+      </div>
+      <div class="flex justify-center space-x-12">
+        <div class="text-center">
+          <div class="flex justify-center mb-4">
+            <div class="bg-purple-200 p-4 rounded-full">
+              <img src="./images/delivary.png" alt="Fast Delivery icon" class="w-8 h-8"/>
+            </div>
+          </div>
+          <h3 class="text-gray-800 text-xl font-semibold">Fast Delivery</h3>
+          <p class="text-gray-600 mt-2"> Your favorite skincare products, delivered to you in no time!😊</p>
+        </div>
+        <div class="text-center">
+          <div class="flex justify-center mb-4">
+            <div class="bg-pink-200 p-4 rounded-full">
+              <img src="./images/frre shipping.jpeg" alt="Free Shipping icon" class="w-8 h-8"/>
+            </div>
+          </div>
+          <h3 class="text-gray-800 text-xl font-semibold">Free Shipping</h3>
+          <p class="text-gray-600 mt-2">🚚Get your skincare products to your doorstep in no time!😊</p>
+        </div>
+        <div class="text-center">
+          <div class="flex justify-center mb-4">
+            <div class="bg-pink-200 p-4 rounded-full">
+              <img src="./images/return.png" alt="Easy Returns icon" class="w-8 h-8"/>
+            </div>
+          </div>
+          <h3 class="text-gray-800 text-xl font-semibold">Easy Returns</h3>
+          <p class="text-gray-600 mt-2"> Get your order delivered quickly and hassle-free! 😊</p>
+        </div>
+      </div>
+    </div>
+
+    <!--footer section-->
+<%-include('../../views/partials/user/footer')%>
+
+  
