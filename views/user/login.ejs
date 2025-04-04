@@ -1,0 +1,138 @@
+
+   <html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Sign In - Laris
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+.error-message {
+  color: red !important; 
+  font-size: 0.8rem;
+  font-weight: bold;
+  display: none;
+  margin-top: 5px;
+}
+
+  </style>
+ </head>
+ <body class="font-roboto">
+  <!-- Header -->
+  <%-include('../../views/partials/user/header')%>
+  
+<main class="flex justify-center items-center h-screen px-4 bg-cover bg-center" style="background-image: url(./images/logimage.jpg);">
+    <!-- <div class="absolute inset-0 flex items-center justify-center"> -->
+      <div style="position: relative; top: -40px;" class="bg-white rounded-lg shadow-md p-4 w-full max-w-xs backdrop-blur-md border border-white/20">
+        <div  class="flex justify-between border-b pb-2 mb-3 text-sm border-white/30">
+          <a style="position: relative; left: 56px;" class="text-gray-700 font-medium" href="/signup">
+           Sign Up
+          </a>
+          <a style="position: relative; left: -58px;" class="text-gray-700 font-medium border-b-2 border-black" href="#">
+           LOGIN
+          </a>
+         </div>
+         <form id="loginform" method="POST" action="/login">
+
+          <div class="mb-4">
+           <label class="block text-gray-700" for="email">
+            Your email address *
+           </label>
+           <input class="w-full border rounded px-3 py-1 mt-1" name="email" id="email" type="email"/>
+           <div id="error1" class="error-message"></div>
+          </div>
+
+          
+          <div class="mb-4">
+           <label class="block text-gray-700" for="password">
+            Password *
+           </label>
+           <input class="w-full border rounded px-3 py-1 mt-1" name="password" id="password" type="password"/>
+           <div id="error2" class="error-message"></div>
+          </div>
+          <%if(locals.message && message.length > 0){%>
+            <div class="alert alert-danger text-center">
+              <%=message%>
+            </div>
+          <%}%>
+          <div class="flex justify-between items-center mb-4">
+           <button class="bg-black text-white px-6 py-1 rounded" type="submit">
+            LOGIN
+           </button>
+           <a class="text-gray-700" href="/forgot-password">
+            forgot Password?
+           </a>
+          </div>
+          <div class="text-center text-gray-700 mb-4">
+           or sign in with
+          </div>
+          <div tyle="position: relative; left: 138px; "  class="flex justify-between">
+            <a href="/auth/google" class="w-full bg-white/10 text-black-200 py-1 rounded mr-1 text-xs border border-white/30" style="position: relative; left: 138px; width: 10px;">
+              <i  class="fab fa-google "></i>
+            </a>
+          </div>
+         </form>
+        </div>
+       <!-- </div> -->
+  </main>
+  
+
+
+  <!-- Footer -->
+  <%-include('../../views/partials/user/footer')%>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+  const emailid = document.getElementById("email");
+  const passid = document.getElementById("password");
+  const error1 = document.getElementById("error1");
+  const error2 = document.getElementById("error2");
+  const loginform = document.getElementById("loginform");
+
+  function emailValidateChecking() {
+    const emailval = emailid.value;
+    const emailpattern = /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+
+    if (!emailpattern.test(emailval)) {
+      error1.style.display = "block";
+      error1.innerHTML = "Invalid Format";
+    } else {
+      error1.style.display = "none";
+      error1.innerHTML = "";
+    }
+  }
+
+  function passValidateChecking() {
+    const passval = passid.value;
+    if (passval.length < 8) {
+      error2.style.display = "block";
+      error2.innerHTML = "Should contain at least 8 characters";
+    } else {
+      error2.style.display = "none";
+      error2.innerHTML = "";
+    }
+  }
+
+  emailid.addEventListener("input", emailValidateChecking);
+  passid.addEventListener("input", passValidateChecking);
+
+  loginform.addEventListener("submit", function (e) {
+    emailValidateChecking();
+    passValidateChecking();
+
+    if (error1.innerHTML || error2.innerHTML) {
+      e.preventDefault(); // Stop form submission if errors exist
+    }
+  });
+});
+
+
+
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, '/login');
+    }
+  </script>

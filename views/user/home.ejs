@@ -49,7 +49,7 @@
      <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
       This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
      </p>
-     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="/shop.ejs">
       Shop Now
      </a>
     </div>
@@ -168,64 +168,50 @@
     </div>
    </div>
   </section>
-  <!-- Best Selling Section -->
-  <section class="bg-gray-100 py-20">
-   <div class="container mx-auto text-center">
-    <h2 class="text-3xl font-bold mb-10" style= " font-weight: 500; font-style:normal; font-family:'Headland One', serif">
-     Best Selling
+<!-- Best Selling Section -->
+<section class="bg-gray-100 py-20">
+  <div class="container mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-10" style="font-weight: 500; font-style: normal; font-family: 'Headland One', serif">
+      Best Selling
     </h2>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-     <div class="bg-white p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Best Selling Product 1" class="mb-4" height="300" src="./images/bestselling1.png" width="200"/>
-      <h3 class="text-xl mb-2">
-      De construct SPF 50++ Sunscreen
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $29.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Nowt
-      </a>
-     </div>
-     <div class="bg-white p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Best Selling Product 2" class="mb-4" height="300" src="./images/best2.png" width="200"/>
-      <h3 class="text-xl mb-2">
-       Advance Snail Musin Essence
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $39.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-      Shop Now
-      </a>
-     </div>
-     <div class="bg-white p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Best Selling Product 3" class="mb-4" height="300" src="./images/best3.webp" width="200"/>
-      <h3 class="text-xl  mb-2">
-      Lakme Blush & Glow Face Wash
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $49.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Now
-      </a>
-     </div>
-     <div class="bg-white p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Best Selling Product 4" class="mb-4" height="300" src="./images/best4.webp" width="200"/>
-      <h3 class="text-xl mb-2">
-       Vitamin C Serum & Moisturizer
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $59.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Now
-      </a>
-     </div>
+      <% products.forEach(product => { %>
+        <div class="bg-white p-6 rounded shadow-md">
+          <% if (product.productImage && product.productImage.length > 0) { %>
+            <img 
+              style="position: relative;" 
+              alt="<%= product.productName %>" 
+              class="mb-4" 
+              height="300" 
+              src="/uploads/product-images/<%= product.productImage[0] %>"
+              width="200"
+              onerror="this.src='/images/placeholder.jpg'; console.log('Image load failed for <%= product.productName %>: /uploads/product-images/<%= product.productImage[0] %>')"
+            />
+          <% } else { %>
+            <img 
+              style="position: relative;" 
+              alt="No image available" 
+              class="mb-4" 
+              height="300" 
+              src="/images/placeholder.jpg"
+              width="200"
+            />
+          <% } %>
+          <h3 class="text-xl mb-2">
+            <%= product.productName %>
+          </h3>
+          <p class="text-gray-700 mb-2">
+            $<%= product.salePrice.toFixed(2) %>
+          </p>
+          <a class="bg-black text-white py-2 px-4 rounded" href="/product/<%= product._id %>">
+            Shop Now
+          </a>
+        </div>
+      <% }) %>
     </div>
-   </div>
-  </section>
+  </div>
+</section>
+
   <!-- Featured Section -->
   <section class="relative full-page">
    <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/bg-03.jpg" width="1920"/>
@@ -282,7 +268,7 @@
         <i class="fas fa-star text-yellow-500">
         </i>
        </div>
-       <p >James Oliver</p>
+       <p >Shadin</p>
       </div>
       <div class="bg-gray-100 p-6 rounded shadow-md">
        <p class="text-gray-700 mb-4">
@@ -328,20 +314,20 @@
   <section >
    <div class="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
     <div class="text-center md:text-left">
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; top: 9px; left: -58px" class="text-3xl font-bold mb-4">
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -55px; left: 35px" class="text-3xl font-bold mb-4">
         The Ultimate
       </h2>
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; top: 13px; left: 14px" class="text-3xl font-bold mb-4">
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -29px; left: 104px" class="text-3xl font-bold mb-4">
         Skincare
       </h2>
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:72px; position: relative; left: 60px" class="text-3xl font-bold mb-4">
+      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -9px; left: 106px" class="text-3xl font-bold mb-4">
         Regime
       </h2>
       
-      <p style="position: relative; left: 17px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+      <p style="position: relative; left: 114px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
         Find your unique style.
        </p>
-       <a style="font-family:'Marcellus', serif; position: relative; left: 60px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+       <a style="font-family:'Marcellus', serif; position: relative; left: 130px;" class="bg-black text-white py-4 px-9 rounded" href="#">
         Shop Now
        </a>
     </div>
@@ -382,7 +368,7 @@
             </div>
           </div>
           <h3 class="text-gray-800 text-xl font-semibold">Easy Returns</h3>
-          <p class="text-gray-600 mt-2"> Get your order delivered quickly and hassle-free! 😊</p>
+          <p class="text-gray-600 mt-2"> Get your order delivered quickly and hassle-free!😊</p>
         </div>
       </div>
     </div>

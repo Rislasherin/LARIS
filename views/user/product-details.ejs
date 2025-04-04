@@ -1,0 +1,170 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title><%= product.name %> - Product Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800">
+  <!-- Header Section -->
+  <%- include('../partials/user/header') %>
+
+  <main class="container mx-auto py-8 px-6">
+    <div class="flex flex-col lg:flex-row">
+      <div class="lg:w-1/2 flex justify-center">
+        <img id="mainImage" alt="Product image of <%= product.name %>" class="w-80" height="500" src="<%= product.image %>" width="375" />
+      </div>
+      <div class="lg:w-1/2 lg:pl-10">
+        <div class="text-sm text-gray-500"><%= product.category %></div>
+        <h1 class="text-3xl font-bold mt-2"><%= product.name %></h1>
+        <div class="text-xl text-red-500 mt-2">
+          $<%= product.price %>
+          <% if (product.originalPrice) { %>
+            <span class="line-through text-gray-500">$<%= product.originalPrice %></span>
+          <% } %>
+        </div>
+        <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+          <% product.features.forEach(feature => { %>
+            <li><%= feature %></li>
+          <% }) %>
+        </ul>
+        <form id="cartForm" class="mt-6 flex items-center space-x-4" method="POST" action="/cart/add">
+          <input type="hidden" name="productId" value="<%= product._id %>" />
+          <input id="quantity" name="quantity" class="border rounded w-16 text-center" type="number" value="1" min="1" />
+          <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded">ADD TO CART</button>
+          <button type="button" onclick="buyNow('<%= product._id %>')" class="bg-gray-800 text-white px-4 py-2 rounded">BUY NOW</button>
+        </form>
+        <div class="mt-4 text-gray-500">Category: <%= product.category %></div>
+      </div>
+    </div>
+
+    <!-- Additional Images Carousel -->
+    <div class="flex justify-center mt-4 space-x-4">
+      <% product.additionalImages.forEach((img, index) => { %>
+        <img alt="Additional product image <%= index + 1 %>" class="w-16 h-16 cursor-pointer" height="64" src="<%= img %>" width="64" onclick="changeImage('<%= img %>')" />
+      <% }) %>
+    </div>
+
+    <!-- Description and Reviews Tabs -->
+    <div class="mt-10">
+      <div class="border-b">
+        <ul class="flex space-x-4">
+          <li id="descTab" class="py-2 border-b-2 border-gray-800 cursor-pointer" onclick="showTab('description')">Description</li>
+          <li id="revTab" class="py-2 text-gray-500 cursor-pointer" onclick="showTab('reviews')">Reviews (<%= reviews.length %>)</li>
+        </ul>
+      </div>
+      <div id="description" class="mt-4">
+        <p><%= product.description %></p>
+      </div>
+      <div id="reviews" class="mt-4 hidden">
+        <% if (reviews.length === 0) { %>
+          <p>Be the first to review “<%= product.name %>”</p>
+        <% } else { %>
+          <% reviews.forEach(review => { %>
+            <div class="border-b py-2">
+              <div class="flex space-x-1 text-yellow-500">
+                <% for(let i = 0; i < review.rating; i++) { %>
+                  <i class="fas fa-star"></i>
+                <% } %>
+              </div>
+              <p><%= review.text %></p>
+              <p class="text-gray-500 text-sm">By <%= review.name %> on <%= review.date.toDateString() %></p>
+            </div>
+          <% }) %>
+        <% } %>
+        <!-- Review Form -->
+        <form id="reviewForm" method="POST" action="/product/<%= product._id %>/review" class="mt-4">
+          <p>Your email address will not be published. Required fields are marked *</p>
+          <div class="mt-4">
+            <label class="block text-gray-700" for="rating">Your rating *</label>
+            <select name="rating" id="rating" class="border rounded px-2 py-1" required>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
+          <div class="mt-4">
+            <label class="block text-gray-700" for="review">Your review *</label>
+            <textarea name="text" class="w-full border rounded px-2 py-1" id="review" rows="4" required></textarea>
+          </div>
+          <div class="mt-4 flex space-x-4">
+            <div class="w-1/2">
+              <label class="block text-gray-700" for="name">Name *</label>
+              <input name="name" class="w-full border rounded px-2 py-1" id="name" type="text" required />
+            </div>
+            <div class="w-1/2">
+              <label class="block text-gray-700" for="email">Email *</label>
+              <input name="email" class="w-full border rounded px-2 py-1" id="email" type="email" required />
+            </div>
+          </div>
+          <button type="submit" class="mt-4 bg-gray-800 text-white px-4 py-2 rounded">SUBMIT</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="mt-10">
+      <h2 class="text-2xl font-bold">Related Products</h2>
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <% relatedProducts.forEach(related => { %>
+          <div class="border p-4">
+            <img alt="Product image of <%= related.name %>" class="w-full" height="200" src="<%= related.image %>" width="150" />
+            <div class="mt-2 text-gray-500"><%= related.category %></div>
+            <div class="mt-1 text-lg font-bold"><%= related.name %></div>
+            <div class="mt-1 text-red-500">
+              $<%= related.price %>
+              <% if (related.originalPrice) { %>
+                <span class="line-through text-gray-500">$<%= related.originalPrice %></span>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Section (Assuming you have one) -->
+  <%- include('../partials/user/footer') %>
+
+  <!-- JavaScript for Interactivity -->
+  <script>
+
+    function changeImage(src) {
+      document.getElementById('mainImage').src = src;
+    }
+
+    function showTab(tab) {
+      const desc = document.getElementById('description');
+      const rev = document.getElementById('reviews');
+      const descTab = document.getElementById('descTab');
+      const revTab = document.getElementById('revTab');
+
+      if (tab === 'description') {
+        desc.classList.remove('hidden');
+        rev.classList.add('hidden');
+        descTab.classList.add('border-b-2', 'border-gray-800');
+        revTab.classList.remove('border-b-2', 'border-gray-800');
+      } else {
+        desc.classList.add('hidden');
+        rev.classList.remove('hidden');
+        revTab.classList.add('border-b-2', 'border-gray-800');
+        descTab.classList.remove('border-b-2', 'border-gray-800');
+      }
+    }
+
+    function buyNow(productId) {
+      const quantity = document.getElementById('quantity').value;
+      window.location.href = `/checkout?productId=${productId}&quantity=${quantity}`;
+    }
+  </script>
+</body>
+</html>

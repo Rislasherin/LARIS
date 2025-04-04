@@ -1,0 +1,443 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <!-- Add SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ </head>
+ <body class="bg-gray-900 text-gray-300 text-sm">
+  <div class="flex">
+    <!-- Sidebar -->
+    <%- include("../partials/admin/header") %>
+    
+    <!-- Main Content -->
+    <div class="flex-1 p-4">
+        
+      <div class="flex justify-between items-center mb-4">
+        <form action="/admin/category" method="get" class="flex items-center w-full mb-4">
+            <div class="relative w-1/2">
+                <input
+                    id="searchInput"
+                    class="w-full bg-gray-800 text-gray-300 rounded-full pl-8 pr-8 py-1.5 focus:outline-none text-sm"
+                    placeholder="Search for Categories"
+                    type="text"
+                    name="search"
+                    value="<%= search || '' %>"
+                    oninput="toggleClearIcon()"
+                />
+                <i class="fas fa-search absolute left-3 top-2 text-gray-400 text-xs"></i>
+        
+                <!-- Clear Icon (❌) -->
+                <i 
+                    id="clearIcon"
+                    class="fas fa-times absolute right-3 top-2 text-gray-400 text-xs cursor-pointer hidden"
+                    onclick="clearSearch()"
+                ></i>
+            </div>
+        </form>
+        
+        
+        <div class="flex items-center">
+          <button id="openAddCategoryModal" class="bg-green-500 text-white px-3 py-1.5 rounded-full hover:bg-green-600 text-sm">
+            ADD CATEGORY +
+          </button>
+        </div>
+      </div>
+    </form>
+      <div>
+        <h2 class="text-xl font-semibold mb-3">Categories</h2>
+        <div class="bg-gray-800 rounded-lg overflow-hidden">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="bg-gray-700">
+                <th class="py-2 px-3">NO</th>
+                <th class="py-2 px-3">CATEGORY</th>
+                <th class="py-2 px-3">CATEGORY DESCRIPTION</th>
+                <th class="py-2 px-3">OFFER PRICE</th>
+                <th class="py-2 px-3">OFFERS</th>
+                <th class="py-2 px-3">STATUS</th>
+                <th class="py-2 px-3">LIST/UNLIST</th>
+                <th class="py-2 px-3">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if(cat && cat.length > 0) { %>
+                <% cat.forEach((category, index) => { %>
+                  <tr class="border-b border-gray-700">
+                    <td class="py-2 px-3"><%= index + 1 %></td>
+                    <td class="py-2 px-3"><%= category.name %></td>
+                    <td class="py-2 px-3"><%= category.description %></td>
+                    <td class="py-2 px-3">
+                      <% if(category.categoryOffer) { %>
+                        <%= category.categoryOffer %>%
+                      <% } else { %>
+                        0%
+                      <% } %>
+                    </td>
+                    <td class="py-2 px-3">
+                      <% if(!category.categoryOffer || category.categoryOffer === 0) { %>
+                        <button onclick="openOfferModal('<%= category._id %>', '<%= category.name %>')" class="bg-blue-500 text-white px-2 py-0.5 rounded-full hover:bg-blue-600 text-xs">
+                          Add Offer
+                        </button>
+                      <% } else { %>
+                        <button onclick="removeOffer('<%= category._id %>')" class="bg-red-500 text-white px-2 py-0.5 rounded-full hover:bg-red-600 text-xs">
+                          Remove Offer
+                        </button>
+                      <% } %>
+                    </td>
+                    <td class="py-2 px-3"><%= category.isListed ? 'Listed' : 'Unlisted' %></td>
+
+                    <td class="py-2 px-3">
+                      <% if(category.isListed) { %>
+                        <a href="/admin/category/<%= category._id %>/unlist" class="bg-red-500 text-white px-2 py-0.5 rounded-full hover:bg-red-600 text-xs">
+                          Unlist
+                        </a>
+                      <% } else { %>
+                        <a href="/admin/category/<%= category._id %>/list" class="bg-green-500 text-white px-2 py-0.5 rounded-full hover:bg-green-600 text-xs">
+                          List
+                        </a>
+                      <% } %>
+                    </td>
+                    <td class="py-2 px-3 flex space-x-2">
+                      <a href="/admin/edit-category/<%= category._id %>">
+                        <i class="fas fa-edit cursor-pointer"></i>
+                    </a>
+                    
+                      
+                      
+                    
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr class="border-b border-gray-700">
+                  <td colspan="8" class="py-4 text-center">No categories found</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+          <div class="p-3 flex justify-between items-center text-xs">
+            <span>SHOWING <%= currentPage %> OF <%= totalPages %></span>
+            <div class="flex space-x-1">
+              <% if(totalPages > 0) { %>
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                  <% if(i === currentPage) { %>
+                    <a href="/admin/category?page=<%= i %>" class="px-2 py-1 bg-purple-600 rounded-full"><%= i %></a>
+                  <% } else if(i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) { %>
+                    <a href="/admin/category?page=<%= i %>" class="px-2 py-1 bg-gray-700 rounded-full"><%= i %></a>
+                  <% } else if(i === 2 || i === totalPages - 1) { %>
+                    <span class="px-2 py-1 bg-gray-700 rounded-full">...</span>
+                  <% } %>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Category Modal -->
+  <div id="addCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-lg w-1/3 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Add New Category</h3>
+        <button id="closeAddCategoryModal" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="addCategoryForm" action="admin/category" method="get">
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1" for="categoryName">Category Name</label>
+          <input type="text" id="categoryName" name="name" class="w-full bg-gray-700 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1" for="categoryDescription">Description</label>
+          <textarea id="categoryDescription" name="description" class="w-full bg-gray-700 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-green-500 h-24" required></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" id="cancelAddCategory" class="bg-gray-600 text-white px-4 py-2 rounded mr-2 hover:bg-gray-700">Cancel</button>
+          <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Category</button>
+        </div>
+      </form>
+      <div id="addCategoryMessage" class="mt-3 text-center hidden"></div>
+    </div>
+  </div>
+  
+  <!-- Add Offer Modal -->
+  <div id="addOfferModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-lg w-1/3 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Add Offer to <span id="offerCategoryName"></span></h3>
+        <button id="closeOfferModal" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="addOfferForm">
+        <input type="hidden" id="categoryId" name="categoryId">
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-1" for="offerPercentage">Offer Percentage (%)</label>
+          <input type="number" id="offerPercentage" name="offerPercentage" min="1" max="99" class="w-full bg-gray-700 text-white rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" id="cancelOffer" class="bg-gray-600 text-white px-4 py-2 rounded mr-2 hover:bg-gray-700">Cancel</button>
+          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply Offer</button>
+        </div>
+      </form>
+      <div id="offerMessage" class="mt-3 text-center hidden"></div>
+    </div>
+  </div>
+  
+  <%- include("../partials/admin/footer") %>
+  
+  <script>
+   document.addEventListener("DOMContentLoaded", function () {
+        toggleClearIcon(); 
+
+        function toggleClearIcon() {
+            const searchInput = document.getElementById('searchInput');
+            const clearIcon = document.getElementById('clearIcon');
+            
+            if (searchInput.value.trim()) {
+                clearIcon.classList.remove('hidden'); 
+            } else {
+                clearIcon.classList.add('hidden');     
+            }
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            window.location.href = '/admin/category';  
+        }
+
+   
+        document.getElementById('searchInput').addEventListener('input', toggleClearIcon);
+        document.getElementById('clearIcon').addEventListener('click', clearSearch);
+    });
+
+    
+    
+   
+    document.addEventListener('DOMContentLoaded', function() {
+      const openModalBtn = document.getElementById('openAddCategoryModal');
+      const closeModalBtn = document.getElementById('closeAddCategoryModal');
+      const cancelBtn = document.getElementById('cancelAddCategory');
+      const modal = document.getElementById('addCategoryModal');
+      const addCategoryForm = document.getElementById('addCategoryForm');
+      const messageDiv = document.getElementById('addCategoryMessage');
+      
+      // Open modal
+      openModalBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+      });
+      
+      // Close modal functions
+      function closeModal() {
+        modal.classList.add('hidden');
+        addCategoryForm.reset();
+        messageDiv.classList.add('hidden');
+        messageDiv.textContent = '';
+      }
+      
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      
+     
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+      
+   
+      addCategoryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+          name: document.getElementById('categoryName').value,
+          description: document.getElementById('categoryDescription').value,
+        };
+        
+        fetch('/admin/category/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.error,
+              confirmButtonColor: '#3085d6'
+            });
+          } else {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: data.message || 'Category added successfully!',
+              confirmButtonColor: '#10b981'
+            }).then(() => {
+              window.location.reload();
+            });
+            
+           
+            addCategoryForm.reset();
+          }
+        })
+        .catch(error => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred. Please try again.',
+            confirmButtonColor: '#3085d6'
+          });
+          console.error('Error:', error);
+        });
+      });
+      
+      const offerModal = document.getElementById('addOfferModal');
+      const closeOfferBtn = document.getElementById('closeOfferModal');
+      const cancelOfferBtn = document.getElementById('cancelOffer');
+      const addOfferForm = document.getElementById('addOfferForm');
+      const offerMessageDiv = document.getElementById('offerMessage');
+      
+   
+      function closeOfferModal() {
+        offerModal.classList.add('hidden');
+        addOfferForm.reset();
+        offerMessageDiv.classList.add('hidden');
+        offerMessageDiv.textContent = '';
+      }
+      
+      closeOfferBtn.addEventListener('click', closeOfferModal);
+      cancelOfferBtn.addEventListener('click', closeOfferModal);
+      
+      offerModal.addEventListener('click', function(e) {
+        if (e.target === offerModal) {
+          closeOfferModal();
+        }
+      });
+      
+   
+      addOfferForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const categoryId = document.getElementById('categoryId').value;
+        const offerPercentage = document.getElementById('offerPercentage').value;
+        
+        const formData = {
+          categoryId: categoryId,
+          offerPercentage: offerPercentage
+        };
+        
+        fetch('/admin/category/add-offer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.error,
+              confirmButtonColor: '#3085d6'
+            });
+          } else {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: data.message || 'Offer added successfully!',
+              confirmButtonColor: '#3b82f6'
+            }).then(() => {
+              window.location.reload();
+            });
+            
+            
+            addOfferForm.reset();
+          }
+        })
+        .catch(error => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred. Please try again.',
+            confirmButtonColor: '#3085d6'
+          });
+          console.error('Error:', error);
+        });
+      });
+    });
+    
+  
+    function openOfferModal(categoryId, categoryName) {
+      document.getElementById('categoryId').value = categoryId;
+      document.getElementById('offerCategoryName').textContent = categoryName;
+      document.getElementById('addOfferModal').classList.remove('hidden');
+    }
+    
+  
+    function removeOffer(categoryId) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to remove the offer from this category?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/admin/category/${categoryId}/remove-offer`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.error,
+                confirmButtonColor: '#3085d6'
+              });
+            } else {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.message || 'Offer removed successfully!',
+                confirmButtonColor: '#3085d6'
+              }).then(() => {
+                window.location.reload();
+              });
+            }
+          })
+          .catch(error => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred. Please try again.',
+              confirmButtonColor: '#3085d6'
+            });
+            console.error('Error:', error);
+          });
+        }
+      });
+    }
+  </script>
+ </body>
+</html>

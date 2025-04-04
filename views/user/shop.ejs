@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Laris Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body class="font-roboto">
+  <!-- Header Section -->
+  <%- include('../partials/user/header') %>
+
+  <main class="container mx-auto py-8 px-6">
+    <h2 class="text-3xl font-bold text-center mb-8">Shop by Category</h2>
+    
+    <!-- Dynamic Categories -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <% if (categories && categories.length > 0) { %>
+        <% const imageMap = {
+          'SUNSCREEN': 'https://storage.googleapis.com/a1aa/image/yssPOVVQ9FZufrq20RldDg_iGcNuXvr3ZuFkZiHTweE.jpg',
+          'MOISTURIZERS': 'https://storage.googleapis.com/a1aa/image/m8vnOqdpvhXyFKl3GLiB_Hd5UYNGgyzHdvjdjgvvMtg.jpg',
+          'FACE WASH': 'https://storage.googleapis.com/a1aa/image/VuyBQ_D8f4FqAU4N9EtY5h6jWCUBme3RXc3JZcwbXaU.jpg'
+        }; %>
+        <% 
+        const getImageUrl = (categoryName) => {
+          const name = categoryName.toUpperCase();
+          if (name.includes('SUNSCREEN')) return 'https://storage.googleapis.com/a1aa/image/yssPOVVQ9FZufrq20RldDg_iGcNuXvr3ZuFkZiHTweE.jpg';
+          if (name.includes('MOISTURIZER') || name.includes('SERUM')) return 'https://storage.googleapis.com/a1aa/image/m8vnOqdpvhXyFKl3GLiB_Hd5UYNGgyzHdvjdjgvvMtg.jpg';
+          if (name.includes('FACE WASH') || name.includes('CLEANSER')) return 'https://storage.googleapis.com/a1aa/image/VuyBQ_D8f4FqAU4N9EtY5h6jWCUBme3RXc3JZcwbXaU.jpg';
+          return 'https://via.placeholder.com/300x300?text=' + encodeURIComponent(categoryName);
+        };
+      %>
+      
+      <% categories.forEach(cat => { %>
+        <div class="text-center">
+          <a href="/shop?category=<%= cat._id %>">
+            <img 
+              alt="<%= cat.name %> product image" 
+              class="mx-auto mb-4" 
+              height="300" 
+              width="300"
+              src="<%= cat.image ? `/uploads/category-images/${cat.image}` : getImageUrl(cat.name) %>"
+              onerror="this.src='https://via.placeholder.com/300x300?text=' + encodeURIComponent('<%= cat.name %>')"
+            />
+              <h3 class="text-xl font-bold <%= selectedCategoryId === cat._id.toString() ? 'text-green-600' : '' %>">
+                <%= cat.name.toUpperCase() %>
+              </h3>
+            </a>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p class="text-center col-span-3">No categories available.</p>
+      <% } %>
+    </div>
+
+    <div class="flex flex-col md:flex-row mb-12">
+      <!-- Filter Sidebar -->
+      <aside class="w-full md:w-1/4 mb-8 md:mb-0">
+        <form id="filterForm" action="/shop" method="GET" class="sticky top-4">
+          <h4 class="text-xl font-bold mb-4">Filter</h4>
+          
+          <!-- Hidden category field to maintain category selection when applying other filters -->
+          <% if (selectedCategoryId) { %>
+            <input type="hidden" name="category" value="<%= selectedCategoryId %>">
+          <% } %>
+          
+          <!-- Price Range -->
+          <div class="mb-6">
+            <h5 class="font-bold mb-2">Price Range</h5>
+            <div class="flex items-center gap-2">
+              <input name="minPrice" type="number" placeholder="Min" class="w-1/2 p-2 border rounded" 
+                     value="<%= typeof minPrice !== 'undefined' ? minPrice : '' %>">
+              <span>-</span>
+              <input name="maxPrice" type="number" placeholder="Max" class="w-1/2 p-2 border rounded"
+                     value="<%= typeof maxPrice !== 'undefined' && maxPrice !== null ? maxPrice : '' %>">
+            </div>
+          </div>
+          
+          <!-- Skin Types -->
+          <div class="mb-6">
+            <h5 class="font-bold mb-2">Skin Types</h5>
+            <ul>
+              <% const skinTypes = ['Oily', 'Dry', 'Combination', 'Sensitive']; %>
+              <% skinTypes.forEach((type, index) => { %>
+                <li class="mb-1">
+                  <input 
+                    id="skin<%= index+1 %>" 
+                    type="radio" 
+                    name="skinType" 
+                    value="<%= type %>"
+                    <%= selectedSkinType === type ? 'checked' : '' %>
+                  />
+                  <label class="ml-2" for="skin<%= index+1 %>"><%= type %></label>
+                </li>
+              <% }) %>
+              <li class="mb-1">
+                <input 
+                  id="skinAll" 
+                  type="radio" 
+                  name="skinType" 
+                  value=""
+                  <%= !selectedSkinType ? 'checked' : '' %>
+                />
+                <label class="ml-2" for="skinAll">All Types</label>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Skin Concerns -->
+          <div class="mb-6">
+            <h5 class="font-bold mb-2">Skin Concerns</h5>
+            <ul>
+              <% const skinConcerns = ['Acne', 'Aging', 'Dark Spots', 'Redness']; %>
+              <% skinConcerns.forEach((concern, index) => { %>
+                <li class="mb-1">
+                  <input 
+                    id="concern<%= index+1 %>" 
+                    type="radio" 
+                    name="skinConcern" 
+                    value="<%= concern %>"
+                    <%= selectedSkinConcern === concern ? 'checked' : '' %>
+                  />
+                  <label class="ml-2" for="concern<%= index+1 %>"><%= concern %></label>
+                </li>
+              <% }) %>
+              <li class="mb-1">
+                <input 
+                  id="concernAll" 
+                  type="radio" 
+                  name="skinConcern" 
+                  value=""
+                  <%= !selectedSkinConcern ? 'checked' : '' %>
+                />
+                <label class="ml-2" for="concernAll">All Concerns</label>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Apply Filter Button -->
+          <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+            Apply Filters
+          </button>
+          
+          <!-- Clear Filters -->
+          <a href="/shop" class="block text-center mt-2 text-sm text-gray-600 hover:text-gray-800">
+            Clear All Filters
+          </a>
+        </form>
+      </aside>
+
+      <!-- Products Section -->
+      <section class="w-full md:w-3/4">
+        <!-- Products Grid -->
+       <!-- Products Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+  <% if (products && products.length > 0) { %>
+    <% products.forEach(product => { %>
+      <div class="border p-4 rounded-lg hover:shadow-lg transition-shadow">
+        
+          <% if (product.productImage && product.productImage.length > 0) { %>
+            <a href="/productDetails?id=<%=product._id%>" class="block">
+            <img
+             
+              alt="<%= product.productName %>" 
+              class="mb-4 mx-auto object-cover h-48 w-full" 
+              src="/uploads/product-images/<%= product.productImage[0] %>" 
+              onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'; console.log('Image load failed for <%= product.productName %>')"
+            />
+          </a>
+          <% } else { %>
+            <img 
+              alt="No image available" 
+              class="mb-4 mx-auto object-cover h-48 w-full" 
+              src="https://via.placeholder.com/300x300?text=No+Image" 
+            />
+          <% } %>
+          
+          <h5 class="font-bold mb-2 text-lg">
+            <%= product.productName %>
+          </h5>
+          
+          <div class="flex justify-between items-center mb-2">
+            <p class="text-green-600 font-semibold">
+              $<%= product.salePrice.toFixed(2) %>
+            </p>
+            
+            <% if (product.skinType) { %>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                <%= product.skinType %>
+              </span>
+            <% } %>
+          </div>
+          
+          <% if (product.skinConcern) { %>
+            <p class="text-xs text-gray-600 mb-2">
+              <% if (Array.isArray(product.skinConcern)) { %>
+                Treats: <%= product.skinConcern.join(', ') %>
+              <% } else { %>
+                Treats: <%= product.skinConcern %>
+              <% } %>
+            </p>
+          <% } %>
+        </a>
+        
+        <button class="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors">
+          Add to Cart
+        </button>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <div class="col-span-full text-center py-8">
+      <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
+      <p class="text-xl text-gray-500">No products match your filters.</p>
+      <a href="/shop" class="mt-4 inline-block text-green-600 hover:underline">Clear all filters</a>
+    </div>
+  <% } %>
+</div>
+
+        <!-- Pagination Controls -->
+        <% if (totalPages > 1) { %>
+          <div class="flex justify-center mt-8">
+            <!-- Previous Button -->
+            <% if (currentPage > 1) { %>
+              <a href="/shop?page=<%= currentPage - 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= typeof minPrice !== 'undefined' ? '&minPrice=' + minPrice : '' %><%= typeof maxPrice !== 'undefined' && maxPrice !== null ? '&maxPrice=' + maxPrice : '' %>" 
+                class="mx-1 px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                Previous
+              </a>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/shop?page=<%= i %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= typeof minPrice !== 'undefined' ? '&minPrice=' + minPrice : '' %><%= typeof maxPrice !== 'undefined' && maxPrice !== null ? '&maxPrice=' + maxPrice : '' %>" 
+                class="mx-1 px-3 py-2 <%= currentPage === i ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700' %> rounded hover:bg-gray-300">
+                <%= i %>
+              </a>
+            <% } %>
+
+            <!-- Next Button -->
+            <% if (currentPage < totalPages) { %>
+              <a href="/shop?page=<%= currentPage + 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= typeof minPrice !== 'undefined' ? '&minPrice=' + minPrice : '' %><%= typeof maxPrice !== 'undefined' && maxPrice !== null ? '&maxPrice=' + maxPrice : '' %>" 
+                class="mx-1 px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                Next
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <%- include('../partials/user/footer') %>
+
+  <script>
+    // Optional JavaScript for enhancing the filtering experience
+    document.addEventListener('DOMContentLoaded', function() {
+      // Automatically submit form when radio buttons change
+      const radioButtons = document.querySelectorAll('input[type="radio"]');
+      radioButtons.forEach(button => {
+        button.addEventListener('change', () => {
+          document.getElementById('filterForm').submit();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

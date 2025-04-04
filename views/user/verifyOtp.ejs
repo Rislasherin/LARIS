@@ -1,0 +1,213 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sign Up - Laris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.7rem;
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-roboto bg-pink-100 bg-cover bg-center relative" style="background-image: url('./images/logimage.jpg');">
+    
+    <!-- Overlay for better readability -->
+    <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+
+    <!-- Header -->
+    <%-include('../../views/partials/user/header')%>
+
+    <!-- Main Content -->
+    <main class="relative flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto z-10">
+            <h2 class="text-center text-2xl font-bold mb-4">OTP VERIFICATION</h2>
+            <p class="text-center text-gray-600 mb-6">4 Digit verification code sent to your Email</p>
+            <p class="text-center text-gray-600 mb-6">Check your Email</p>
+
+            <form id="otpForm" action="/verifyOtp" method="post">
+                <div class="flex justify-center space-x-2 mb-6">
+                    <input class="border rounded-lg w-12 h-12 text-center text-2xl otp-input" id="otp1" name="otp1" maxlength="1" type="text"/>
+                    <input class="border rounded-lg w-12 h-12 text-center text-2xl otp-input" id="otp2" name="otp2" maxlength="1" type="text"/>
+                    <input class="border rounded-lg w-12 h-12 text-center text-2xl otp-input" id="otp3" name="otp3" maxlength="1" type="text"/>
+                    <input class="border rounded-lg w-12 h-12 text-center text-2xl otp-input" id="otp4" name="otp4" maxlength="1" type="text"/>
+                </div>
+            
+                <input type="hidden" name="otp" id="otp-input" />
+            
+                <p id="timerContainer" class="text-center text-gray-600 mb-6">
+                    Resend OTP in: <span id="timer">60</span>s
+                </p>
+
+                <button id="verifyBtn" class="bg-black text-white w-full py-2 rounded-lg mb-3" type="submit">
+                    VERIFY
+                </button>
+                <button id="resendBtn" class="bg-gray-500 text-white w-full py-2 rounded-lg hidden" type="button" >
+                    Resend OTP
+                </button>
+            </form>
+            
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <%-include('../../views/partials/user/footer')%>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Start the timer when page loads
+        startTimer();
+        
+        // Auto-tab between OTP fields
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+    
+        // Form submission
+        document.getElementById('otpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Combine OTP values
+            const otp1 = document.getElementById('otp1').value;
+            const otp2 = document.getElementById('otp2').value;
+            const otp3 = document.getElementById('otp3').value;
+            const otp4 = document.getElementById('otp4').value;
+            const otpFull = otp1 + otp2 + otp3 + otp4;
+            
+            // Set combined OTP to hidden input
+            document.getElementById('otp-input').value = otpFull;
+            
+            // Validate OTP - must be 4 digits
+            if (!/^\d{4}$/.test(otpFull)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Invalid OTP",
+                    text: "Please enter a 4-digit code"
+                });
+                return;
+            }
+            
+            // Make AJAX request
+            $.ajax({
+                type: "POST",
+                url: "/verifyOtp",
+                data: { otp: otpFull },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "OTP Verified successfully",
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            window.location.href = response.redirectUrl;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message || "Invalid OTP"
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = "Please try again";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    Swal.fire({
+                        icon: "error",
+                        title: "Invalid OTP",
+                        text: errorMessage
+                    });
+                }
+            });
+        });
+        
+        // Set up resend button
+        document.getElementById('resendBtn').addEventListener('click', function() {
+            resendOTP();
+        });
+    });
+    
+    let timer = 60;
+    let timerInterval;
+    
+    function startTimer() {
+        const timerElement = document.getElementById("timer");
+        const timerContainer = document.getElementById("timerContainer");
+        const resendButton = document.getElementById("resendBtn");
+        
+        clearInterval(timerInterval); // Clear any existing interval
+        
+        // Reset timer display
+        timerContainer.classList.remove("hidden");
+        resendButton.classList.add("hidden");
+        
+        timerInterval = setInterval(() => {
+            if (timer <= 0) {
+                clearInterval(timerInterval);
+                timerContainer.classList.add("hidden");
+                resendButton.classList.remove("hidden");
+            } else {
+                timerElement.innerText = timer;
+                timer--;
+            }
+        }, 1000);
+    }
+    
+    function resendOTP() {
+        $.ajax({
+            type: "POST",
+            url: "/resendOtp",
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "OTP Resent",
+                        text: "Please check your email",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    // Reset the timer and show timer display
+                    timer = 60;
+                    startTimer();
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.message || "Failed to resend OTP"
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: "error",
+                    title: "Server Error",
+                    text: "Failed to resend OTP. Please try again."
+                });
+            }
+        });
+    }
+
+</script>
+
+</body>
+</html>

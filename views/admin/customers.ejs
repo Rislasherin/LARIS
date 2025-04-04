@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Users</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-900 text-gray-300">
+  <div class="flex h-screen"> 
+    <!-- Sidebar -->
+    <%- include("../partials/admin/header") %>
+
+    <!-- Main Content -->
+    <div class="w-5/6 p-4 ml-auto">
+      <form action="/admin/users" method="get">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex w-1/2 relative">
+            <input 
+              class="bg-gray-800 text-white p-2 rounded-l w-full" 
+              name="search" 
+              value="<%= locals.search || '' %>" 
+              placeholder="Search for User Name or Email" 
+              type="text"
+            />
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          
+          <% if (locals.search && locals.search.trim() !== '') { %>
+            <a href="/admin/users" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded transition">
+              <i class="fas fa-times mr-1"></i> Clear Results
+            </a>
+          <% } %>
+        </div>
+      </form>
+      
+      <h2 class="text-xl mb-4">
+        Users
+        <% if (locals.search && locals.search.trim() !== '') { %>
+          <span class="text-sm font-normal text-gray-400 ml-2">
+            Results for: "<%= locals.search %>"
+          </span>
+        <% } %>
+      </h2>
+      
+      <div class="bg-gray-800 p-4 rounded">
+        <% if (locals.data && locals.data.length > 0) { %>
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr>
+                <!-- <th class="py-1">USER IMAGE</th> -->
+                <th class="py-1">USER NAME</th>
+                <th class="py-1">EMAIL</th>
+                <th class="py-1">PHONE</th>
+                <th class="py-1">DATE OF CREATION</th>
+                <th class="py-1">ACTION</th>
+                <!-- <th class="py-1">EDIT</th> -->
+              </tr>
+            </thead>
+            <tbody>
+            
+              <% data.forEach(user => { %>
+                <tr class="border-t border-gray-700">
+                  <!-- <td class="py-1">
+                    <img alt="User image" class="rounded-full" height="40" src="<%= user.image || '/images/default-user.png' %>" width="40"/>
+                  </td> -->
+                  <td class="py-1"><%= user.name %></td>
+                  <td class="py-1"><%= user.email %></td>
+                  <td class="py-1"><%= user.phone %></td>
+                  <td class="py-1"><%= new Date(user.createdAt).toLocaleDateString() %></td>
+                  <td class="py-1">
+                    <% if (user.isBlocked) { %>
+                      <a href="/admin/unblock-user?id=<%= user._id %>" class="bg-green-500 text-white px-2 py-1 rounded">UNBLOCK</a>
+                    <% } else { %>
+                      <a href="/admin/block-user?id=<%= user._id %>" class="bg-red-500 text-white px-2 py-1 rounded">BLOCK</a>
+                    <% } %>
+                  </td>
+                  
+                  <!-- <td class="py-1">
+                    <i class="fas fa-edit text-gray-400 mx-1"></i>
+                    <i class="fas fa-trash text-gray-400"></i>
+                  </td> -->
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+          
+          <% if (locals.totalPages > 1) { %>
+            <div class="flex justify-between items-center mt-4">
+              <span>
+                SHOWING <%= currentPage %> OF <%= totalPages %>
+              </span>
+              <div class="flex items-center">
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                  <a class="px-2 py-1 <%= currentPage == i ? 'bg-purple-500 text-white rounded' : 'text-gray-400' %>" 
+                    href="/admin/users?page=<%= i %><%= locals.search ? '&search=' + search : '' %>">
+                    <%= i %>
+                  </a>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="py-8 text-center text-gray-400">
+            <% if (locals.search && locals.search.trim() !== '') { %>
+              <i class="fas fa-search mb-3 text-2xl"></i>
+              <p>No users found matching "<%= locals.search %>"</p>
+              <a href="/admin/users" class="inline-block mt-3 text-blue-400 hover:text-blue-300">
+                View all users
+              </a>
+            <% } else { %>
+              <p>No users available</p>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <%- include("../partials/admin/footer") %>
+</body>
+</html>

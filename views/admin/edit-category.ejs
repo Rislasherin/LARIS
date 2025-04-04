@@ -1,0 +1,54 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Edit Category</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="bg-gray-900 text-gray-300 text-sm">
+    <div class="flex">
+        <!-- Sidebar -->
+        <%- include("../partials/admin/header") %>
+
+            <!-- Main Content -->
+            <div class="flex-1 p-10">
+                <h1 class="text-xl font-normal text-left mb-8">Edit Category</h1>
+                <div class="flex justify-center items-center">
+                    <div class="w-full max-w-lg">
+                        <!-- Form with POST method and action -->
+                        <form class="space-y-6 mx-auto" action="/admin/edit-category/<%= category._id %>" method="POST">
+                            <input type="hidden" name="id" value="<%= category._id %>" />
+                        
+                            <!-- Category Name Input -->
+                            <div>
+                                <label class="block text-lg" for="category-name">Category Name:</label>
+                                <input class="w-full p-2 mt-2 bg-gray-800 border-gray-700 rounded" id="category-name"
+                                    type="text" name="name" value="<%= category.name %>" required />
+                            </div>
+
+                            <!-- Description Input -->
+                            <div>
+                                <label class="block text-lg" for="description">Description:</label>
+                                <textarea class="w-full p-2 mt-2 bg-gray-800 border-gray-700 rounded h-32"
+                                    id="description" name="description" required><%= category.description %></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button class="px-4 py-2 bg-green-500 text-black font-semibold rounded hover:bg-green-600"
+                                type="submit">
+                                SUBMIT CHANGES
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <%- include("../partials/admin/footer") %>
+</body>
+
+</html>
