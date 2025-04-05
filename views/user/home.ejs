@@ -1,379 +1,409 @@
+<!DOCTYPE html>
 <html lang="en">
- <head>
+<head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Beauty Products
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
+  <title>Beauty Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Headland+One&family=Marcellus&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-
-    .p{
-      font-family:"font-'Marcellus', serif";
-     font-weight: 100;
+    .p {
+      font-family: "Marcellus", serif;
+      font-weight: 100;
     }
-.h3{
-  font-family:"font-'Marcellus', serif";
-  font-weight: 100;
-  font-size: small;
-}
-
-   .full-page {
-    height: 100vh;
-    
-   }
+    .h3 {
+      font-family: "Marcellus", serif;
+      font-weight: 100;
+      font-size: small;
+    }
+    .full-page {
+      height: 100vh;
+    }
   </style>
- </head>
- <body class="font-'Marcellus', serif;">  
- 
-   <!--header section-->
-   <%-include('../../views/partials/user/header')%>
+</head>
+<body class="font-'Marcellus', serif;">
+  <!-- Header Section -->
+  <%-include('../../views/partials/user/header')%>
 
 
   <!-- Hero Section -->
   <section class="relative full-page">
-   <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/home1.jpg" width="1920"/>
-   <div class="container mx-auto relative text-left text-white flex items-center h-full">
-    <div>
-      <p style="font-size: small; position: relative; left: 1px; top: -21px;" >NEW IN TOWN</p>
-     <h1 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:64px; position: relative; left:1 px" class= "text-4xl font-bold  mb-4">
-      The New Beauty
-     </h1>
-     <h1 style=" top: 5px; font-family:'Marcellus', serif;font-weight: bolder;font-size:64px; position: relative; left: 1px" class= "text-4xl font-bold  mb-4">
-      Collection
-     </h1>
-     <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
-      This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
-     </p>
-     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="/shop.ejs">
-      Shop Now
-     </a>
+    <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/home1.jpg" width="1920"/>
+    <div class="container mx-auto relative text-left text-white flex items-center h-full">
+      <div>
+        <p style="font-size: small; position: relative; left: 1px; top: -21px;">NEW IN TOWN</p>
+        <h1 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:64px; position: relative; left:1px" class="text-4xl font-bold mb-4">
+          The New Beauty
+        </h1>
+        <h1 style="top: 5px; font-family:'Marcellus', serif; font-weight: bolder; font-size:64px; position: relative; left: 1px" class="text-4xl font-bold mb-4">
+          Collection
+        </h1>
+        <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+          This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
+        </p>
+        <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="/shop">
+          Shop Now
+        </a>
+      </div>
     </div>
-   </div>
   </section>
+
   <!-- Brands Section -->
   <section class="bg-white py-10">
-    <h2 class="text-3xl text-center font-bold mb-10" style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif">
+    <h2 class="text-3xl text-center font-bold mb-10" style="font-weight: 500; font-style: normal; font-family:'Headland One', serif">
       Popular Brands
-     </h2>
-   <div class="container mx-auto flex justify-around items-center">
-    <img alt="Brand 1" height="50" src="./images/brand1.png" width="100"/>
-    <img alt="Brand 2" height="50" src="./images/brand2.png" width="100"/>
-    <img alt="Brand 3" height="50" src="./images/brand3.png" width="100"/>
-    <img alt="Brand 4" height="50" src="./images/brand4.png" width="100"/>
-    <img alt="Brand 4" height="50" src="./images/brand5.png" width="100"/>
-    <img alt="Brand 4" height="50" src="./images/brand6.jpeg" width="100"/>
-    <img alt="Brand 4" height="50" src="./images/brand7.png" width="100"/>
-    
-   </div>
+    </h2>
+    <div class="container mx-auto flex justify-around items-center">
+      <img alt="Brand 1" height="50" src="./images/brand1.png" width="100"/>
+      <img alt="Brand 2" height="50" src="./images/brand2.png" width="100"/>
+      <img alt="Brand 3" height="50" src="./images/brand3.png" width="100"/>
+      <img alt="Brand 4" height="50" src="./images/brand4.png" width="100"/>
+      <img alt="Brand 4" height="50" src="./images/brand5.png" width="100"/>
+      <img alt="Brand 4" height="50" src="./images/brand6.jpeg" width="100"/>
+      <img alt="Brand 4" height="50" src="./images/brand7.png" width="100"/>
+    </div>
   </section>
 
-  <!-- Categories Section -->
-  <section class="bg-gray-100 py-20">
-    <div class="container mx-auto text-center max-w-screen-lg">
-     <h2 style="font-family:'Headland One', serif;font-weight: bolder;" class= " text-3xl font-bold mb-10">
-      Shop by Category
-     </h2>
-     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div style="width: 348; position: relative; left: -62px;" class="bg-white p-6 rounded shadow-md">
-       <img alt="Sunscreen" class="mb-4" height="200" src="./images/sunscreen.jpg" width="300"/>
-       <h3 class="text-xl font-bold mb-2">
-        Sunscreen
-       </h3>
-       <a class="text-blue-500" href="#">
-        Shop Now
-       </a>
+  <!-- Skincare Science Section -->
+  <section class="bg-gray-50 py-20">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 style="font-family:'Headland One', serif; font-weight: bolder;" class="text-4xl text-gray-800 mb-6">
+          The Science Behind Beautiful Skin
+        </h2>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Dive into the world of innovative skincare ingredients and understand how they work to transform your skin.
+        </p>
       </div>
-      <div  style="width: 348; position: relative; left: -29px;" class="bg-white p-6 rounded shadow-md">
-       <img style="width: 234px; position: relative; left: 37px;" alt="Moisturizer and Serums" class="mb-4" height="200" src="./images/home3.jpg" width="300"/>
-       <h3 class="text-xl font-bold mb-2">
-        Moisturizer and Serums
-       </h3>
-       <a class="text-blue-500" href="#">
-        Shop Now
-       </a>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <div class="flex items-center mb-4">
+                <div class="bg-pink-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 01-4.176-3.97l-.962-2.98a2 2 0 00-1.922-1.445H4.762c-.836 0-1.546.577-1.697 1.403a11.983 11.983 0 006.59 13.262 12 12 0 007.709.618 1.969 1.969 0 001.488-1.858v-2.583a1.994 1.994 0 00-1.42-1.887z" />
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800">Hyaluronic Acid</h3>
+              </div>
+              <p class="text-gray-600">
+                A powerful humectant that can hold up to 1000 times its weight in water, providing deep hydration and plumping effect to the skin.
+              </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <div class="flex items-center mb-4">
+                <div class="bg-purple-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 4.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800">Vitamin C</h3>
+              </div>
+              <p class="text-gray-600">
+                A potent antioxidant that brightens skin, reduces hyperpigmentation, and stimulates collagen production for a more youthful complexion.
+              </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+              <div class="flex items-center mb-4">
+                <div class="bg-teal-100 p-3 rounded-full mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800">Niacinamide</h3>
+              </div>
+              <p class="text-gray-600">
+                A form of Vitamin B3 that helps minimize pores, regulate oil production, and improve overall skin texture and tone.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-8">
+          <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Ingredient Compatibility Chart
+          </h3>
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div class="bg-green-100 p-4 rounded">
+              <h4 class="font-bold text-green-800">Compatible</h4>
+              <p class="text-sm text-green-700">Hyaluronic Acid + Vitamin C</p>
+              <p class="text-sm text-green-700">Niacinamide + Vitamin C</p>
+            </div>
+            <div class="bg-yellow-100 p-4 rounded">
+              <h4 class="font-bold text-yellow-800">Caution</h4>
+              <p class="text-sm text-yellow-700">Retinol + Vitamin C</p>
+              <p class="text-sm text-yellow-700">AHA/BHA + Retinol</p>
+            </div>
+            <div class="bg-red-100 p-4 rounded">
+              <h4 class="font-bold text-red-800">Avoid Mixing</h4>
+              <p class="text-sm text-red-700">Vitamin C + Benzoyl Peroxide</p>
+              <p class="text-sm text-red-700">Retinol + Benzoyl Peroxide</p>
+            </div>
+          </div>
+          <div class="mt-6 text-center">
+            <p class="text-gray-600 italic">
+              "Understanding ingredient interactions is key to an effective skincare routine."
+            </p>
+          </div>
+        </div>
       </div>
-      <div  style="width: 348; position: relative; left: 6px;" class="bg-white p-6 rounded shadow-md">
-       <img alt="Face Wash and Cleansers" class="mb-4" height="200" src="./images/Facewash cream.jpg" width="300"/>
-       <h3 class="text-xl font-bold mb-2">
-        Face Wash and Cleansers
-       </h3>
-       <a class="text-blue-500" href="#">
-        Shop Now
-       </a>
-      </div>
-     </div>
     </div>
-   </section>
+  </section>
 
   <!-- Trending Now Section -->
-  <section class="bg-white py-20">
-   <div class="container mx-auto text-center">
-    <h2 class="text-3xl font-bold mb-10" style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif">
-     Trending Now
-    </h2>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-     <div class="bg-gray-100 p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Product 1" class="mb-4" height="300" src="./images/trending1.jpg" width="200"/>
-      <h3 class="text-xl mb-2">
-       Body Moisturizer
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $29.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-      Shop Now
-      </a>
-     </div>
-     <div class="bg-gray-100 p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Product 2" class="mb-4" height="300" src="./images/trending2.jpg" width="200"/>
-      <h3 class="text-xl  mb-2">
-      Face Cream
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $39.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Now
-      </a>
-     </div>
-     <div class="bg-gray-100 p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Product 3" class="mb-4" height="300" src="./images/trending3.jpg" width="200"/>
-      <h3 class="text-xl mb-2">
-       Cleanser
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $49.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Now
-      </a>
-     </div>
-     <div class="bg-gray-100 p-6 rounded shadow-md">
-      <img style="position: relative;" alt="Product 4" class="mb-4" height="300" src="./images/trending4.jpg" width="200"/>
-      <h3 class="text-xl  mb-2">
-       Facewash
-      </h3>
-      <p class="text-gray-700 mb-2">
-       $59.99
-      </p>
-      <a class="bg-black text-white py-2 px-4 rounded" href="#">
-        Shop Now
-      </a>
-     </div>
+  <section id="trending-section" class="bg-white py-20">
+    <div class="container mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-10" style="font-weight: 500; font-style: normal; font-family:'Headland One', serif">
+        Trending Now
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <% if (trendingProducts && trendingProducts.length > 0) { %>
+          <% trendingProducts.forEach((product, index) => { %>
+            <div class="bg-gray-100 p-6 rounded shadow-md flex flex-col h-full">
+              <% if (product.productImage && product.productImage.length > 0) { %>
+                <img 
+                  style="position: relative;" 
+                  alt="<%= product.productName %>" 
+                  class="mb-4 mx-auto" 
+                  height="300" 
+                  src="/uploads/product-images/<%= product.productImage[0] %>"
+                  width="200"
+                  onerror="this.src='/images/placeholder.jpg';"
+                />
+              <% } else { %>
+                <img 
+                  style="position: relative;" 
+                  alt="No image available" 
+                  class="mb-4 mx-auto" 
+                  height="300" 
+                  src="/images/placeholder.jpg"
+                  width="200"
+                />
+              <% } %>
+              <h3 class="text-xl mb-2 line-clamp-2 h-14">
+                <%= product.productName %>
+              </h3>
+              <p class="text-gray-700 mb-2">
+                ₹<%= product.salePrice.toFixed(2) %>
+              </p>
+              <!-- Static Rating, Verified Icon, and Reviews -->
+              <div class="flex justify-center items-center mb-4">
+                <i class="fas fa-star text-yellow-500 text-sm"></i>
+                <span class="text-gray-600 text-sm ml-1">4.33</span>
+                <i class="fas fa-check-circle text-blue-500 text-sm ml-2"></i>
+                <span class="text-gray-600 text-sm ml-2">(128 reviews)</span>
+              </div>
+              <a class="bg-black text-white py-2 px-4 rounded mt-auto" href="/product/<%= product._id %>">
+                Shop Now
+              </a>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p class="text-gray-700">No trending products available at the moment.</p>
+        <% } %>
+      </div>
     </div>
-   </div>
   </section>
-<!-- Best Selling Section -->
-<section class="bg-gray-100 py-20">
-  <div class="container mx-auto text-center">
-    <h2 class="text-3xl font-bold mb-10" style="font-weight: 500; font-style: normal; font-family: 'Headland One', serif">
-      Best Selling
-    </h2>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <% products.forEach(product => { %>
-        <div class="bg-white p-6 rounded shadow-md">
-          <% if (product.productImage && product.productImage.length > 0) { %>
-            <img 
-              style="position: relative;" 
-              alt="<%= product.productName %>" 
-              class="mb-4" 
-              height="300" 
-              src="/uploads/product-images/<%= product.productImage[0] %>"
-              width="200"
-              onerror="this.src='/images/placeholder.jpg'; console.log('Image load failed for <%= product.productName %>: /uploads/product-images/<%= product.productImage[0] %>')"
-            />
-          <% } else { %>
-            <img 
-              style="position: relative;" 
-              alt="No image available" 
-              class="mb-4" 
-              height="300" 
-              src="/images/placeholder.jpg"
-              width="200"
-            />
-          <% } %>
-          <h3 class="text-xl mb-2">
-            <%= product.productName %>
-          </h3>
-          <p class="text-gray-700 mb-2">
-            $<%= product.salePrice.toFixed(2) %>
-          </p>
-          <a class="bg-black text-white py-2 px-4 rounded" href="/product/<%= product._id %>">
-            Shop Now
-          </a>
-        </div>
-      <% }) %>
+
+  <!-- Best Selling Section -->
+  <section class="bg-gray-100 py-20">
+    <div class="container mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-10" style="font-weight: 500; font-style: normal; font-family: 'Headland One', serif">
+        Best Selling
+      </h2>
+      <div id="bestselling-section" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <% products.forEach((product, index) => { %>
+          <div class="bg-white p-6 rounded shadow-md flex flex-col h-full">
+            <div class="mb-4 flex-shrink-0">
+              <% if (product.productImage && product.productImage.length > 0) { %>
+                <img 
+                  alt="<%= product.productName %>" 
+                  class="mx-auto" 
+                  height="300" 
+                  src="/uploads/product-images/<%= product.productImage[0] %>"
+                  width="200"
+                  onerror="this.src='/images/placeholder.jpg'; console.log('Image load failed for <%= product.productName %>: /uploads/product-images/<%= product.productImage[0] %>')"
+                />
+              <% } else { %>
+                <img 
+                  alt="No image available" 
+                  class="mx-auto" 
+                  height="300" 
+                  src="/images/placeholder.jpg"
+                  width="200"
+                />
+              <% } %>
+            </div>
+            <div class="flex-grow flex flex-col">
+              <h3 class="text-xl mb-2 line-clamp-2 h-14">
+                <%= product.productName %>
+              </h3>
+              <p class="text-gray-700 mb-2">
+                ₹<%= product.salePrice.toFixed(2) %>
+              </p>
+              <!-- Static Rating, Verified Icon, and Reviews -->
+              <div class="flex justify-center items-center mb-4">
+                <i class="fas fa-star text-yellow-500 text-sm"></i>
+                <span class="text-gray-600 text-sm ml-1">4.33</span>
+                <i class="fas fa-check-circle text-blue-500 text-sm ml-2"></i>
+                <span class="text-gray-600 text-sm ml-2">(245 reviews)</span>
+              </div>
+              <div class="mt-auto">
+                <a class="bg-black text-white py-2 px-4 rounded inline-block" href="/product/<%= product._id %>">
+                  Shop Now
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
   <!-- Featured Section -->
   <section class="relative full-page">
-   <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/bg-03.jpg" width="1920"/>
-   <div class="container mx-auto relative text-left text-white flex items-center h-full">
-    <div>
-      <p style="font-size: small; position: relative; left: 1px; top: -21px;" >New collection</p>
-    <h4 style=" font-family:'Marcellus', serif;  font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
-      The beauty collection
-    </h4>
-    <h4 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
-      that makes all the
-    </h4>
-
-    <h4 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
-      difference!
-    </h4>
-     
-    <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
-      This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
-     </p>
-     <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="#">
-      Shop Now
-     </a>
+    <img alt="Beauty products poster background" class="absolute inset-0 w-full h-full object-cover" height="1080" src="./images/bg-03.jpg" width="1920"/>
+    <div class="container mx-auto relative text-left text-white flex items-center h-full">
+      <div>
+        <p style="font-size: small; position: relative; left: 1px; top: -21px;">New collection</p>
+        <h4 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+          The beauty collection
+        </h4>
+        <h4 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+          that makes all the
+        </h4>
+        <h4 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:40px; position: relative; left: 1px" class="text-3xl font-bold mb-4">
+          difference!
+        </h4>
+        <p style="position: relative; left: 1px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+          This new collection brings with it the most exciting<br> lorem ipsum dolor sit amet.
+        </p>
+        <a style="font-family:'Marcellus', serif; position: relative; left: 1px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+          Shop Now
+        </a>
+      </div>
     </div>
-   </div>
   </section>
+
   <!-- Reviews Section -->
   <section class="bg-white py-20">
-   <div class="container mx-auto">
-    <h2 style= " font-weight: 500; font-style: normal; font-family:'Headland One', serif" class="text-3xl  mb-10 text-center">
-     Customer Reviews
-    </h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-     <div class="bg-gray-100 p-6 rounded shadow-md">
-      <p  class="text-gray-700 mb-4 text-2xl">
-       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
-      </p>
-     </div>
-     <div class="grid grid-cols-1 gap-6">
-      <div class="bg-gray-100 p-6 rounded shadow-md">
-       <p class="text-gray-700 mb-4">
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
-       </p>
-       
-       <div class="flex justify-center">
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-       </div>
-       <p >Shadin</p>
+    <div class="container mx-auto">
+      <h2 style="font-weight: 500; font-style: normal; font-family:'Headland One', serif" class="text-3xl mb-10 text-center">
+        Customer Reviews
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-100 p-6 rounded shadow-md">
+          <p class="text-gray-700 mb-4 text-2xl">
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
+          </p>
+        </div>
+        <div class="grid grid-cols-1 gap-6">
+          <div class="bg-gray-100 p-6 rounded shadow-md">
+            <p class="text-gray-700 mb-4">
+              "I've tried countless moisturizers, but this one truly stands out. My skin feels hydrated all day without feeling greasy. Will definitely repurchase!"
+            </p>
+            <div class="flex justify-center">
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+            </div>
+            <p>Shadin</p>
+          </div>
+          <div class="bg-gray-100 p-6 rounded shadow-md">
+            <p class="text-gray-700 mb-4">
+              "The vitamin C serum has dramatically improved my skin tone in just two weeks! Dark spots are fading and my skin looks brighter. Highly recommend!"
+            </p>
+            <div class="flex justify-center">
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+            </div>
+            <p>James Oliver</p>
+          </div>
+          <div class="bg-gray-100 p-6 rounded shadow-md">
+            <p class="text-gray-700 mb-4">
+              "Fast shipping and excellent customer service! The face wash is gentle yet effective for my sensitive skin. My redness has significantly decreased since I started using it."
+            </p>
+            <div class="flex justify-center">
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+              <i class="fas fa-star text-yellow-500"></i>
+            </div>
+            <p>James Oliver</p>
+          </div>
+        </div>
       </div>
-      <div class="bg-gray-100 p-6 rounded shadow-md">
-       <p class="text-gray-700 mb-4">
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
-       </p>
-       <div class="flex justify-center">
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-       </div>
-       <p >James Oliver</p>
-      </div>
-      <div class="bg-gray-100 p-6 rounded shadow-md">
-       <p class="text-gray-700 mb-4">
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin vel ligula euismod, lacinia purus vel, dictum risus."
-       </p>
-       <div class="flex justify-center">
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-        <i class="fas fa-star text-yellow-500">
-        </i>
-       </div>
-       <p >James Oliver</p>
-      </div>
-     </div>
     </div>
-   </div>
   </section>
+
   <!-- Featured Section 2 -->
-  <section >
-   <div class="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-    <div class="text-center md:text-left">
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -55px; left: 35px" class="text-3xl font-bold mb-4">
-        The Ultimate
-      </h2>
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -29px; left: 104px" class="text-3xl font-bold mb-4">
-        Skincare
-      </h2>
-      <h2 style=" font-family:'Marcellus', serif;font-weight: bolder;font-size:61px; position: relative; top: -9px; left: 106px" class="text-3xl font-bold mb-4">
-        Regime
-      </h2>
-      
-      <p style="position: relative; left: 114px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
-        Find your unique style.
-       </p>
-       <a style="font-family:'Marcellus', serif; position: relative; left: 130px;" class="bg-black text-white py-4 px-9 rounded" href="#">
-        Shop Now
-       </a>
+  <section>
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+      <div class="text-center md:text-left">
+        <h2 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:61px; position: relative; top: -55px; left: 35px" class="text-3xl font-bold mb-4">
+          The Ultimate
+        </h2>
+        <h2 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:61px; position: relative; top: -29px; left: 104px" class="text-3xl font-bold mb-4">
+          Skincare
+        </h2>
+        <h2 style="font-family:'Marcellus', serif; font-weight: bolder; font-size:61px; position: relative; top: -9px; left: 106px" class="text-3xl font-bold mb-4">
+          Regime
+        </h2>
+        <p style="position: relative; left: 114px; font-family:'Marcellus', serif; font-weight: 500;" class="text-lg mb-6">
+          Find your unique style.
+        </p>
+        <a style="font-family:'Marcellus', serif; position: relative; left: 130px;" class="bg-black text-white py-4 px-9 rounded" href="#">
+          Shop Now
+        </a>
+      </div>
+      <div class="text-center">
+        <img style="position: relative; top: -47px;" alt="Beauty products collection" class="h-full object-cover w-full inset-0" height="1080" src="./images/bg-02.jpg" width="1920"/>
+      </div>
     </div>
-    <div class="text-center">
-      <img style="position: relative; top: -47px;" alt="Beauty products collection" class="h-full object-cover w-full inset-0" height="1080" src="./images/bg-02.jpg" width="1920"/>
-    </div>
-   </div>
   </section>
 
-    <div style="position: relative; top: -42px;" class="container mx-auto py-10">
-      <div class="text-center mb-8">
-        <h2 class="text-gray-800 text-lg font-semibold">WHY CHOOSE US</h2>
-        <hr class="w-16 mx-auto border-t-2 border-gray-300 mt-2"/>
-      </div>
-      <div class="flex justify-center space-x-12">
-        <div class="text-center">
-          <div class="flex justify-center mb-4">
-            <div class="bg-purple-200 p-4 rounded-full">
-              <img src="./images/delivary.png" alt="Fast Delivery icon" class="w-8 h-8"/>
-            </div>
-          </div>
-          <h3 class="text-gray-800 text-xl font-semibold">Fast Delivery</h3>
-          <p class="text-gray-600 mt-2"> Your favorite skincare products, delivered to you in no time!😊</p>
-        </div>
-        <div class="text-center">
-          <div class="flex justify-center mb-4">
-            <div class="bg-pink-200 p-4 rounded-full">
-              <img src="./images/frre shipping.jpeg" alt="Free Shipping icon" class="w-8 h-8"/>
-            </div>
-          </div>
-          <h3 class="text-gray-800 text-xl font-semibold">Free Shipping</h3>
-          <p class="text-gray-600 mt-2">🚚Get your skincare products to your doorstep in no time!😊</p>
-        </div>
-        <div class="text-center">
-          <div class="flex justify-center mb-4">
-            <div class="bg-pink-200 p-4 rounded-full">
-              <img src="./images/return.png" alt="Easy Returns icon" class="w-8 h-8"/>
-            </div>
-          </div>
-          <h3 class="text-gray-800 text-xl font-semibold">Easy Returns</h3>
-          <p class="text-gray-600 mt-2"> Get your order delivered quickly and hassle-free!😊</p>
-        </div>
-      </div>
-    </div>
+  <!-- Footer Section -->
+  <%-include('../../views/partials/user/footer')%>
 
-    <!--footer section-->
-<%-include('../../views/partials/user/footer')%>
-
-  
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scroll function
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          // Get the header height to offset scrolling
+          const headerHeight = document.querySelector('header').offsetHeight;
+          
+          // Calculate position with offset
+          const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+          
+          // Scroll to element with offset
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>

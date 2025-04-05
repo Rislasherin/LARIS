@@ -40,7 +40,7 @@ const addCategory = async (req, res) => {
 
     try {
         
-        const existingCategory = await category.findOne({ name });
+        const existingCategory = await category.findOne({ name }).collation({ locale: 'en', strength: 2 });
         if (existingCategory) {
             return res.status(400).json({ error: "Category already exists" });
         }
@@ -59,7 +59,7 @@ const addCategory = async (req, res) => {
     }
 };
 
-// Add Category Offer
+
 const addOffer = async (req, res) => {
     try {
         const { categoryId, offerPercentage } = req.body;
@@ -74,7 +74,7 @@ const addOffer = async (req, res) => {
             return res.status(400).json({ error: "Offer percentage must be between 1 and 99" });
         }
 
-        // Find the category
+ 
         const categoryData = await category.findById(categoryId);
         if (!categoryData) {
             return res.status(404).json({ error: "Category not found" });
@@ -100,18 +100,16 @@ const addOffer = async (req, res) => {
     }
 };
 
-// Remove Category Offer
 const removeOffer = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Find the category
+      
         const categoryData = await category.findById(id);
         if (!categoryData) {
             return res.status(404).json({ error: "Category not found" });
         }
 
-        // Remove offer
         categoryData.categoryOffer = 0;
        
         
@@ -130,7 +128,6 @@ const removeOffer = async (req, res) => {
     }
 };
 
-// List Category Controller
 const listCategory = async (req, res) => {
     try {
         const { id } = req.params;
@@ -143,7 +140,6 @@ const listCategory = async (req, res) => {
     }
 };
 
-// Unlist Category Controller
 const unlistCategory = async (req, res) => {
     try {
         const { id } = req.params;

@@ -35,6 +35,9 @@ const customerInfo = async (req, res) => {
             data: userData, 
             totalPages: Math.ceil(count / limit),
             currentPage: page,
+            search: search,
+            successMessage: req.flash('success'),
+            errorMessage: req.flash('error')
         });
     } catch (error) {
         console.error("Error fetching customers:", error);
@@ -46,29 +49,44 @@ const customerInfo = async (req, res) => {
 const customerBlocked = async (req, res) => {
     try {
       const id = req.query.id
+      const user = await User.findById(id);
+        
+      if (!user) {
+          req.flash('error', 'User not found');
+          return res.redirect("/admin/users");
+      }
+
       await User.updateOne({ _id: id }, { $set: { isBlocked: true } })
   
       userBlockedEmitter.emit("userBlocked", id)
   
-      res.redirect("/admin/users")
+      req.flash('success', `User ${user.name} has been blocked successfully`);
+        res.redirect("/admin/users");
     } catch (error) {
-      res.redirect("/pageerror")
+        req.flash('error', 'An error occurred while blocking the user');
+        res.redirect("/admin/users");
     }
-  }
+};
 
 const customerUnblocked = async (req,res) => {
     try {
 
         let id = req.query.id;
-        await User.updateOne({_id:id},{$set:{isBlocked:false}})
-        res.redirect("/admin/users")
-
+        const user = await User.findById(id);
         
-    } catch (error) {
-        res.redirect('/pageerror')
-    }
-}
+        if (!user) {
+            req.flash('error', 'User not found');
+            return res.redirect("/admin/users");
+        }
 
+        await User.updateOne({_id:id},{$set:{isBlocked:false}})
+        req.flash('success', `User ${user.name} has been unblocked successfully`);
+        res.redirect("/admin/users");
+    } catch (error) {
+        req.flash('error', 'An error occurred while unblocking the user');
+        res.redirect("/admin/users");
+    }
+};
 
 
 module.exports = {

@@ -1,0 +1,34 @@
+/* Ensure consistent navbar height */
+.navbar {
+    height: 80px; /* Adjust this value to match your design */
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* Ensure logo and nav items are vertically centered */
+.navbar .logo {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.navbar .nav-links {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.navbar .nav-links a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 15px;
+}
+
+/* Additional right-side icons */
+.navbar .icons {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}

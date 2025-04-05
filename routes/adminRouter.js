@@ -7,8 +7,10 @@ const path = require('path');
 const categoryController = require('../controllers/admin/categoryController');
 const customerController = require('../controllers/admin/customerController');
 const storage = require('../utils/multer')
-const upload = multer({ dest: 'public/uploads/Product-images/' });
+
+const upload = require ('../utils/multer')
 const productController = require('../controllers/admin/productController')
+const orderController = require('../controllers/admin/orderController')
 
 
 
@@ -32,7 +34,7 @@ router.get('/edit-category/:id', adminAuth, categoryController.getEditCategory);
 router.post('/edit-category/:id', adminAuth, categoryController.editCategory);
 
 
-
+// user management
 router.get('/users', adminAuth, customerController.customerInfo);
 router.get('/block-user', adminAuth, customerController.customerBlocked);
 router.get('/unblock-user', adminAuth, customerController.customerUnblocked);
@@ -40,20 +42,26 @@ router.get('/unblock-user', adminAuth, customerController.customerUnblocked);
 //product managemant
 
 router.get('/addProducts',adminAuth,productController.getproductAddPage);
-router.post('/addProducts',adminAuth,upload.array('images',4),productController.addProducts)
+router.post('/addProducts',adminAuth,upload.array('images',6),productController.addProducts)
 router.get('/products',adminAuth,productController.getAllproducts)
 router.post('/addProductOffer',adminAuth,productController.addProductOffer)
 router.post('/removeProductOffer', adminAuth, productController.removeproductOffer)
 router.post('/toggleProductStatus', productController.toggleProductStatus);
+
 //edit product
 router.get('/editProduct/:id',adminAuth,productController.getEditProduct)
-router.post('/editProduct/:id', adminAuth, upload.array('images', 4), productController.EditProduct);
+router.post('/editProduct/:id', upload.array('imageFile', 6), productController.EditProduct);
 router.post('/deleteImage',adminAuth,productController.deleteSingleImage)
 
-
-
-
-
-
+// Order routes
+router.get("/orders", adminAuth, orderController.renderOrderManage);
+router.get("/order/details/:orderId", adminAuth, orderController.renderOrderDetails); 
+router.get("/order/:orderId", adminAuth, orderController.getOrderById); 
+router.post('/order/update-status/:orderId', adminAuth, orderController.updateOrderStatus);
+router.get('/return-requests', adminAuth, orderController.renderReturnRequestsList);
+router.put('/:orderId/update-product-status', adminAuth, orderController.updateProductStatus);
+router.post('/order/update-all-items/:orderId', orderController.updateAllOrderItems);
+router.post('/order/accept-return',orderController.acceptReturnRequest);
+router.post('/order/reject-return',orderController.rejectReturnRequest);
 
 module.exports = router;

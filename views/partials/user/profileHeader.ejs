@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Skincare E-commerce</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<style>
+    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+        
+        .sidebar, .content {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+        }
+        
+        .sidebar h2, .content h2 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            color: #555;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .nav-item:hover {
+            color: #ec4899;
+        }
+        
+        .nav-item.active {
+            background-color: #fdf2f8;
+            color: #ec4899;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .nav-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-item small {
+            margin-left: 8px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+</style>
+<body>
+
+    <div class="container">
+        <h1>My Account</h1>
+        
+        <div class="grid">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+
+                <div class="sidebar-section">
+                    <h2>Profile</h2>
+                    
+                    <nav id="profileNav">
+                        <a href="/userProfile" class="nav-item ">
+                            <i class="fas fa-user"></i>
+                            Personal Information
+                        </a>
+                        
+                        <a href='/add' class="nav-item ">
+                            <i class="fas fa-home"></i>
+                            Address Book
+                        </a>
+                        
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-credit-card"></i>
+                            Payment Methods
+                        </a>
+                        
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-file-alt"></i>
+                            Skincare Profile
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>My Account</h2>
+                    
+                    <nav id="myAccountNav">
+                        <a href="/orders" class="nav-item">
+                            <i class="fas fa-shopping-bag"></i>
+                            Orders
+                        </a>
+                        
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-wallet"></i>
+                            Wallet
+                        </a>
+                        
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-user-friends"></i>
+                            Invite Friends
+                            <small>Earn 100 points for every friend</small>
+                        </a>
+                        
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-life-ring"></i>
+                            Customer Care
+                        </a>
+                    </nav>
+                </div>
+                
+                
+            </div>
+
+
+            <script>
+                 document.querySelectorAll('#myAccountNav .nav-item, #profileNav .nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                const navSection = this.closest('nav');
+                navSection.querySelectorAll('.nav-item').forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                
+                this.classList.add('active');
+            });
+        });
+            </script>
+</body>
+</html>

@@ -37,7 +37,7 @@ async function forgotPassword(event){
 
         if(res.ok){
             console.log("Navigating to OTP page...");
-            window.location.href = data.redirect || '/forgot-verfy-Otp'
+            window.location.href = data.redirect || '/forgot-verify-Otp'
         }else{
             console.log("Error response:", data);
             if (['email1', 'email2', 'email3', 'email4'].includes(data.type)) {

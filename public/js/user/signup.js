@@ -31,7 +31,7 @@ async function signup(event) {
         name,
         regex.name,
         error1,
-        "Name must start with a capital letter and contain only alphabets and spaces"
+        'Name must be start with Capital letter'
     );
 
     // Email

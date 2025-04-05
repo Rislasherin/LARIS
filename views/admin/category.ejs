@@ -105,10 +105,6 @@
                       <a href="/admin/edit-category/<%= category._id %>">
                         <i class="fas fa-edit cursor-pointer"></i>
                     </a>
-                    
-                      
-                      
-                    
                     </td>
                   </tr>
                 <% }) %>
@@ -192,7 +188,7 @@
   </div>
   
   <%- include("../partials/admin/footer") %>
-  
+
   <script>
    document.addEventListener("DOMContentLoaded", function () {
         toggleClearIcon(); 
@@ -230,13 +226,13 @@
       const addCategoryForm = document.getElementById('addCategoryForm');
       const messageDiv = document.getElementById('addCategoryMessage');
       
-      // Open modal
+ 
       openModalBtn.addEventListener('click', function(e) {
         e.preventDefault();
         modal.classList.remove('hidden');
       });
       
-      // Close modal functions
+   
       function closeModal() {
         modal.classList.add('hidden');
         addCategoryForm.reset();

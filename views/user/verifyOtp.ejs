@@ -21,8 +21,7 @@
     <!-- Overlay for better readability -->
     <div class="absolute inset-0 bg-black bg-opacity-30"></div>
 
-    <!-- Header -->
-    <%-include('../../views/partials/user/header')%>
+   
 
     <!-- Main Content -->
     <main class="relative flex items-center justify-center min-h-screen">
@@ -56,14 +55,13 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <%-include('../../views/partials/user/footer')%>
+  
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Start the timer when page loads
+ 
         startTimer();
         
-        // Auto-tab between OTP fields
+
         const otpInputs = document.querySelectorAll('.otp-input');
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', function() {
@@ -79,21 +77,19 @@
             });
         });
     
-        // Form submission
+
         document.getElementById('otpForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Combine OTP values
+
             const otp1 = document.getElementById('otp1').value;
             const otp2 = document.getElementById('otp2').value;
             const otp3 = document.getElementById('otp3').value;
             const otp4 = document.getElementById('otp4').value;
             const otpFull = otp1 + otp2 + otp3 + otp4;
-            
-            // Set combined OTP to hidden input
+
             document.getElementById('otp-input').value = otpFull;
-            
-            // Validate OTP - must be 4 digits
+
             if (!/^\d{4}$/.test(otpFull)) {
                 Swal.fire({
                     icon: "error",
@@ -102,8 +98,7 @@
                 });
                 return;
             }
-            
-            // Make AJAX request
+
             $.ajax({
                 type: "POST",
                 url: "/verifyOtp",
@@ -140,8 +135,7 @@
                 }
             });
         });
-        
-        // Set up resend button
+
         document.getElementById('resendBtn').addEventListener('click', function() {
             resendOTP();
         });
@@ -155,9 +149,8 @@
         const timerContainer = document.getElementById("timerContainer");
         const resendButton = document.getElementById("resendBtn");
         
-        clearInterval(timerInterval); // Clear any existing interval
-        
-        // Reset timer display
+        clearInterval(timerInterval); 
+
         timerContainer.classList.remove("hidden");
         resendButton.classList.add("hidden");
         
@@ -186,7 +179,7 @@
                         showConfirmButton: false,
                         timer: 1500
                     });
-                    // Reset the timer and show timer display
+                  
                     timer = 60;
                     startTimer();
                 } else {

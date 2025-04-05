@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .content {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            color: #555;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: pink;
+            border-bottom: 2px solid pink;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: pink;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #ff69b4;
+        }
+
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #555;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .password-visibility {
+            position: absolute;
+            right: 10px;
+            top: 38px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .security-tips {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .security-tips h3 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .security-tips ul {
+            padding-left: 20px;
+            color: #666;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .profile-view .form-group {
+        margin-bottom: 15px;
+    }
+
+    .profile-view .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: bold;
+    }
+
+    .profile-view .form-group p {
+        margin: 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+    }
+    #success-section {
+            text-align: center;
+            padding: 20px;
+            background-color: #e6f3e6;
+            border-radius: 8px;
+        }
+
+        #success-section .success-message {
+            color: #2e7d32;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        #success-section .success-icon {
+            font-size: 3rem;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/user/header') %>
+        <%- include('../partials/user/profileHeader') %>
+            <div class="content">
+                <div class="tabs">
+                    <div class="tab active" data-tab="profile-details">Profile Details</div>
+                    <div class="tab" data-tab="change-password">Change Password</div>
+                </div>
+
+                <div id="profile-details" class="content-section active">
+                    <h2>Personal Information</h2>
+                    <div class="profile-view">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <p id="display-fullName"><%= user.name %></p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <p id="display-email"><%= user.email %></p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <p id="display-phone"><%= user.phone %></p>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" id="open-edit-profile-modal" class="btn btn-primary">Edit Profile</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password Section -->
+                <div id="change-password" class="content-section">
+                    <h2>Change Password</h2>
+
+                    <form id="change-password-form" action="/change-password" method="POST">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="current-password">
+                            <i class="fas fa-eye password-visibility"
+                                onclick="togglePasswordVisibility(this, 'current-password')"></i>
+                            <div id="current-password-error" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="new-password">
+                            <i class="fas fa-eye password-visibility"
+                                onclick="togglePasswordVisibility(this, 'new-password')"></i>
+                            <div id="new-password-error" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password</label>
+                            <input type="password" id="confirm-password" name="confirm-password">
+                            <i class="fas fa-eye password-visibility"
+                                onclick="togglePasswordVisibility(this, 'confirm-password')"></i>
+                            <div id="confirm-password-error" class="error-message"></div>
+                        </div>
+
+                        <div id="password-change-success" class="success-message">
+                            Password changed successfully!
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                        </div>
+
+                        <div class="security-tips">
+                            <h3>Security Tips</h3>
+                            <ul>
+                                <li>Use a unique password for each account</li>
+                                <li>Consider using a password manager</li>
+                                <li>Change your password every 3-6 months</li>
+                                <li>Don't share your password with others</li>
+                            </ul>
+
+                            <h3>Password Requirements:</h3>
+                            <ul>
+                                <li>Minimum 8 characters long</li>
+                                <li>Include at least one uppercase letter</li>
+                                <li>Include at least one lowercase letter</li>
+                                <li>Include at least one number</li>
+                                <li>Include at least one special character</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </div>
+    </div>
+
+    <!-- Email Change Modal -->
+    <div id="email-change-modal" class="modal">
+        <div class="modal-content">
+            <span style="position: relative; left: 350px;" class="close-btn">&times;</span>
+            <div class="modal-header">
+                <h3>Change Email</h3>
+                
+            </div>
+
+            <div id="email-input-section">
+                <div class="form-group">
+                    <label for="new-email">New Email Address</label>
+                    <input type="email" id="new-email" name="new-email">
+                    <div id="new-email-error" class="error-message"></div>
+                </div>
+                <button id="send-otp-btn" class="btn btn-primary">Send OTP</button>
+            </div>
+
+            <div id="otp-section" style="display: none;">
+                <div class="form-group">
+                    <label for="otp-input">Enter OTP</label>
+                    <input type="text" id="otp-input" name="otp-input" maxlength="4">
+                    <div id="otp-error" class="error-message"></div>
+                </div>
+                <div class="form-actions">
+                    <button id="verify-otp-btn" class="btn btn-primary">Verify OTP</button>
+                    <button id="resend-otp-btn" class="btn btn-secondary">Resend OTP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Edit Profile</h3>
+            
+            <form id="edit-profile-modal-form">
+                <div class="form-group">
+                    <label for="modal-fullName">Full Name</label>
+                    <input type="text" id="modal-fullName" name="name">
+                    <div id="modal-name-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modal-phone">Phone Number</label>
+                    <input type="tel" id="modal-phone" name="phone">
+                    <div id="modal-phone-error" class="error-message"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-edit-profile">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab Switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab, .content-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Password Visibility Toggle
+    function togglePasswordVisibility(icon, inputId) {
+        const passwordInput = document.getElementById(inputId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Attach password visibility toggles
+    document.querySelectorAll('.password-visibility').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const inputId = icon.previousElementSibling.id;
+            togglePasswordVisibility(icon, inputId);
+        });
+    });
+
+    // Edit Profile Modal Handling
+    const openEditProfileBtn = document.getElementById('open-edit-profile-modal');
+    const editProfileModal = document.getElementById('edit-profile-modal');
+    
+    if (openEditProfileBtn && editProfileModal) {
+        const closeModalBtn = editProfileModal.querySelector('.close-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-profile');
+        const editProfileForm = document.getElementById('edit-profile-modal-form');
+
+        function openEditProfileModal() {
+            // Populate modal with current values
+            const fullNameDisplay = document.getElementById('display-fullName');
+            const phoneDisplay = document.getElementById('display-phone');
+            
+            if (fullNameDisplay && phoneDisplay) {
+                document.getElementById('modal-fullName').value = fullNameDisplay.textContent.trim();
+                document.getElementById('modal-phone').value = phoneDisplay.textContent.trim();
+            }
+            
+            // Reset error messages
+            const errorMessages = editProfileModal.querySelectorAll('.error-message');
+            errorMessages.forEach(msg => {
+                msg.textContent = '';
+                msg.style.display = 'none';
+            });
+
+            editProfileModal.style.display = 'block';
+        }
+
+        function closeEditProfileModal() {
+            editProfileModal.style.display = 'none';
+        }
+
+        openEditProfileBtn.addEventListener('click', openEditProfileModal);
+        
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeEditProfileModal);
+        }
+        
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', closeEditProfileModal);
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === editProfileModal) {
+                closeEditProfileModal();
+            }
+        });
+
+        // Edit Profile Form Submission
+        if (editProfileForm) {
+            editProfileForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Reset previous error messages
+                const errorMessages = editProfileForm.querySelectorAll('.error-message');
+                errorMessages.forEach(msg => {
+                    msg.textContent = '';
+                    msg.style.display = 'none';
+                });
+
+                // Get form values
+                const name = document.getElementById('modal-fullName').value.trim();
+                const phone = document.getElementById('modal-phone').value.trim();
+
+                // Basic validation
+                let isValid = true;
+                if (!name) {
+                    const nameError = document.getElementById('modal-name-error');
+                    nameError.textContent = 'Name is required';
+                    nameError.style.display = 'block';
+                    isValid = false;
+                }
+
+                const phoneRegex = /^\+?[\d\s-]{8,15}$/;
+                if (phone && !phoneRegex.test(phone)) {
+                    const phoneError = document.getElementById('modal-phone-error');
+                    phoneError.textContent = 'Invalid phone number format';
+                    phoneError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (!isValid) return;
+
+                try {
+                    const response = await fetch('/update-profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            phone: phone
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update the display values
+                        document.getElementById('display-fullName').textContent = data.user.name;
+                        document.getElementById('display-phone').textContent = data.user.phone;
+
+                        // Close the modal
+                        closeEditProfileModal();
+                    } else {
+                        // Handle server-side validation errors
+                        if (data.message.includes('name')) {
+                            const nameError = document.getElementById('modal-name-error');
+                            nameError.textContent = data.message;
+                            nameError.style.display = 'block';
+                        } else if (data.message.includes('phone')) {
+                            const phoneError = document.getElementById('modal-phone-error');
+                            phoneError.textContent = data.message;
+                            phoneError.style.display = 'block';
+                        } else {
+                            const nameError = document.getElementById('modal-name-error');
+                            nameError.textContent = data.message;
+                            nameError.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    const nameError = document.getElementById('modal-name-error');
+                    nameError.textContent = 'An error occurred. Please try again.';
+                    nameError.style.display = 'block';
+                }
+            });
+        }
+    }
+
+
+    const changePasswordForm = document.getElementById('change-password-form');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const errorMessages = document.querySelectorAll('.error-message');
+            errorMessages.forEach(msg => {
+                msg.textContent = '';
+                msg.style.display = 'none';
+            });
+            document.getElementById('password-change-success').style.display = 'none';
+
+            // Get input values
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            // Validation flags
+            let isValid = true;
+
+            // Current password validation
+            if (!currentPassword) {
+                const currentPasswordError = document.getElementById('current-password-error');
+                currentPasswordError.textContent = 'Current password is required';
+                currentPasswordError.style.display = 'block';
+                isValid = false;
+            }
+
+            // New password validation
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!newPassword) {
+                const newPasswordError = document.getElementById('new-password-error');
+                newPasswordError.textContent = 'New password is required';
+                newPasswordError.style.display = 'block';
+                isValid = false;
+            } else if (!passwordRegex.test(newPassword)) {
+                const newPasswordError = document.getElementById('new-password-error');
+                newPasswordError.textContent = 'Password does not meet requirements';
+                newPasswordError.style.display = 'block';
+                isValid = false;
+            }
+
+            // Confirm password validation
+            if (!confirmPassword) {
+                const confirmPasswordError = document.getElementById('confirm-password-error');
+                confirmPasswordError.textContent = 'Please confirm your new password';
+                confirmPasswordError.style.display = 'block';
+                isValid = false;
+            } else if (newPassword !== confirmPassword) {
+                const confirmPasswordError = document.getElementById('confirm-password-error');
+                confirmPasswordError.textContent = 'Passwords do not match';
+                confirmPasswordError.style.display = 'block';
+                isValid = false;
+            }
+
+            // If all validations pass, proceed with password change
+            if (isValid) {
+                fetch('/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword,
+                        confirmPassword: confirmPassword
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || 'Password change failed');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Success: show success message and clear form
+                    document.getElementById('password-change-success').style.display = 'block';
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                })
+                .catch(error => {
+                    // Handle specific error scenarios
+                    const errorMessage = error.message || 'Password change failed';
+
+                    if (errorMessage.toLowerCase().includes('current password')) {
+                        const currentPasswordError = document.getElementById('current-password-error');
+                        currentPasswordError.textContent = errorMessage;
+                        currentPasswordError.style.display = 'block';
+                    } else if (errorMessage.toLowerCase().includes('passwords do not match')) {
+                        const confirmPasswordError = document.getElementById('confirm-password-error');
+                        confirmPasswordError.textContent = errorMessage;
+                        confirmPasswordError.style.display = 'block';
+                    } else {
+                        const currentPasswordError = document.getElementById('current-password-error');
+                        currentPasswordError.textContent = errorMessage;
+                        currentPasswordError.style.display = 'block';
+                    }
+                });
+            }
+        });
+    }
+
+
+    // Email Change Modal Handling
+    const emailChangeModal = document.getElementById('email-change-modal');
+    const sendOtpBtn = document.getElementById('send-otp-btn');
+    const verifyOtpBtn = document.getElementById('verify-otp-btn');
+    const resendOtpBtn = document.getElementById('resend-otp-btn');
+    const closeModalBtns = document.querySelectorAll('.close-btn');
+    const emailInputSection = document.getElementById('email-input-section');
+    const otpSection = document.getElementById('otp-section');
+    const successSection = document.getElementById('success-section');
+
+    // Add a button to trigger email change modal
+    const displayEmailElement = document.getElementById('display-email');
+    const emailChangeButton = document.createElement('button');
+    emailChangeButton.textContent = 'Change Email';
+    emailChangeButton.classList.add('btn', 'btn-secondary');
+    emailChangeButton.style.marginLeft = '10px';
+    displayEmailElement.parentNode.appendChild(emailChangeButton);
+
+    // Open Email Change Modal
+    emailChangeButton.addEventListener('click', function() {
+        emailChangeModal.style.display = 'block';
+        
+        // Reset modal sections
+        emailInputSection.style.display = 'block';
+        otpSection.style.display = 'none';
+        successSection.style.display = 'none';
+        
+        // Clear previous inputs and errors
+        document.getElementById('new-email').value = '';
+        document.getElementById('new-email-error').textContent = '';
+        document.getElementById('new-email-error').style.display = 'none';
+    });
+
+    // Close Modal Function
+    function closeModal() {
+        emailChangeModal.style.display = 'none';
+    }
+
+    // Close modal buttons
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === emailChangeModal) {
+            closeModal();
+        }
+    });
+
+    // Send OTP Button
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', async function() {
+            const newEmail = document.getElementById('new-email').value.trim();
+            const emailError = document.getElementById('new-email-error');
+
+            // Reset previous error
+            emailError.textContent = '';
+            emailError.style.display = 'none';
+
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!newEmail) {
+                emailError.textContent = 'Email is required';
+                emailError.style.display = 'block';
+                return;
+            }
+            if (!emailRegex.test(newEmail)) {
+                emailError.textContent = 'Invalid email format';
+                emailError.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/send-email-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: newEmail })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Hide email input, show OTP section
+                    emailInputSection.style.display = 'none';
+                    otpSection.style.display = 'block';
+                } else {
+                    emailError.textContent = data.message;
+                    emailError.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                emailError.textContent = 'An error occurred. Please try again.';
+                emailError.style.display = 'block';
+            }
+        });
+    }
+
+    if (verifyOtpBtn) {
+        verifyOtpBtn.addEventListener('click', async function() {
+            const newEmail = document.getElementById('new-email').value.trim();
+            const otpInput = document.getElementById('otp-input').value.trim();
+            const otpError = document.getElementById('otp-error');
+
+            console.log('Verify OTP clicked'); // Debugging log
+
+            // Reset previous error
+            otpError.textContent = '';
+            otpError.style.display = 'none';
+
+            if (!otpInput) {
+                otpError.textContent = 'OTP is required';
+                otpError.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/verify-email-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email: newEmail, 
+                        otp: otpInput 
+                    })
+                });
+
+                const data = await response.json();
+
+                console.log('Verify OTP response:', data); // Debugging log
+
+                if (data.success) {
+                    // Explicitly log and force display of success section
+                    console.log('Email verification successful');
+                    
+                    // Force show success section
+                    if (emailInputSection) emailInputSection.style.display = 'none';
+                    if (otpSection) otpSection.style.display = 'none';
+                    if (successSection) {
+                        successSection.style.display = 'block';
+                        console.log('Success section display style:', successSection.style.display);
+                    }
+
+                    // Update displayed email
+                    const displayEmailElement = document.getElementById('display-email');
+                    if (displayEmailElement) {
+                        displayEmailElement.textContent = newEmail;
+                    }
+                } else {
+                    otpError.textContent = data.message;
+                    otpError.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                otpError.textContent = 'An error occurred. Please try again.';
+                otpError.style.display = 'block';
+            }
+        });
+    }
+    // Resend OTP Button
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', async function() {
+            try {
+                const response = await fetch('/resend-email-otp', { method: 'POST' });
+                const data = await response.json();
+
+                const otpError = document.getElementById('otp-error');
+                otpError.textContent = '';
+                otpError.style.display = 'none';
+
+                if (data.success) {
+                    alert('New OTP sent successfully');
+                } else {
+                    otpError.textContent = data.message;
+                    otpError.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error resending OTP:', error);
+                const otpError = document.getElementById('otp-error');
+                otpError.textContent = 'An error occurred. Please try again.';
+                otpError.style.display = 'block';
+            }
+        });
+    }
+});
+
+
+    </script>
+</body>
+
+</html>

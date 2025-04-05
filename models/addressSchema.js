@@ -1,49 +1,57 @@
-const mongoose = require ("mongoose")
-const {Schema} = mongoose;
+const mongoose = require('mongoose');
 
-
-const addressSchema = new Schema({
-    userId:{
-        type:Schema.Types.ObjectId,
-        ref:"user",
-        required:true
+const addressSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    address : [{
-        addressType:{
-            type:String,
-            require:true
-        },
-        name:{
+    fullName: {
         type: String,
-        required:true,
-        },
-        city :{
-            type:String,
-            required:true,
-        },
-        landMark:{
-            type:String,
-            required:true,
-        },
-        state:{
-            type:String,
-            required:true,
-        },
-        pincode:{
-            type:String,
-            required:true,
-        },
-        phone:{
-            type:string,
-            required:true,
-        },
-        altPhone:{
-            type:string,
-            required:true,
-        }
-    }]
-    
-})
-const Address = mongoose.model('Address',addressSchema);
+        required: true,
+        trim: true
+    },
+    phone: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    address: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    city: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    state: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    country: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    pincode: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    addressType: {
+        type: String,
+        enum: ['Home', 'Work'],
+        required: true
+    },
+    isDefault: {
+        type: Boolean,
+        default: false
+    }
+}, { timestamps: true });
+
+const Address = mongoose.model('Address', addressSchema);
 
 module.exports = Address;

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            font-size: 0.9rem;
+            font-family: "Arial", sans-serif;
+        }
+        .card {
+            background-color: #1e293b;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .tab-button {
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            background-color: #1e293b;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .product-item {
+            transition: background-color 0.2s ease;
+        }
+        .product-item:hover {
+            background-color: #2d3748;
+        }
+        .group:hover .group-hover\:block {
+            display: block;
+        }
+        .disabled-option {
+            opacity: 0.5;
+            pointer-events: none;
+            background-color: #4a5568;
+        }
+        @media (max-width: 640px) {
+            .product-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .group-hover\:block {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <div class="flex min-h-screen">
+        <div class="bg-gray-800 p-4">
+            <%- include('../partials/admin/header') %>
+        </div>
+        <div class="flex-1 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <a href="/admin/orders" class="flex items-center text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Orders
+                </a>
+                <form action="/admin/order/invoice/<%= order._id %>" method="GET" target="_blank">
+                    <button type="submit" class="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-print mr-2"></i> Print Invoice
+                    </button>
+                </form>
+            </div>
+            <div class="card mb-6">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-white">Order Summary</h2>
+                    <span class="status-badge bg-<%= order.status === 'Delivered' ? 'green' : order.status === 'Cancelled' ? 'red' : 'yellow' %>-500 text-white">
+                        <%= order.status %>
+                    </span>
+                </div>
+                <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h3 class="text-sm uppercase text-gray-400 mb-2">Order Info</h3>
+                        <p><span class="text-gray-500">Date:</span> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                        <p><span class="text-gray-500">Customer:</span> <%= order.user ? order.user.name : 'Unknown' %></p>
+                        <p><span class="text-gray-500">Email:</span> <%= order.user ? order.user.email : 'N/A' %></p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm uppercase text-gray-400 mb-2">Payment</h3>
+                        <p><span class="text-gray-500">Method:</span> <%= order.paymentMethod %></p>
+                        <p><span class="text-gray-500">Status:</span> <%= order.paymentStatus || order.status %></p>
+                        <p><span class="text-gray-500">Total:</span> <span class="font-semibold">₹<%= order.finalAmount.toFixed(2) %></span></p>
+                    </div>
+                    <div>
+                        <h3 class="text-sm uppercase text-gray-400 mb-2">Shipping</h3>
+                        <p><span class="text-gray-500">Name:</span> <%= order.address ? order.address.fullName : 'N/A' %></p>
+                        <p><span class="text-gray-500">Address:</span> <%= order.address ? order.address.address : 'N/A' %></p>
+                        <p><span class="text-gray-500">Location:</span> <%= order.address ? `${order.address.city}, ${order.address.pincode}` : 'N/A' %></p>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-6 border-b border-gray-700">
+                <div class="flex space-x-2">
+                    <button class="tab-button active text-white" data-tab="products">Products</button>
+                </div>
+            </div>
+            <div class="tab-content">
+                <div id="products-tab" class="tab-pane active">
+                    <div class="card mb-6">
+                        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-white">Order Items</h2>
+                            <div class="flex items-center gap-4">
+                                <select id="globalStatus" class="bg-gray-700 text-white text-xs p-2 rounded-lg border border-gray-600">
+                                    <option value="Pending" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Pending</option>
+                                    <option value="Processing" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Processing</option>
+                                    <option value="Shipped" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Cancelled</option>
+                                </select>
+                                <button id="updateAllStatus" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                    <i class="fas fa-save mr-2"></i> Update All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="divide-y divide-gray-700">
+                            <% order.orderItems.forEach((item) => { %>
+                                <div class="product-item p-4 flex items-center gap-4" data-product-id="<%= item._id %>">
+                                    <div class="relative w-20 h-20 flex-shrink-0 group">
+                                        <img 
+                                            src="/uploads/product-images/<%= item.displayImage %>" 
+                                            alt="<%= item.displayName || 'Product' %>" 
+                                            class="w-full h-full object-cover rounded-md"
+                                            onerror="this.src='/default-image.jpg'"
+                                        >
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex flex-col">
+                                            <h3 class="font-medium text-white text-base mb-1"><%= item.displayName %></h3>
+                                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400">
+                                                <p>₹<%= item.price.toFixed(2) %> × <%= item.quantity %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-2">
+                                        <span class="product-status-badge status-badge bg-<%= 
+                                            item.status === 'Delivered' ? 'green' : 
+                                            item.status === 'Cancelled' ? 'red' : 
+                                            item.status === 'Return Requested' ? 'orange' : 
+                                            item.status === 'Returned' ? 'purple' : 
+                                            'yellow' %>-500 text-white text-xs px-2 py-1 rounded-full">
+                                            <%= item.status %>
+                                        </span>
+                                        <span class="font-medium text-white">₹<%= (item.price * item.quantity).toFixed(2) %></span>
+                                        <% if (item.status === 'Return Requested') { %>
+                                            <div class="flex gap-2 mt-1">
+                                                <button class="accept-return-btn bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-lg" 
+                                                        data-product-id="<%= item._id %>"
+                                                        data-order-id="<%= order._id %>">
+                                                    Accept
+                                                </button>
+                                                <button class="reject-return-btn bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded-lg" 
+                                                        data-product-id="<%= item._id %>"
+                                                        data-order-id="<%= order._id %>">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function showAlert(message, color) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `fixed top-4 right-4 bg-${color}-500 text-white px-4 py-2 rounded-lg shadow-lg`;
+                alertDiv.textContent = message;
+                document.body.appendChild(alertDiv);
+                setTimeout(() => alertDiv.remove(), 3000);
+            }
+
+            function updateItemStatus(productId, status, bgClass) {
+                const item = document.querySelector(`.product-item[data-product-id="${productId}"]`);
+                const badge = item.querySelector('.product-status-badge');
+                badge.textContent = status;
+                badge.className = `product-status-badge status-badge ${bgClass} text-white text-xs px-2 py-1 rounded-full`;
+                const buttons = item.querySelectorAll('.accept-return-btn, .reject-return-btn');
+                buttons.forEach(btn => btn.remove());
+            }
+
+            function updateStatusDropdown() {
+                const select = document.getElementById('globalStatus');
+                const allDelivered = Array.from(document.querySelectorAll('.product-status-badge'))
+                    .every(badge => badge.textContent === 'Delivered');
+                
+                Array.from(select.options).forEach(option => {
+                    if (option.value !== 'Delivered' && allDelivered) {
+                        option.classList.add('disabled-option');
+                        option.disabled = true;
+                    } else {
+                        option.classList.remove('disabled-option');
+                        option.disabled = false;
+                    }
+                });
+            }
+
+            document.getElementById('updateAllStatus').addEventListener('click', function () {
+    const newStatus = document.getElementById('globalStatus').value;
+    // Exclude Returned items from productIds
+    const productIds = Array.from(document.querySelectorAll('.product-item'))
+        .filter(el => el.querySelector('.product-status-badge').textContent.trim() !== 'Returned')
+        .map(el => el.getAttribute('data-product-id'));
+
+    if (productIds.length === 0) {
+        showAlert('No editable items available (all items are Returned)', 'red');
+        return;
+    }
+
+    const invalidItems = Array.from(document.querySelectorAll('.product-item')).filter(item => {
+        const currentStatus = item.querySelector('.product-status-badge').textContent.trim();
+        return (currentStatus === 'Delivered' && newStatus !== 'Delivered') ||
+               (currentStatus === 'Cancelled' && newStatus !== 'Cancelled');
+    });
+
+    if (invalidItems.length > 0) {
+        showAlert(`Cannot update ${invalidItems.length} item(s) from their current status`, 'red');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to update all ${productIds.length} items to ${newStatus}?`)) return;
+
+    fetch(`/admin/order/update-all-items/<%= order._id %>`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, productIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'green');
+            document.querySelectorAll('.product-status-badge').forEach(badge => {
+                const productItem = badge.closest('.product-item');
+                const currentStatus = badge.textContent.trim();
+                // Only update if not Returned
+                if (currentStatus !== 'Returned') {
+                    badge.textContent = newStatus;
+                    badge.className = `product-status-badge status-badge bg-${newStatus === 'Delivered' ? 'green' : newStatus === 'Cancelled' ? 'red' : 'yellow'}-500 text-white text-xs px-2 py-1 rounded-full`;
+                }
+            });
+            if (data.orderStatus) {
+                const orderStatusBadge = document.querySelector('.status-badge');
+                orderStatusBadge.textContent = data.orderStatus;
+                orderStatusBadge.className = `status-badge bg-${data.orderStatus === 'Delivered' ? 'green' : data.orderStatus === 'Cancelled' ? 'red' : 'yellow'}-500 text-white`;
+            }
+            updateStatusDropdown();
+        } else {
+            showAlert(data.message || 'Failed to update statuses', 'red');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error: Failed to update statuses', 'red');
+    });
+});
+            // Accept Return
+            document.querySelectorAll('.accept-return-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const orderId = this.getAttribute('data-order-id');
+                    const productId = this.getAttribute('data-product-id');
+
+                    if (!confirm(`Are you sure you want to accept the return for product ${productId}?`)) return;
+
+                    fetch('/admin/order/accept-return', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, productId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'green');
+                            updateItemStatus(productId, 'Returned', 'bg-purple-500');
+                            if (data.orderStatus) {
+                                const orderStatusBadge = document.querySelector('.status-badge');
+                                orderStatusBadge.textContent = data.orderStatus;
+                                orderStatusBadge.className = `status-badge bg-${data.orderStatus === 'Delivered' ? 'green' : data.orderStatus === 'Cancelled' ? 'red' : data.orderStatus === 'Returned' ? 'purple' : 'yellow'}-500 text-white`;
+                            }
+                            updateStatusDropdown();
+                        } else {
+                            showAlert(data.message || 'Failed to accept return', 'red');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('Error: Failed to process return request', 'red');
+                    });
+                });
+            });
+
+            // Reject Return
+            document.querySelectorAll('.reject-return-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const orderId = this.getAttribute('data-order-id');
+                    const productId = this.getAttribute('data-product-id');
+
+                    if (!confirm(`Are you sure you want to reject the return for product ${productId}?`)) return;
+
+                    fetch('/admin/order/reject-return', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, productId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert(data.message, 'green');
+                            updateItemStatus(productId, 'Delivered', 'bg-green-500');
+                            updateStatusDropdown();
+                        } else {
+                            showAlert(data.message || 'Failed to reject return', 'red');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('Error: Failed to process return request', 'red');
+                    });
+                });
+            });
+
+            // Initial check
+            updateStatusDropdown();
+        });
+    </script>
+</body>
+</html>

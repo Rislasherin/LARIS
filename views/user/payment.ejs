@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Beauty Cart - Payment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Lato', sans-serif; 
+      background-color: #f9fafb; 
+    }
+    .input-field {
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    .input-field:focus {
+      border-color: palevioletred;
+      outline: none;
+      box-shadow: 0 0 0 2px pink;
+    }
+    .checkout-step {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .checkout-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      width: 100%;
+      background-color: #e5e7eb;
+      top: 50%;
+      left: 50%;
+      z-index: 0;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #fff;
+      border: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    .step-active .step-circle {
+      border-color: black;
+      background-color: black;
+      color: white;
+    }
+    .step-completed .step-circle {
+      border-color: #10b981;
+      background-color: #10b981;
+      color: white;
+    }
+    .payment-option {
+      transition: all 0.2s ease;
+      border: 1px solid #e5e7eb;
+    }
+    .payment-option:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .payment-option.selected {
+      border-color  : palevioletred;
+      box-shadow: 0 0 0 1px pink;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/user/header') %>
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Checkout Progress -->
+    <div class="flex justify-center mb-10">
+      <div class="w-full max-w-3xl flex justify-between">
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Cart</span>
+          </div>
+        </div>
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Address</span>
+          </div>
+        </div>
+        <div class="checkout-step step-active flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              3
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Payment</span>
+          </div>
+        </div>
+        <div class="checkout-step flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              4
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Confirmation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Payment Method</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Payment Options Column -->
+      <div class="lg:col-span-2">
+        <form action="/place-order" method="POST" id="payment-form">
+          <input type="hidden" name="selectedAddress" value="<%= selectedAddress %>">
+          
+          <div class="grid grid-cols-1 gap-4">
+            <!-- COD Payment Option -->
+            <div class="payment-option bg-white rounded-lg p-5">
+              <div class="flex items-center">
+                <input type="radio" id="cod" name="paymentMethod" value="cod" class="mr-3" required>
+                <label for="cod" class="flex items-center cursor-pointer w-full">
+                  <div class="bg-gray-100 p-3 rounded-full mr-3">
+                    <i class="fas fa-money-bill-wave text-gray-700"></i>
+                  </div>
+                  <div>
+                    <span class="font-medium text-gray-800 block">Cash on Delivery</span>
+                    <span class="text-sm text-gray-500">Pay when you receive your order</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Bank Transfer Option -->
+            <div class="payment-option bg-white rounded-lg p-5">
+              <div class="flex items-center">
+                <input type="radio" id="bank" name="paymentMethod" value="bank" class="mr-3">
+                <label for="bank" class="flex items-center cursor-pointer w-full">
+                  <div class="bg-gray-100 p-3 rounded-full mr-3">
+                    <i class="fas fa-university text-gray-700"></i>
+                  </div>
+                  <div>
+                    <span class="font-medium text-gray-800 block">Bank Transfer</span>
+                    <span class="text-sm text-gray-500">Pay using bank transfer</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Credit Card Option -->
+            <div class="payment-option bg-white rounded-lg p-5">
+              <div class="flex items-center">
+                <input type="radio" id="credit" name="paymentMethod" value="credit" class="mr-3">
+                <label for="credit" class="flex items-center cursor-pointer w-full">
+                  <div class="bg-gray-100 p-3 rounded-full mr-3">
+                    <i class="fas fa-credit-card text-gray-700"></i>
+                  </div>
+                  <div>
+                    <span class="font-medium text-gray-800 block">Credit Card</span>
+                    <span class="text-sm text-gray-500">Pay using Visa, Mastercard, or American Express</span>
+                  </div>
+                </label>
+              </div>
+              
+              <!-- Credit Card Details -->
+              <div id="credit-card-details" class="hidden mt-4 pt-4 border-t border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Holder Name</label>
+                    <input type="text" name="cardName" class="input-field w-full px-3 py-2 rounded-md" placeholder="Name on card">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                    <input type="text" name="cardNumber" class="input-field w-full px-3 py-2 rounded-md" placeholder="1234 5678 9012 3456" maxlength="19">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                    <input type="text" name="cardExpiry" class="input-field w-full px-3 py-2 rounded-md" placeholder="MM/YY" maxlength="5">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                    <input type="text" name="cardCVV" class="input-field w-full px-3 py-2 rounded-md" placeholder="123" maxlength="3">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" class="w-full bg-black text-white py-3 rounded hover:bg-gray-800 transition mt-6 font-medium">
+            Complete Order
+          </button>
+          
+          <div class="mt-4 flex items-center justify-center text-gray-500 text-sm">
+            <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+            Secure Checkout
+          </div>
+        </form>
+      </div>
+      
+      <!-- Order Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+          <h2 class="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">
+            Order Summary
+          </h2>
+          <div class="space-y-3 mb-6">
+            <% cart.items.forEach((item) => { %>
+              <div class="flex justify-between items-center pb-2 text-sm">
+                <div>
+                  <p class="font-medium"><%= item.product.productName %></p>
+                  <p class="text-xs text-gray-600">x <%= item.quantity %></p>
+                </div>
+                <p class="font-medium">
+                  ₹<%= (item.product.regularPrice * (1 - Math.max(item.product.productOffer || 0, item.product.category.categoryOffer || 0) / 100) * item.quantity).toFixed(2) %>
+                </p>
+              </div>
+            <% }); %>
+            
+            <div class="pt-3 border-t border-gray-100"></div>
+            
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Subtotal</span>
+              <span>₹<%= subtotal.toFixed(2) %></span>
+            </div>
+            <% if (discount > 0) { %>
+              <div class="flex justify-between text-sm text-green-600">
+                <span>Discount</span>
+                <span>-₹<%= discount.toFixed(2) %></span>
+              </div>
+            <% } %>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Shipping</span>
+              <span>₹<%= shippingCost.toFixed(2) %></span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Tax</span>
+              <span>₹<%= tax.toFixed(2) %></span>
+            </div>
+          </div>
+          <div class="flex justify-between font-bold text-lg pt-4 border-t">
+            <span>Total</span>
+            <span>₹<%= total.toFixed(2) %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/user/footer') %>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    const creditCardDetails = document.getElementById('credit-card-details');
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    
+    // Handle payment method selection
+    paymentRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        // Toggle credit card details visibility
+        creditCardDetails.classList.toggle('hidden', radio.value !== 'credit');
+        
+        // Handle required fields for credit card
+        if (radio.value === 'credit') {
+          document.querySelector('input[name="cardName"]').required = true;
+          document.querySelector('input[name="cardNumber"]').required = true;
+          document.querySelector('input[name="cardExpiry"]').required = true;
+          document.querySelector('input[name="cardCVV"]').required = true;
+        } else {
+          document.querySelector('input[name="cardName"]').required = false;
+          document.querySelector('input[name="cardNumber"]').required = false;
+          document.querySelector('input[name="cardExpiry"]').required = false;
+          document.querySelector('input[name="cardCVV"]').required = false;
+        }
+        
+        // Visual selection for payment options
+        paymentOptions.forEach(option => {
+          const optionRadio = option.querySelector('input[type="radio"]');
+          option.classList.toggle('selected', optionRadio === radio);
+        });
+      });
+    });
+    
+    // Make options clickable
+    paymentOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        const radio = this.querySelector('input[type="radio"]');
+        radio.checked = true;
+        
+        // Trigger the change event manually
+        const event = new Event('change');
+        radio.dispatchEvent(event);
+      });
+    });
+    
+    // Format credit card number with spaces
+    const cardNumberInput = document.querySelector('input[name="cardNumber"]');
+    if (cardNumberInput) {
+      cardNumberInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = '';
+        
+        for (let i = 0; i < value.length; i++) {
+          if (i > 0 && i % 4 === 0) {
+            formattedValue += ' ';
+          }
+          formattedValue += value[i];
+        }
+        
+        e.target.value = formattedValue;
+      });
+    }
+    
+    // Format expiry date with slash
+    const expiryInput = document.querySelector('input[name="cardExpiry"]');
+    if (expiryInput) {
+      expiryInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
+        
+        if (value.length > 2) {
+          value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        
+        e.target.value = value;
+      });
+    }
+  });
+  </script>
+</body>
+</html>

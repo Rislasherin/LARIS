@@ -27,9 +27,11 @@ const userSchema = new Schema({
         unique:false,
 
     },
-    password:{
-        type:String,
-        required:false,
+    password: { 
+        type: String, 
+        required: function() {
+            return !this.googleId; // Password required only if googleId is not set
+        }
     },
     isBlocked:{
         type:Boolean,
@@ -45,7 +47,23 @@ const userSchema = new Schema({
         // required : true
         
     },
+    addresses: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Address'
+    }],
+    cart: [{
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true
+        },
+        quantity: {
+          type: Number,
+          default: 1,
+          min: 1
+        }
+      }]
 }, { timestamps : true})
 
-const User = mongoose.model('user',userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;

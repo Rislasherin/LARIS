@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Beauty Cart - Order Successful</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Lato', sans-serif; 
+      background-color: #f9fafb; 
+    }
+    @keyframes checkmark { 
+      0% { stroke-dashoffset: 50; } 
+      100% { stroke-dashoffset: 0; } 
+    }
+    .checkmark { 
+      stroke-dasharray: 50; 
+      stroke-dashoffset: 50; 
+      animation: checkmark 0.8s ease-in-out forwards; 
+    }
+    .checkout-step {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .checkout-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      width: 100%;
+      background-color: #e5e7eb;
+      top: 50%;
+      left: 50%;
+      z-index: 0;
+    }
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #fff;
+      border: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    .step-active .step-circle {
+      border-color: #3b82f6;
+      background-color: #3b82f6;
+      color: white;
+    }
+    .step-completed .step-circle {
+      border-color: #10b981;
+      background-color: #10b981;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/user/header') %>
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Checkout Progress -->
+    <div class="flex justify-center mb-10">
+      <div class="w-full max-w-3xl flex justify-between">
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Cart</span>
+          </div>
+        </div>
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Address</span>
+          </div>
+        </div>
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-700">Payment</span>
+          </div>
+        </div>
+        <div class="checkout-step step-completed flex-1 text-center">
+          <div class="flex flex-col items-center">
+            <div class="step-circle">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+            <span class="text-sm mt-2 text-gray-900">Confirmation</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-lg p-8 max-w-lg w-full text-center">
+        <div class="relative mx-auto w-24 h-24 mb-6">
+          <svg class="w-full h-full" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="25" fill="none" stroke="#10b981" stroke-width="2" />
+            <path class="checkmark" fill="none" stroke="#10b981" stroke-width="3" d="M14 27 l7 7 16-16" />
+          </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold mb-3 text-gray-800">Order Successful!</h1>
+        <p class="text-gray-600 mb-6">Thank you for your purchase. Your order has been confirmed.</p>
+
+        <div class="bg-gray-50 p-5 rounded-lg mb-6 border border-gray-100">
+          <p class="text-sm text-gray-600 mb-1">Your Order Number:</p>
+          <p class="text-xl font-bold text-blue-600"><%= orderId %></p>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-center gap-4 mt-8">
+          <a href="/order-details/<%= orderId %>" class="px-6 py-3 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200 transition flex items-center justify-center">
+            <i class="fas fa-file-alt mr-2"></i>
+            View Order Details
+          </a>
+          <a href="/shop" class="px-6 py-3 rounded-md bg-black text-white hover:bg-gray-900 transition flex items-center justify-center">
+            <i class="fas fa-shopping-bag mr-2"></i>
+            Continue Shopping
+          </a>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-500">
+          <p>A confirmation email has been sent to your registered email address.</p>
+          <p class="mt-2">If you have any questions, please contact our customer support.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/user/footer') %>
+</body>
+</html>

@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
   <style>
 .error-message {
-  color: red !important; 
+  color: red;
   font-size: 0.8rem;
   font-weight: bold;
   display: none;
@@ -22,12 +22,9 @@
   </style>
  </head>
  <body class="font-roboto">
-  <!-- Header -->
-  <%-include('../../views/partials/user/header')%>
-  
 <main class="flex justify-center items-center h-screen px-4 bg-cover bg-center" style="background-image: url(./images/logimage.jpg);">
     <!-- <div class="absolute inset-0 flex items-center justify-center"> -->
-      <div style="position: relative; top: -40px;" class="bg-white rounded-lg shadow-md p-4 w-full max-w-xs backdrop-blur-md border border-white/20">
+      <div class="bg-white rounded-lg shadow-md p-4 w-full max-w-xs backdrop-blur-md border border-white/20">
         <div  class="flex justify-between border-b pb-2 mb-3 text-sm border-white/30">
           <a style="position: relative; left: 56px;" class="text-gray-700 font-medium" href="/signup">
            Sign Up
@@ -51,7 +48,11 @@
            <label class="block text-gray-700" for="password">
             Password *
            </label>
-           <input class="w-full border rounded px-3 py-1 mt-1" name="password" id="password" type="password"/>
+           <div class="relative">
+           <input class="w-full border rounded px-3 py-1 mt-1" name="password" id="password" type="password"/> <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600" style="top: 4px;">
+            <i class="fas fa-eye"></i>
+          </button>
+          </div>
            <div id="error2" class="error-message"></div>
           </div>
           <%if(locals.message && message.length > 0){%>
@@ -80,10 +81,6 @@
        <!-- </div> -->
   </main>
   
-
-
-  <!-- Footer -->
-  <%-include('../../views/partials/user/footer')%>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -125,7 +122,7 @@
     passValidateChecking();
 
     if (error1.innerHTML || error2.innerHTML) {
-      e.preventDefault(); // Stop form submission if errors exist
+      e.preventDefault();
     }
   });
 });
@@ -135,4 +132,20 @@
     if (window.history.replaceState) {
         window.history.replaceState(null, null, '/login');
     }
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const togglePassword = document.getElementById("togglePassword");
+  const password = document.getElementById("password");
+  
+  togglePassword.addEventListener("click", function () {
+
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+
+    this.querySelector("i").classList.toggle("fa-eye");
+    this.querySelector("i").classList.toggle("fa-eye-slash");
+  });
+}); 
   </script>
