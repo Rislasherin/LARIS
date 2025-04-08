@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Beauty Cart - Payment Failed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body { 
+      font-family: 'Lato', sans-serif; 
+      background-color: #f9fafb; 
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    .shake-animation {
+      animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .error-card {
+      transition: all 0.3s ease;
+    }
+    .error-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .modal {
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .modal.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-content {
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+    }
+    .modal.active .modal-content {
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/user/header') %>
+
+  <div class="container mx-auto px-4 py-16 max-w-5xl min-h-[70vh] flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-lg p-8 max-w-lg w-full text-center error-card">
+      <div class="relative mx-auto w-24 h-24 mb-6 shake-animation">
+        <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="11" stroke="#EF4444" stroke-width="2"/>
+          <path d="M8 8L16 16" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 8L8 16" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold mb-3 text-gray-800">Oops! Payment Failed</h1>
+      <p class="text-gray-600 mb-6"><%= errorMessage || "We encountered an issue processing your payment." %></p>
+
+      <div class="bg-red-50 p-6 rounded-xl mb-6 border border-red-100">
+        <p class="text-sm text-gray-700 mb-1">Error Details:</p>
+        <p class="text-md text-red-600"><%= errorDetails || "Payment could not be completed. Please try again." %></p>
+        <% if (errorCode) { %>
+          <p class="text-xs text-gray-500 mt-2">Error Code: <%= errorCode %></p>
+        <% } %>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <a href="javascript:history.back()" class="px-6 py-3 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-all duration-300 flex items-center justify-center group">
+          <i class="fas fa-arrow-left mr-2 group-hover:translate-x-[-3px] transition-transform"></i>
+          <span>Go Back</span>
+        </a>
+        <button id="retry-payment" class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 flex items-center justify-center group" data-order-id="<%= orderId %>">
+          <i class="fas fa-redo mr-2 group-hover:rotate-180 transition-transform"></i>
+          <span>Retry Payment</span>
+        </button>
+        <button id="view-details" class="px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-300 flex items-center justify-center group">
+          <i class="fas fa-eye mr-2 group-hover:scale-110 transition-transform"></i>
+          <span>View Details</span>
+        </button>
+      </div>
+
+      <div class="mt-10 text-sm border-t border-gray-100 pt-6">
+        <div class="flex items-center justify-center mb-3 text-gray-700">
+          <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+          <p>This might be a temporary issue. Please try again later.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Order Details -->
+  <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="modal-content bg-white rounded-xl shadow-xl max-w-lg w-full relative">
+      <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      <div class="p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-info-circle mr-3 text-blue-500"></i>
+          Payment Attempt Details
+        </h2>
+        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 text-left">
+          <div class="space-y-3 text-gray-700">
+            <p class="flex justify-between border-b border-gray-200 pb-2">
+              <strong>Razorpay Order ID:</strong> 
+              <span class="text-gray-600"><%= orderId || 'N/A' %></span>
+            </p>
+            <p class="flex justify-between border-b border-gray-200 pb-2">
+              <strong>Amount:</strong> 
+              <span class="text-gray-600"><%= typeof finalAmount !== 'undefined' ? `₹${finalAmount.toFixed(2)}` : 'N/A' %></span>
+            </p>
+            <p class="flex justify-between border-b border-gray-200 pb-2">
+              <strong>Payment Method:</strong> 
+              <span class="text-gray-600">Razorpay</span>
+            </p>
+            <p class="flex justify-between border-b border-gray-200 pb-2">
+              <strong>Status:</strong> 
+              <span class="text-red-500 font-medium">Failed</span>
+            </p>
+            <p class="flex justify-between">
+              <strong>Reason:</strong> 
+              <span class="text-red-500"><%= errorDetails || 'Payment not completed' %></span>
+            </p>
+          </div>
+        </div>
+        <div class="mt-6 text-center">
+          <button id="retry-payment-modal" class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 flex items-center justify-center mx-auto group" data-order-id="<%= orderId %>">
+            <i class="fas fa-redo mr-2 group-hover:rotate-180 transition-transform"></i>
+            <span>Retry Payment</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/user/footer') %>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const card = document.querySelector('.error-card');
+      setTimeout(() => {
+        card.classList.add('transform', 'translate-y-0');
+      }, 300);
+
+      // Modal control
+      const modal = document.getElementById('details-modal');
+      const viewDetailsBtn = document.getElementById('view-details');
+      const closeModalBtn = document.getElementById('close-modal');
+      const retryPaymentInModal = document.getElementById('retry-payment-modal');
+      
+      viewDetailsBtn.addEventListener('click', function() {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+      });
+      
+      closeModalBtn.addEventListener('click', function() {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Re-enable scrolling
+      });
+      
+      // Close modal when clicking outside of it
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      });
+
+      // Retry Payment Logic
+      const setupRetryPayment = (button) => {
+        button?.addEventListener('click', async function(e) {
+          const orderId = this.getAttribute('data-order-id');
+          
+          try {
+            const response = await fetch('/retry-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.razorpayOrder) {
+              const options = {
+                key: data.key_id,
+                amount: data.razorpayOrder.amount,
+                currency: 'INR',
+                name: 'Beauty Cart',
+                description: 'Order Payment Retry',
+                order_id: data.razorpayOrder.id,
+                handler: async function(response) {
+                  const verifyResponse = await fetch('/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      orderId: data.orderId,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_signature: response.razorpay_signature
+                    })
+                  });
+                  
+                  const verifyData = await verifyResponse.json();
+                  if (verifyData.success) {
+                    window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+                  } else {
+                    window.location.href = `/order-error?message=Payment%20Verification%20Failed&details=Payment%20verification%20failed&orderId=${data.orderId}`;
+                  }
+                },
+                prefill: {
+                  name: 'Customer Name',
+                  email: 'customer@example.com',
+                  contact: '9999999999'
+                },
+                theme: {
+                  color: '#F472B6'
+                },
+                modal: {
+                  ondismiss: function() {
+                    window.location.href = `/order-error?message=Payment%20Cancelled&details=Payment%20was%20not%20completed&orderId=${data.orderId}`;
+                  }
+                }
+              };
+              
+              const rzp = new Razorpay(options);
+              rzp.open();
+            } else {
+              alert(data.message || 'Failed to initiate payment retry');
+            }
+          } catch (error) {
+            console.error('Retry Payment Error:', error);
+            alert('An error occurred while retrying payment');
+          }
+        });
+      };
+
+      // Setup retry payment listeners for both buttons
+      setupRetryPayment(document.getElementById('retry-payment'));
+      setupRetryPayment(retryPaymentInModal);
+    });
+  </script>
+</body>
+</html>

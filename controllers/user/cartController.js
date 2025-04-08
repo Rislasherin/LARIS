@@ -19,7 +19,8 @@ const getCartPage = async (req, res) => {
         let shippingCost = 50;
         let discount = 0;
   
-        if (cart && cart.items.length > 0) {
+        if (cart && cart.items && cart.items.length > 0) {
+            cart.items = cart.items.reverse();
             subtotal = cart.items.reduce((sum, item) => {
                 if (item.product && item.product.regularPrice) {
                     const regularPrice = item.product.regularPrice;

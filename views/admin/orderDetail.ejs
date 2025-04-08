@@ -6,6 +6,8 @@
     <title>Order Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Add SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             background-color: #1a1a2e;
@@ -77,7 +79,7 @@
             <div class="card mb-6">
                 <div class="p-4 border-b border-gray-700 flex justify-between items-center">
                     <h2 class="text-lg font-semibold text-white">Order Summary</h2>
-                    <span class="status-badge bg-<%= order.status === 'Delivered' ? 'green' : order.status === 'Cancelled' ? 'red' : 'yellow' %>-500 text-white">
+                    <span class="status-badge bg-<%= order.status === 'Delivered' ? 'green' : order.status === 'Cancelled' ? 'red' : order.status === 'Returned' ? 'purple' : 'yellow' %>-500 text-white">
                         <%= order.status %>
                     </span>
                 </div>
@@ -92,6 +94,11 @@
                         <h3 class="text-sm uppercase text-gray-400 mb-2">Payment</h3>
                         <p><span class="text-gray-500">Method:</span> <%= order.paymentMethod %></p>
                         <p><span class="text-gray-500">Status:</span> <%= order.paymentStatus || order.status %></p>
+                        <p><span class="text-gray-500">Refund:</span> 
+                            <span class="status-badge bg-<%= order.refundStatus === 'Processed' ? 'green' : order.refundStatus === 'Partially Processed' ? 'blue' : 'gray' %>-500 text-white">
+                                <%= order.refundStatus || 'Not Applicable' %>
+                            </span>
+                        </p>
                         <p><span class="text-gray-500">Total:</span> <span class="font-semibold">₹<%= order.finalAmount.toFixed(2) %></span></p>
                     </div>
                     <div>
@@ -114,11 +121,11 @@
                             <h2 class="text-lg font-semibold text-white">Order Items</h2>
                             <div class="flex items-center gap-4">
                                 <select id="globalStatus" class="bg-gray-700 text-white text-xs p-2 rounded-lg border border-gray-600">
-                                    <option value="Pending" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Pending</option>
-                                    <option value="Processing" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Processing</option>
-                                    <option value="Shipped" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Shipped</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Shipped">Shipped</option>
                                     <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled" <%= order.orderItems.every(item => item.status === 'Delivered') ? 'class="disabled-option"' : '' %>>Cancelled</option>
+                                    <option value="Cancelled">Cancelled</option>
                                 </select>
                                 <button id="updateAllStatus" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
                                     <i class="fas fa-save mr-2"></i> Update All
@@ -180,14 +187,6 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            function showAlert(message, color) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `fixed top-4 right-4 bg-${color}-500 text-white px-4 py-2 rounded-lg shadow-lg`;
-                alertDiv.textContent = message;
-                document.body.appendChild(alertDiv);
-                setTimeout(() => alertDiv.remove(), 3000);
-            }
-
             function updateItemStatus(productId, status, bgClass) {
                 const item = document.querySelector(`.product-item[data-product-id="${productId}"]`);
                 const badge = item.querySelector('.product-status-badge');
@@ -199,11 +198,12 @@
 
             function updateStatusDropdown() {
                 const select = document.getElementById('globalStatus');
-                const allDelivered = Array.from(document.querySelectorAll('.product-status-badge'))
-                    .every(badge => badge.textContent === 'Delivered');
-                
+                const items = Array.from(document.querySelectorAll('.product-status-badge'));
+                const anyDelivered = items.some(badge => badge.textContent.trim() === 'Delivered');
+                const allDelivered = items.every(badge => badge.textContent.trim() === 'Delivered');
+
                 Array.from(select.options).forEach(option => {
-                    if (option.value !== 'Delivered' && allDelivered) {
+                    if (anyDelivered && option.value !== 'Delivered') {
                         option.classList.add('disabled-option');
                         option.disabled = true;
                     } else {
@@ -211,73 +211,140 @@
                         option.disabled = false;
                     }
                 });
-            }
 
-            document.getElementById('updateAllStatus').addEventListener('click', function () {
-    const newStatus = document.getElementById('globalStatus').value;
-    // Exclude Returned items from productIds
-    const productIds = Array.from(document.querySelectorAll('.product-item'))
-        .filter(el => el.querySelector('.product-status-badge').textContent.trim() !== 'Returned')
-        .map(el => el.getAttribute('data-product-id'));
-
-    if (productIds.length === 0) {
-        showAlert('No editable items available (all items are Returned)', 'red');
-        return;
-    }
-
-    const invalidItems = Array.from(document.querySelectorAll('.product-item')).filter(item => {
-        const currentStatus = item.querySelector('.product-status-badge').textContent.trim();
-        return (currentStatus === 'Delivered' && newStatus !== 'Delivered') ||
-               (currentStatus === 'Cancelled' && newStatus !== 'Cancelled');
-    });
-
-    if (invalidItems.length > 0) {
-        showAlert(`Cannot update ${invalidItems.length} item(s) from their current status`, 'red');
-        return;
-    }
-
-    if (!confirm(`Are you sure you want to update all ${productIds.length} items to ${newStatus}?`)) return;
-
-    fetch(`/admin/order/update-all-items/<%= order._id %>`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, productIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(data.message, 'green');
-            document.querySelectorAll('.product-status-badge').forEach(badge => {
-                const productItem = badge.closest('.product-item');
-                const currentStatus = badge.textContent.trim();
-                // Only update if not Returned
-                if (currentStatus !== 'Returned') {
-                    badge.textContent = newStatus;
-                    badge.className = `product-status-badge status-badge bg-${newStatus === 'Delivered' ? 'green' : newStatus === 'Cancelled' ? 'red' : 'yellow'}-500 text-white text-xs px-2 py-1 rounded-full`;
+                if (allDelivered) {
+                    select.value = 'Delivered';
                 }
-            });
-            if (data.orderStatus) {
-                const orderStatusBadge = document.querySelector('.status-badge');
-                orderStatusBadge.textContent = data.orderStatus;
-                orderStatusBadge.className = `status-badge bg-${data.orderStatus === 'Delivered' ? 'green' : data.orderStatus === 'Cancelled' ? 'red' : 'yellow'}-500 text-white`;
             }
-            updateStatusDropdown();
-        } else {
-            showAlert(data.message || 'Failed to update statuses', 'red');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('Error: Failed to update statuses', 'red');
-    });
-});
+
+            document.getElementById('updateAllStatus').addEventListener('click', async function () {
+                const newStatus = document.getElementById('globalStatus').value;
+                const productIds = Array.from(document.querySelectorAll('.product-item'))
+                    .filter(el => {
+                        const currentStatus = el.querySelector('.product-status-badge').textContent.trim();
+                        return currentStatus !== 'Returned' && 
+                               (currentStatus !== 'Cancelled' || newStatus === 'Cancelled') &&
+                               (currentStatus !== 'Delivered' || newStatus === 'Delivered');
+                    })
+                    .map(el => el.getAttribute('data-product-id'));
+
+                if (productIds.length === 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'No editable items available!',
+                        position: 'top-end',
+                        toast: true,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    return;
+                }
+
+                const result = await Swal.fire({
+                    title: 'Confirm Update',
+                    text: `Are you sure you want to update ${productIds.length} item(s) to ${newStatus}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update',
+                    cancelButtonText: 'No',
+                    background: '#1e293b',
+                    color: '#e6e6e6',
+                    confirmButtonColor: '#3b82f6',
+                    cancelButtonColor: '#ef4444',
+                    width: '400px'
+                });
+
+                if (!result.isConfirmed) return;
+
+                fetch(`/admin/order/update-all-items/<%= order._id %>`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, productIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: data.message,
+                            position: 'top-end',
+                            toast: true,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        document.querySelectorAll('.product-item').forEach(item => {
+                            const productId = item.getAttribute('data-product-id');
+                            if (productIds.includes(productId)) {
+                                const badge = item.querySelector('.product-status-badge');
+                                badge.textContent = newStatus;
+                                badge.className = `product-status-badge status-badge bg-${
+                                    newStatus === 'Delivered' ? 'green' :
+                                    newStatus === 'Cancelled' ? 'red' : 'yellow'
+                                }-500 text-white text-xs px-2 py-1 rounded-full`;
+                            }
+                        });
+                        if (data.orderStatus) {
+                            const orderStatusBadge = document.querySelector('.status-badge');
+                            orderStatusBadge.textContent = data.orderStatus;
+                            orderStatusBadge.className = `status-badge bg-${
+                                data.orderStatus === 'Delivered' ? 'green' :
+                                data.orderStatus === 'Cancelled' ? 'red' : 'yellow'
+                            }-500 text-white`;
+                        }
+                        updateStatusDropdown();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to update statuses',
+                            position: 'top-end',
+                            toast: true,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to update statuses',
+                        position: 'top-end',
+                        toast: true,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                });
+            });
+
             // Accept Return
             document.querySelectorAll('.accept-return-btn').forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', async function () {
                     const orderId = this.getAttribute('data-order-id');
                     const productId = this.getAttribute('data-product-id');
 
-                    if (!confirm(`Are you sure you want to accept the return for product ${productId}?`)) return;
+                    const result = await Swal.fire({
+                        title: 'Confirm Return',
+                        text: `Are you sure you want to accept the return for product ${productId}?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, accept',
+                        cancelButtonText: 'No',
+                        background: '#1e293b',
+                        color: '#e6e6e6',
+                        confirmButtonColor: '#22c55e',
+                        cancelButtonColor: '#ef4444',
+                        width: '400px'
+                    });
+
+                    if (!result.isConfirmed) return;
 
                     fetch('/admin/order/accept-return', {
                         method: 'POST',
@@ -287,7 +354,16 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showAlert(data.message, 'green');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data.message,
+                                position: 'top-end',
+                                toast: true,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
                             updateItemStatus(productId, 'Returned', 'bg-purple-500');
                             if (data.orderStatus) {
                                 const orderStatusBadge = document.querySelector('.status-badge');
@@ -296,23 +372,55 @@
                             }
                             updateStatusDropdown();
                         } else {
-                            showAlert(data.message || 'Failed to accept return', 'red');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to accept return',
+                                position: 'top-end',
+                                toast: true,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showAlert('Error: Failed to process return request', 'red');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to process return request',
+                            position: 'top-end',
+                            toast: true,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
                     });
                 });
             });
 
             // Reject Return
             document.querySelectorAll('.reject-return-btn').forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', async function () {
                     const orderId = this.getAttribute('data-order-id');
                     const productId = this.getAttribute('data-product-id');
 
-                    if (!confirm(`Are you sure you want to reject the return for product ${productId}?`)) return;
+                    const result = await Swal.fire({
+                        title: 'Confirm Rejection',
+                        text: `Are you sure you want to reject the return for product ${productId}?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, reject',
+                        cancelButtonText: 'No',
+                        background: '#1e293b',
+                        color: '#e6e6e6',
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#22c55e',
+                        width: '400px'
+                    });
+
+                    if (!result.isConfirmed) return;
 
                     fetch('/admin/order/reject-return', {
                         method: 'POST',
@@ -322,16 +430,43 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showAlert(data.message, 'green');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: data.message,
+                                position: 'top-end',
+                                toast: true,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
                             updateItemStatus(productId, 'Delivered', 'bg-green-500');
                             updateStatusDropdown();
                         } else {
-                            showAlert(data.message || 'Failed to reject return', 'red');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to reject return',
+                                position: 'top-end',
+                                toast: true,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showAlert('Error: Failed to process return request', 'red');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to process return request',
+                            position: 'top-end',
+                            toast: true,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
                     });
                 });
             });

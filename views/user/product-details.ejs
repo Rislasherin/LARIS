@@ -137,9 +137,10 @@
           <div class="w-80 h-80 overflow-hidden flex items-center justify-center">
             <img id="mainImage" alt="Product image of <%= product.name %>" class="zoom-image" height="500" src="<%= product.image %>" width="375" />
           </div>
-          <div class="absolute top-2 right-2 bg-white rounded-full p-2 cursor-pointer shadow-md" onclick="toggleWishlist('<%= product._id %>')">
-            <i id="wishlistIcon" class="far fa-heart text-red-500"></i>
-          </div>
+          <div class="absolute top-2 right-2 bg-white rounded-full p-2 cursor-pointer shadow-md" 
+     onclick="toggleWishlist('<%= product._id %>', this)">
+    <i id="wishlistIcon" class="<%= isInWishlist ? 'fas' : 'far' %> fa-heart text-red-500"></i>
+</div>
         </div>
         
 
@@ -639,6 +640,25 @@
 
   <script>
 
+
+function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      notification.style.transform = 'translateX(100%)';
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 10);
+
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
     function changeImage(src) {
       const mainImage = document.getElementById("mainImage");
       mainImage.src = src;
@@ -745,20 +765,54 @@
       });
     });
 
+    function toggleWishlist(productId, element) {
+  const icon = element.querySelector('#wishlistIcon');
   
-    function toggleWishlist(productId) {
-      const icon = document.getElementById("wishlistIcon");
-      
-      if (icon.classList.contains("far")) {
-        icon.classList.remove("far");
-        icon.classList.add("fas");
-  
-      } else {
-        icon.classList.remove("fas");
-        icon.classList.add("far");
-       
+  fetch('/wishlist/toggle', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ productId: productId })
+  })
+  .then(response => {
+    if (!response.ok) {
+      if (response.status === 401) {
+        showNotification('Please login to add items to your wishlist', 'error');
+        setTimeout(() => window.location.href = '/login', 2000);
+        return;
       }
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      // Toggle the icon
+      if (icon.classList.contains('far')) {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        showNotification('Product added to your wishlist', 'success');
+      } else {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        showNotification('Product removed from your wishlist', 'success');
+      }
+      
+      // Update wishlist count in header if it exists
+      const wishlistCountElement = document.getElementById('wishlistCount');
+      if (wishlistCountElement && data.wishlistCount !== undefined) {
+        wishlistCountElement.textContent = data.wishlistCount;
+      }
+    } else {
+      showNotification(data.message || 'Failed to update wishlist', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showNotification('An error occurred. Please try again.', 'error');
+  });
+}
 
 
     function buyNow(productId) {
@@ -952,23 +1006,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     }
 
-    function showNotification(message, type) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      notification.style.transform = 'translateX(100%)';
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-      }, 10);
-
-      setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+    
 
     function incrementQuantity() {
       const input = document.getElementById("quantity");

@@ -13,7 +13,7 @@ const orderSchema = new mongoose.Schema({
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         quantity: { type: Number, required: true },
         productName: String,
-        variantIndex: { type: Number,},
+        variantIndex: { type: Number },
         productImage: String,
         price: { type: Number, required: true },
         status: {
@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
                 'Cancelled', 
                 'Return Requested', 
                 'Returned',
-                'Cancellation Requested' // Add this
+                'Cancellation Requested'
             ],
             default: 'Pending'
         }
@@ -49,7 +49,9 @@ const orderSchema = new mongoose.Schema({
             'Partially Cancelled',
             'Return Requested',
             'Returned',
-            'Partially Returned'
+            'Partially Returned',
+            'Confirmed',          // Added for successful payment
+            'Payment Failed'     // Added for failed verification
         ]
     },
     paymentMethod: { type: String, required: true, enum: ['cod', 'bank', 'credit', 'razorpay', 'paylater'] },
@@ -75,7 +77,9 @@ const orderSchema = new mongoose.Schema({
         timestamp: Date,
         notes: String,
         updatedBy: String
-    }]
+    }],
+    razorpayPaymentId: { type: String }, // Add for Razorpay
+    razorpayOrderId: { type: String }    // Add for Razorpay
 });
 
 const Order = mongoose.model("Order", orderSchema);

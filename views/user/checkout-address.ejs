@@ -164,52 +164,79 @@
             <i class="fas fa-plus-circle mr-2"></i> Add New Address
           </button>
         </form>
-      </div>
-      
-      <!-- Order Summary -->
-      <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow p-6 sticky top-6">
-          <h2 class="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">
-            Order Summary
-          </h2>
-          <div class="space-y-3 mb-6">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Subtotal</span>
-              <span>₹<%= subtotal ? subtotal.toFixed(2) : '0.00' %></span>
-            </div>
-            <% if (discount && discount > 0) { %>
-              <div class="flex justify-between text-sm text-green-600">
-                <span>Discount</span>
-                <span>-₹<%= discount.toFixed(2) %></span>
-              </div>
-            <% } %>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Shipping</span>
-              <span>₹<%= shippingCost ? shippingCost.toFixed(2) : '0.00' %></span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Tax</span>
-              <span>₹<%= tax ? tax.toFixed(2) : '0.00' %></span>
-            </div>
-          </div>
-          <div class="flex justify-between font-bold text-lg pt-4 border-t">
-            <span>Total</span>
-            <span>₹<%= total ? total.toFixed(2) : '0.00' %></span>
-          </div>
-          <button type="submit" form="address-form" class="w-full bg-black text-white py-3 rounded hover:bg-gray-900 transition mt-6 font-medium"
-            <%= userAddresses && userAddresses.length > 0 ? '' : 'disabled' %>
-          >
-            Proceed to Payment
+        
+    <!-- Coupon Section -->
+    <div class="mt-8">
+      <div class="bg-white rounded-lg p-4 border border-gray-200">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold text-gray-800">Apply Coupon</h3>
+          <button type="button" id="view-coupons-btn" class="text-sm text-pink-600 hover:text-pink-800">
+            View Available Coupons
           </button>
-          <div class="mt-4 flex items-center justify-center text-gray-500 text-sm">
-            <i class="fas fa-shield-alt mr-2 text-green-500"></i>
-            Secure Checkout
-          </div>
         </div>
+        <div class="flex">
+          <input type="text" id="coupon-code" placeholder="Enter coupon code" class="input-field flex-1 px-3 py-2 rounded-l-md" />
+          <button type="button" id="apply-coupon-btn" class="bg-black text-white px-4 py-2 rounded-r-md hover:bg-gray-900 transition">
+            Apply
+          </button>
+        </div>
+        <div id="coupon-message" class="mt-2 text-sm hidden"></div>
       </div>
     </div>
   </div>
-
+  
+  <!-- Order Summary Column -->
+  <div class="lg:col-span-1">
+    <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+      <h2 class="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">
+        Order Summary
+      </h2>
+      <div class="space-y-3 mb-6">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Subtotal</span>
+          <span>₹<%= subtotal ? subtotal.toFixed(2) : '0.00' %></span>
+        </div>
+        <% if (discount && discount > 0) { %>
+          <div class="flex justify-between text-sm text-green-600">
+            <span>Discount</span>
+            <span>-₹<%= discount.toFixed(2) %></span>
+          </div>
+        <% } %>
+        <% if (appliedCoupon) { %>
+          <div class="flex justify-between text-sm text-green-600">
+            <span>Coupon (<%= appliedCoupon.code %>)</span>
+            <span>-₹<%= (discount - (subtotal * 0.1)).toFixed(2) %></span>
+          </div>
+          <div class="flex justify-end text-sm">
+            <button id="remove-coupon-btn" class="text-red-600 hover:text-red-800">Remove Coupon</button>
+          </div>
+        <% } %>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Shipping</span>
+          <span>₹<%= shippingCost ? shippingCost.toFixed(2) : '0.00' %></span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Tax</span>
+          <span>₹<%= tax ? tax.toFixed(2) : '0.00' %></span>
+        </div>
+      </div>
+      <div class="flex justify-between font-bold text-lg pt-4 border-t">
+        <span>Total</span>
+        <span>₹<%= total ? total.toFixed(2) : '0.00' %></span>
+      </div>
+      <button type="submit" form="address-form" class="w-full bg-black text-white py-3 rounded hover:bg-gray-900 transition mt-6 font-medium"
+        <%= userAddresses && userAddresses.length > 0 ? '' : 'disabled' %>
+      >
+        Proceed to Payment
+      </button>
+      <div class="mt-4 flex items-center justify-center text-gray-500 text-sm">
+        <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+        Secure Checkout
+      </div>
+    </div>
+  </div>
+</div>
+</div>
   <!-- Address Modal -->
   <div id="address-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-6 border max-w-md w-full shadow-lg rounded-lg bg-white">
@@ -270,7 +297,7 @@
           <button type="button" id="cancel-address" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition text-gray-800">
             Cancel
           </button>
-          <button type="submit" class="px-4 py-2 bg-black-600 text-white rounded hover:bg-gray-700 transition">
+          <button type="submit" class="px-4 py-2 bg-black rounded text-white hover:bg-gray-700 transition">
             Save Address
           </button>
         </div>
@@ -278,34 +305,54 @@
     </div>
   </div>
 
+  <!-- Coupon Modal -->
+  <div id="coupon-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border max-w-md w-full shadow-lg rounded-lg bg-white">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-800">Available Coupons</h3>
+        <button id="close-coupon-modal" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div id="coupons-list" class="space-y-3 max-h-72 overflow-y-auto">
+        <!-- Coupons will be loaded here dynamically -->
+      </div>
+      
+      <div class="mt-4 text-center text-sm text-gray-500">
+        Click on a coupon to select it, then click "Apply" to use it
+      </div>
+    </div>
+  </div>
+
   <%- include('../partials/user/footer') %>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
       const addAddressBtn = document.getElementById('add-address-btn');
       const addressModal = document.getElementById('address-modal');
       const cancelAddressBtn = document.getElementById('cancel-address');
       const closeModalBtn = document.getElementById('close-modal');
       const newAddressForm = document.getElementById('new-address-form');
-      let isEditMode = false; // Flag to track if we're in edit mode
-      let currentAddressId = null; // Store the address ID being edited
+      let isEditMode = false;
+      let currentAddressId = null;
     
       // Open modal for adding address
       addAddressBtn.addEventListener('click', () => {
-        isEditMode = false; // Reset to add mode
+        isEditMode = false;
         currentAddressId = null;
-        document.querySelector('h3').textContent = 'Add New Address'; // Set modal title
-        newAddressForm.reset(); // Clear form
+        document.querySelector('#address-modal h3').textContent = 'Add New Address';
+        newAddressForm.reset();
         addressModal.classList.remove('hidden');
       });
       
       // Close modal functions
       function closeModal() {
         addressModal.classList.add('hidden');
-        newAddressForm.reset(); // Reset form when closing
-        isEditMode = false; // Reset edit mode
+        newAddressForm.reset();
+        isEditMode = false;
         currentAddressId = null;
-        document.querySelector('h3').textContent = 'Add New Address'; // Reset title
+        document.querySelector('#address-modal h3').textContent = 'Add New Address';
       }
       
       cancelAddressBtn.addEventListener('click', closeModal);
@@ -320,14 +367,13 @@
       addressCards.forEach(card => {
         const radioInput = card.querySelector('input[type="radio"]');
         card.addEventListener('click', function(e) {
-          if (e.target.tagName !== 'A') { // Ignore clicks on Edit/Remove links
+          if (e.target.tagName !== 'A') {
             addressCards.forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             radioInput.checked = true;
           }
         });
       });
-    
       // Edit Address
       const editButtons = document.querySelectorAll('.edit-address');
       editButtons.forEach(button => {
@@ -354,7 +400,7 @@
               // Switch to edit mode
               isEditMode = true;
               currentAddressId = addressId;
-              document.querySelector('h3').textContent = 'Edit Address'; // Update modal title
+              document.querySelector('#address-modal h3').textContent = 'Edit Address'; // Update modal title
               addressModal.classList.remove('hidden');
             } else {
               showNotification(address.message || 'Failed to load address', false);
@@ -448,7 +494,168 @@
           setTimeout(() => notification.remove(), 300);
         }, 3000);
       }
+
+
+      // Coupon-related functionality
+      const viewCouponsBtn = document.getElementById('view-coupons-btn');
+      const couponModal = document.getElementById('coupon-modal');
+      const closeCouponModalBtn = document.getElementById('close-coupon-modal');
+      const applyBtn = document.getElementById('apply-coupon-btn');
+      const couponInput = document.getElementById('coupon-code');
+      const couponMessage = document.getElementById('coupon-message');
+      const couponsList = document.getElementById('coupons-list');
+      const removeCouponBtn = document.getElementById('remove-coupon-btn');
+      const subtotal = <%= subtotal %>; 
+
+      // Open coupon modal
+      viewCouponsBtn.addEventListener('click', async () => {
+        couponModal.classList.remove('hidden');
+        await loadAvailableCoupons();
+      });
+      
+      // Close coupon modal
+      function closeCouponModal() {
+        couponModal.classList.add('hidden');
+      }
+      
+      closeCouponModalBtn.addEventListener('click', closeCouponModal);
+      couponModal.addEventListener('click', function(e) {
+        if (e.target === couponModal) closeCouponModal();
+      });
+      
+      // Load available coupons
+      async function loadAvailableCoupons() {
+        try {
+          const response = await fetch('/coupons/available');
+          const result = await response.json();
+          
+          if (result.success) {
+            renderCoupons(result.coupons);
+          } else {
+            couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
+          }
+        } catch (error) {
+          console.error('Error loading coupons:', error);
+          couponsList.innerHTML = `<div class="p-4 text-center text-red-500">Error loading coupons. Please try again.</div>`;
+        }
+      }
+      
+      // Render coupons in the modal
+      function renderCoupons(coupons) {
+        if (!coupons.length) {
+          couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
+          return;
+        }
+        
+        couponsList.innerHTML = coupons.map(coupon => {
+          const expiryDate = new Date(coupon.expiryDate).toLocaleDateString();
+          const discountText = coupon.discountType === 'percentage' 
+            ? `${coupon.discountValue}% off`
+            : `₹${coupon.discountValue} off`;
+          
+          let minOrderText = '';
+          if (coupon.minOrderValue > 0) {
+            minOrderText = `<div class="text-xs text-gray-500 mt-1">Minimum order value: ₹${coupon.minOrderValue}</div>`;
+          }
+          
+          return `
+            <div class="coupon-item p-3 border border-gray-200 rounded-md cursor-pointer hover:border-pink-300 hover:bg-pink-50 transition" data-code="${coupon.code}">
+              <div class="flex justify-between items-start">
+                <div class="font-medium text-gray-800">${coupon.code}</div>
+                <div class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">${discountText}</div>
+              </div>
+              ${minOrderText}
+              <div class="text-xs text-gray-500 mt-1">Valid till: ${expiryDate}</div>
+            </div>
+          `;
+        }).join('');
+        
+        // Add click events to coupon items (only populate input)
+        document.querySelectorAll('.coupon-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const code = this.getAttribute('data-code');
+            couponInput.value = code; // Only fill the input, don't apply yet
+            closeCouponModal();
+          });
+        });
+      }
+      
+      // Apply coupon button click
+      applyBtn.addEventListener('click', function() {
+        const code = couponInput.value.trim();
+        if (!code) {
+          showCouponMessage('Please enter a coupon code', false);
+          return;
+        }
+        
+        applyCoupon(code);
+      });
+      
+      // Apply coupon function
+      async function applyCoupon(code) {
+        try {
+          const response = await fetch('/coupons/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ couponCode: code })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            if (subtotal < result.minOrderValue) {
+              showCouponMessage(`This coupon can only be applied to purchases above ₹${result.minOrderValue}`, false);
+            } else {
+              showCouponMessage(result.message, true);
+              location.reload(); // Reload to update order summary with coupon discount
+            }
+          } else {
+            showCouponMessage(result.message, false);
+          }
+        } catch (error) {
+          console.error('Error applying coupon:', error);
+          showCouponMessage('Error applying coupon. Please try again.', false);
+        }
+      }
+      
+      // Remove coupon
+      if (removeCouponBtn) {
+        removeCouponBtn.addEventListener('click', async () => {
+          try {
+            const response = await fetch('/coupons/remove', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+              showCouponMessage('Coupon removed successfully', true);
+              location.reload(); // Reload to update order summary without coupon
+            } else {
+              showCouponMessage(result.message || 'Error removing coupon', false);
+            }
+          } catch (error) {
+            console.error('Error removing coupon:', error);
+            showCouponMessage('Error removing coupon. Please try again.', false);
+          }
+        });
+      }
+      
+      // Show coupon message function
+      function showCouponMessage(message, isSuccess) {
+        couponMessage.textContent = message;
+        couponMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+        couponMessage.classList.add(isSuccess ? 'text-green-600' : 'text-red-600');
+        
+        setTimeout(() => {
+          couponMessage.style.opacity = '0';
+          setTimeout(() => {
+            couponMessage.classList.add('hidden');
+            couponMessage.style.opacity = '1';
+          }, 300);
+        }, 5000);
+      }
     });
-    </script>
+  </script>
 </body>
 </html>

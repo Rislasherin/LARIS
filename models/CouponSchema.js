@@ -1,15 +1,12 @@
 const mongoose = require("mongoose");
 
 const couponSchema = new mongoose.Schema({
-  code: { type: String, required: true, unique: true }, // Unique coupon code
-  discountValue: { type: Number, required: true }, // Discount amount
-  minOrderValue: { type: Number, default: 0 }, // Minimum order amount to apply coupon
- // How many times a coupon can be used
-  expiryDate: { type: Date, required: true }, // Expiry date
-  isActive: { type: Boolean, default: true }, // Soft delete functionality
-},
-
-{timestamps:true}
-);
+  code: { type: String, required: true, unique: true },
+  discountValue: { type: Number, required: true },
+  minOrderValue: { type: Number, default: 0 },
+  expiryDate: { type: Date, required: true },
+  isActive: { type: Boolean, default: true },
+  discountType: { type: String, enum: ['percentage', 'fixed'], default: 'percentage' } // Add this
+}, { timestamps: true });
 
 module.exports = mongoose.model("Coupon", couponSchema);

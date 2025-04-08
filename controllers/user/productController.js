@@ -14,6 +14,13 @@ const productDetails = async (req, res) => {
 
     const product = await Product.findById(productId).populate("category");
     
+
+    let isInWishlist = false;
+    if (userData && userData.wishlist) {
+      isInWishlist = userData.wishlist.some(id => id.toString() === productId.toString());
+    }
+
+
     if (!product && product.isBlocked && product.quantity <= 0) {
       return res.redirect("/pageNotFound");
     }
@@ -138,7 +145,8 @@ res.render("product-details", {
   reviews: [],
   relatedProducts: relatedProductsData,
   recentlyViewedProducts: recentlyViewedData,
-  cartCount 
+  cartCount,
+  isInWishlist
 });
 } catch (error) {
 console.error("Error fetching product details:", error);

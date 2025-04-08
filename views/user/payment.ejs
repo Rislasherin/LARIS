@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     body { 
       font-family: 'Lato', sans-serif; 
@@ -65,9 +66,13 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     .payment-option.selected {
-      border-color  : palevioletred;
+      border-color: palevioletred;
       box-shadow: 0 0 0 1px pink;
     }
+    input[type="radio"]:disabled + label {
+  color: #a0aec0; /* Gray text */
+  cursor: not-allowed;
+}
   </style>
 </head>
 <body>
@@ -117,14 +122,14 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Payment Options Column -->
       <div class="lg:col-span-2">
-        <form action="/place-order" method="POST" id="payment-form">
+        <form id="payment-form" method="POST">
           <input type="hidden" name="selectedAddress" value="<%= selectedAddress %>">
           
           <div class="grid grid-cols-1 gap-4">
             <!-- COD Payment Option -->
             <div class="payment-option bg-white rounded-lg p-5">
               <div class="flex items-center">
-                <input type="radio" id="cod" name="paymentMethod" value="cod" class="mr-3" required>
+                <input type="radio" id="cod" name="paymentMethod" value="cod" class="mr-3">
                 <label for="cod" class="flex items-center cursor-pointer w-full">
                   <div class="bg-gray-100 p-3 rounded-full mr-3">
                     <i class="fas fa-money-bill-wave text-gray-700"></i>
@@ -137,61 +142,45 @@
               </div>
             </div>
             
-            <!-- Bank Transfer Option -->
+            <!-- Razorpay Option -->
             <div class="payment-option bg-white rounded-lg p-5">
               <div class="flex items-center">
-                <input type="radio" id="bank" name="paymentMethod" value="bank" class="mr-3">
-                <label for="bank" class="flex items-center cursor-pointer w-full">
+                <input type="radio" id="razorpay" name="paymentMethod" value="razorpay" class="mr-3">
+                <label for="razorpay" class="flex items-center cursor-pointer w-full">
                   <div class="bg-gray-100 p-3 rounded-full mr-3">
                     <i class="fas fa-university text-gray-700"></i>
                   </div>
                   <div>
-                    <span class="font-medium text-gray-800 block">Bank Transfer</span>
-                    <span class="text-sm text-gray-500">Pay using bank transfer</span>
+                    <span class="font-medium text-gray-800 block">Razorpay</span>
+                    <span class="text-sm text-gray-500">Pay securely with Razorpay</span>
                   </div>
                 </label>
               </div>
             </div>
             
-            <!-- Credit Card Option -->
+            <!-- Wallet Option (Replaces Credit Card) -->
             <div class="payment-option bg-white rounded-lg p-5">
               <div class="flex items-center">
-                <input type="radio" id="credit" name="paymentMethod" value="credit" class="mr-3">
-                <label for="credit" class="flex items-center cursor-pointer w-full">
+                <input type="radio" id="wallet" name="paymentMethod" value="wallet" class="mr-3" disabled>
+                <label for="wallet" class="flex items-center w-full">
                   <div class="bg-gray-100 p-3 rounded-full mr-3">
-                    <i class="fas fa-credit-card text-gray-700"></i>
+                    <i class="fas fa-wallet text-gray-700"></i>
                   </div>
                   <div>
-                    <span class="font-medium text-gray-800 block">Credit Card</span>
-                    <span class="text-sm text-gray-500">Pay using Visa, Mastercard, or American Express</span>
+                    <span class="font-medium text-gray-800 block">Wallet</span>
+                    <span class="text-sm text-gray-500">Coming Soon</span>
                   </div>
                 </label>
-              </div>
-              
-              <!-- Credit Card Details -->
-              <div id="credit-card-details" class="hidden mt-4 pt-4 border-t border-gray-200">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Holder Name</label>
-                    <input type="text" name="cardName" class="input-field w-full px-3 py-2 rounded-md" placeholder="Name on card">
-                  </div>
-                  <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                    <input type="text" name="cardNumber" class="input-field w-full px-3 py-2 rounded-md" placeholder="1234 5678 9012 3456" maxlength="19">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                    <input type="text" name="cardExpiry" class="input-field w-full px-3 py-2 rounded-md" placeholder="MM/YY" maxlength="5">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                    <input type="text" name="cardCVV" class="input-field w-full px-3 py-2 rounded-md" placeholder="123" maxlength="3">
-                  </div>
-                </div>
               </div>
             </div>
           </div>
           
+          <!-- Inside the form, above the button -->
+<div id="payment-error" class="text-red-500 text-sm text-center mt-2 hidden">
+  Please select a payment method before proceeding.
+</div>
+
+
           <button type="submit" class="w-full bg-black text-white py-3 rounded hover:bg-gray-800 transition mt-6 font-medium">
             Complete Order
           </button>
@@ -255,82 +244,110 @@
   <%- include('../partials/user/footer') %>
 
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
-    const creditCardDetails = document.getElementById('credit-card-details');
-    const paymentOptions = document.querySelectorAll('.payment-option');
-    
-    // Handle payment method selection
-    paymentRadios.forEach(radio => {
-      radio.addEventListener('change', () => {
-        // Toggle credit card details visibility
-        creditCardDetails.classList.toggle('hidden', radio.value !== 'credit');
-        
-        // Handle required fields for credit card
-        if (radio.value === 'credit') {
-          document.querySelector('input[name="cardName"]').required = true;
-          document.querySelector('input[name="cardNumber"]').required = true;
-          document.querySelector('input[name="cardExpiry"]').required = true;
-          document.querySelector('input[name="cardCVV"]').required = true;
-        } else {
-          document.querySelector('input[name="cardName"]').required = false;
-          document.querySelector('input[name="cardNumber"]').required = false;
-          document.querySelector('input[name="cardExpiry"]').required = false;
-          document.querySelector('input[name="cardCVV"]').required = false;
-        }
-        
-        // Visual selection for payment options
-        paymentOptions.forEach(option => {
-          const optionRadio = option.querySelector('input[type="radio"]');
-          option.classList.toggle('selected', optionRadio === radio);
+    document.addEventListener('DOMContentLoaded', function() {
+      const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+      const paymentOptions = document.querySelectorAll('.payment-option');
+      const form = document.getElementById('payment-form');
+      
+      paymentRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          paymentOptions.forEach(option => {
+            const optionRadio = option.querySelector('input[type="radio"]');
+            option.classList.toggle('selected', optionRadio === radio);
+          });
         });
       });
-    });
-    
-    // Make options clickable
-    paymentOptions.forEach(option => {
-      option.addEventListener('click', function() {
-        const radio = this.querySelector('input[type="radio"]');
-        radio.checked = true;
-        
-        // Trigger the change event manually
-        const event = new Event('change');
-        radio.dispatchEvent(event);
+      
+      paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const radio = this.querySelector('input[type="radio"]');
+          radio.checked = true;
+          const event = new Event('change');
+          radio.dispatchEvent(event);
+        });
       });
+    
+      form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const formData = new FormData(form);
+  const paymentMethod = formData.get('paymentMethod');
+  const paymentError = document.getElementById('payment-error');
+
+  paymentError.classList.add('hidden');
+
+  if (!paymentMethod) {
+    paymentError.classList.remove('hidden');
+    return;
+  }
+
+  const jsonData = Object.fromEntries(formData);
+
+  try {
+    const response = await fetch('/place-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jsonData)
     });
     
-    // Format credit card number with spaces
-    const cardNumberInput = document.querySelector('input[name="cardNumber"]');
-    if (cardNumberInput) {
-      cardNumberInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        let formattedValue = '';
-        
-        for (let i = 0; i < value.length; i++) {
-          if (i > 0 && i % 4 === 0) {
-            formattedValue += ' ';
+    const data = await response.json();
+    
+    if (!response.ok) {
+      window.location.href = `/order-error?message=Payment%20Initiation%20Failed&details=${encodeURIComponent(data.message || 'Something went wrong')}&orderId=${data.orderId || ''}&finalAmount=${data.finalAmount || ''}`;
+      return;
+    }
+
+    if (paymentMethod === 'razorpay' && data.razorpayOrder) {
+      const options = {
+        key: data.key_id,
+        amount: data.razorpayOrder.amount,
+        currency: 'INR',
+        name: 'Beauty Cart',
+        description: 'Order Payment',
+        order_id: data.razorpayOrder.id,
+        handler: async function(response) {
+          const verifyResponse = await fetch('/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: data.orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyResponse.json();
+          if (verifyData.success) {
+            window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+          } else {
+            window.location.href = `/order-error?message=Payment%20Verification%20Failed&details=Payment%20verification%20failed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
           }
-          formattedValue += value[i];
+        },
+        prefill: {
+          name: 'Customer Name',
+          email: 'customer@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#F472B6'
+        },
+        modal: {
+          ondismiss: function() {
+            window.location.href = `/order-error?message=Payment%20Cancelled&details=Payment%20was%20not%20completed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
+          }
         }
-        
-        e.target.value = formattedValue;
-      });
+      };
+      
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+      window.location.href = `/order-success?orderId=${data.orderId}`;
     }
-    
-    // Format expiry date with slash
-    const expiryInput = document.querySelector('input[name="cardExpiry"]');
-    if (expiryInput) {
-      expiryInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
-        
-        if (value.length > 2) {
-          value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        }
-        
-        e.target.value = value;
-      });
-    }
-  });
-  </script>
+  } catch (error) {
+    console.error('Error:', error);
+    window.location.href = `/order-error?message=Payment%20Error&details=An%20error%20occurred%20while%20processing%20your%20order&orderId=&finalAmount=`;
+  }
+});
+    })
+    </script>
 </body>
 </html>

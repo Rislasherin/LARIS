@@ -1,10 +1,10 @@
-const mongoose = required ('mongoose');
+const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 
 const WishlistSchema = new Schema({
     UserId:{
-        type:Schema.Types;ObjectId,
+        type:Schema.Types.ObjectId,
         ref:'User',
         required:true,
     },

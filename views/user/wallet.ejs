@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet</title>
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.12/sweetalert2.min.css">
+    
+    <style>
+        :root {
+            --primary-color: rgb(241, 188, 226);
+            --primary-light: #EEF2FF;
+            --secondary-color: #F9FAFB;
+            --accent-color: pink;
+            --success-color: #10B981;
+            --danger-color: #EF4444;
+            --warning-color: #F59E0B;
+            --info-color: #3B82F6;
+            --text-color: #1F2937;
+            --light-text: #6B7280;
+            --border-radius: 12px;
+            --card-border-radius: 16px;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --transition: all 0.25s ease;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #F3F4F6;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .account-container {
+            max-width: 1320px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--secondary-color);
+            padding-bottom: 1rem;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            height: 100%;
+            transition: var(--transition);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 991.98px) {
+            .sidebar {
+                margin-bottom: 2rem;
+            }
+        }
+
+        /* Wallet container styles */
+        .wallet-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+            height: 100%;
+        }
+        
+        .wallet-overview {
+            margin-bottom: 2.5rem;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-radius: var(--card-border-radius);
+            padding: 2rem;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.15);
+        }
+        
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 1;
+        }
+        
+        .balance-card::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            z-index: 1;
+        }
+        
+        .balance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .balance-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .balance-amount {
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .balance-amount h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        
+        .balance-actions {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .btn-accent {
+            background-color: white;
+            border: none;
+            color: var(--accent-color);
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .btn-accent:hover {
+            background-color: pink;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Transaction section styles */        
+        .transaction-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+        
+        .transaction-list {
+            margin-bottom: 2rem;
+        }
+        
+        .transaction-date {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .transaction-date span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--light-text);
+            background-color: var(--secondary-color);
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: var(--card-border-radius);
+            margin-bottom: 0.75rem;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            transition: var(--transition);
+            border: 1px solid #F3F4F6;
+        }
+        
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+            border-color: #E5E7EB;
+        }
+        
+        .transaction-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .transaction-icon.debit {
+            background-color: #DCFCE7;
+            color: #166534;
+        }
+        
+        .transaction-icon.credit {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .transaction-icon.refund {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+        
+        .transaction-icon.cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .transaction-icon.reward {
+            background-color: #F3E8FF;
+            color: #6B21A8;
+        }
+        
+        .transaction-details {
+            display: flex;
+            flex-grow: 1;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .transaction-info {
+            margin-right: 1rem;
+        }
+        
+        .transaction-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .transaction-id {
+            font-size: 0.85rem;
+            color: var(--light-text);
+            margin-bottom: 0;
+        }
+        
+        .transaction-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+        
+        .transaction-time {
+            font-size: 0.85rem;
+            color: var(--light-text);
+            margin-bottom: 0.25rem;
+        }
+        
+        .transaction-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.75rem;
+            border-radius: 50px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .transaction-status.debit {
+            background-color: #DCFCE7;
+            color: #166534;
+        }
+        
+        .transaction-status.credit {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        
+        .transaction-status.refund {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+        
+        .transaction-status.cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        
+        .transaction-status.reward {
+            background-color: #F3E8FF;
+            color: #6B21A8;
+        }
+        
+        .transaction-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        
+        .transaction-amount.positive {
+            color: var(--success-color);
+        }
+        
+        .transaction-amount.negative {
+            color: var(--danger-color);
+        }
+        
+        @media (max-width: 767.98px) {
+            .transaction-details {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .transaction-meta {
+                margin-top: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* Load more button styles */
+        .load-more {
+            margin: 2rem 0 1rem;
+        }
+        
+        .btn-outline-accent {
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            background-color: transparent;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .btn-outline-accent:hover {
+            background-color: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        
+        .no-more-transactions {
+            color: var(--light-text);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: var(--border-radius);
+        }
+        
+        .spinner-container {
+            text-align: center;
+        }
+        
+        .spinner-container p {
+            margin-top: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        /* Add Cash Modal Styles */
+        .swal2-styled.swal2-confirm {
+            background-color: var(--accent-color) !important;
+        }
+        
+        .swal2-input {
+            border-radius: 10px !important;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/user/header') %>
+
+    <div class="account-container">
+        <div class="row">
+            <%- include('../partials/user/profileHeader') %>
+            <div class="col-lg-9 col-md-8">
+                <div class="wallet-container">
+                    <div class="wallet-overview">
+                        <div class="row">
+                            <div class="col-xl-7 col-lg-6 mb-4">
+                                <div class="balance-card">
+                                    <div class="balance-header">
+                                        <h2>Available Balance</h2>
+                                    </div>
+                                    <div class="balance-amount">
+                                        <h1><%= currency %> <%= balance.toFixed(2) %></h1>
+                                    </div>
+                                    <div class="balance-actions">
+                                        <button class="btn btn-accent" id="addCashBtn">
+                                            <i class="fas fa-plus me-2"></i>Add Cash
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="transaction-header">
+                        <h2 class="section-title">Transaction History</h2>
+                    </div>
+
+                    <div class="transaction-list">
+                        <% if (transactions && transactions.length > 0) { %>
+                            <% let currentDate = ''; %>
+                            <% transactions.forEach((tx, index) => { %>
+                                <% const txDate = new Date(tx.date).toLocaleDateString(); %>
+                                <% if (txDate !== currentDate) { %>
+                                    <% currentDate = txDate; %>
+                                    <div class="transaction-date">
+                                        <span><%= currentDate === new Date().toLocaleDateString() ? 'Today' : currentDate === new Date(Date.now() - 86400000).toLocaleDateString() ? 'Yesterday' : currentDate %></span>
+                                    </div>
+                                <% } %>
+
+                                <div class="transaction-item">
+                                    <div class="transaction-icon <%= tx.type.toLowerCase() %>">
+                                        <% if (tx.type === 'debit') { %>
+                                            <i class="fas fa-arrow-up"></i>
+                                        <% } else if (tx.type === 'credit') { %>
+                                            <i class="fas fa-arrow-down"></i>
+                                        <% } else if (tx.type === 'refund') { %>
+                                            <i class="fas fa-undo"></i>
+                                        <% } else if (tx.type === 'cancelled') { %>
+                                            <i class="fas fa-times"></i>
+                                        <% } else if (tx.type === 'reward') { %>
+                                            <i class="fas fa-gift"></i>
+                                        <% } %>
+                                    </div>
+                                    <div class="transaction-details">
+                                        <div class="transaction-info">
+                                            <h4><%= tx.description %></h4>
+                                            <p class="transaction-id"><%= tx.orderId ? `Order #${tx.orderId.orderID}` : `Transaction #${tx._id}` %></p>
+                                        </div>
+                                        <div class="transaction-meta">
+                                            <span class="transaction-time"><%= new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                            <span class="transaction-status <%= tx.type.toLowerCase() %>"><%= tx.type.charAt(0).toUpperCase() + tx.type.slice(1) %></span>
+                                            <span class="transaction-amount <%= tx.amount > 0 ? 'positive' : 'negative' %>">
+                                                <%= tx.amount > 0 ? `+${currency} ${tx.amount.toFixed(2)}` : `${currency} ${tx.amount.toFixed(2)}` %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-5">
+                                <i class="fas fa-receipt text-secondary mb-3" style="font-size: 3rem;"></i>
+                                <p>No transactions available yet.</p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <div class="text-center load-more">
+                        <button class="btn btn-outline-accent" id="loadMoreBtn">
+                            <i class="fas fa-sync-alt me-2"></i> Load More
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/user/footer') %>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.12/sweetalert2.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        let skip = <%= transactions && transactions.length ? transactions.length : 0 %>;
+        const limit = 5;
+
+        document.getElementById('loadMoreBtn').addEventListener('click', async () => {
+            try {
+                const loadBtn = document.getElementById('loadMoreBtn');
+                loadBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Loading...';
+                loadBtn.disabled = true;
+                
+                const response = await fetch(`/wallet/transactions?skip=${skip}&limit=${limit}`);
+                const data = await response.json();
+
+                if (data.transactions && data.transactions.length > 0) {
+                    const transactionList = document.querySelector('.transaction-list');
+                    let currentDate = '';
+
+                    data.transactions.forEach(tx => {
+                        const txDate = new Date(tx.date).toLocaleDateString();
+                        if (txDate !== currentDate) {
+                            currentDate = txDate;
+                            const dateDiv = document.createElement('div');
+                            dateDiv.className = 'transaction-date';
+                            dateDiv.innerHTML = `<span>${txDate === new Date().toLocaleDateString() ? 'Today' : txDate === new Date(Date.now() - 86400000).toLocaleDateString() ? 'Yesterday' : txDate}</span>`;
+                            transactionList.appendChild(dateDiv);
+                        }
+
+                        const txItem = document.createElement('div');
+                        txItem.className = 'transaction-item';
+                        
+                        let iconClass = '';
+                        if (tx.type === 'debit') iconClass = '<i class="fas fa-arrow-up"></i>';
+                        else if (tx.type === 'credit') iconClass = '<i class="fas fa-arrow-down"></i>';
+                        else if (tx.type === 'refund') iconClass = '<i class="fas fa-undo"></i>';
+                        else if (tx.type === 'cancelled') iconClass = '<i class="fas fa-times"></i>';
+                        else if (tx.type === 'reward') iconClass = '<i class="fas fa-gift"></i>';
+                        
+                        txItem.innerHTML = `
+                            <div class="transaction-icon ${tx.type.toLowerCase()}">
+                                ${iconClass}
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-info">
+                                    <h4>${tx.description || 'No description'}</h4>
+                                    <p class="transaction-id">${tx.orderId ? `Order #${tx.orderId}` : `Transaction #${tx._id}`}</p>
+                                </div>
+                                <div class="transaction-meta">
+                                    <span class="transaction-time">${new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span class="transaction-status ${tx.type.toLowerCase()}">${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</span>
+                                    <span class="transaction-amount ${tx.amount > 0 ? 'positive' : 'negative'}">
+                                        ${tx.amount > 0 ? `+<%= currency %> ${tx.amount.toFixed(2)}` : `<%= currency %> ${tx.amount.toFixed(2)}`}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                        transactionList.appendChild(txItem);
+                    });
+
+                    skip += data.transactions.length;
+                    
+                    loadBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Load More';
+                    loadBtn.disabled = false;
+                    
+                    if (data.transactions.length < limit) {
+                        loadBtn.style.display = 'none';
+                        const noMoreDiv = document.createElement('p');
+                        noMoreDiv.className = 'no-more-transactions';
+                        noMoreDiv.textContent = 'No more transactions to load';
+                        document.querySelector('.load-more').appendChild(noMoreDiv);
+                    }
+                } else {
+                    loadBtn.style.display = 'none';
+                    const noMoreDiv = document.createElement('p');
+                    noMoreDiv.className = 'no-more-transactions';
+                    noMoreDiv.textContent = 'No more transactions to load';
+                    document.querySelector('.load-more').appendChild(noMoreDiv);
+                }
+            } catch (error) {
+                console.error('Error loading more transactions:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: 'Error loading transactions',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                
+                const loadBtn = document.getElementById('loadMoreBtn');
+                loadBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Try Again';
+                loadBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('addCashBtn').addEventListener('click', async () => {
+            const { value: amount } = await Swal.fire({
+                title: 'Add Cash to Wallet',
+                input: 'number',
+                inputLabel: `Enter amount (in <%= currency %>)`,
+                inputPlaceholder: 'Enter amount',
+                confirmButtonText: 'Proceed to Payment',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Please enter an amount';
+                    }
+                    if (value <= 0) {
+                        return 'Amount must be greater than 0';
+                    }
+                }
+            });
+
+            if (!amount) return;
+
+            try {
+                // Show loading state
+                Swal.fire({
+                    title: 'Processing',
+                    html: 'Initiating payment...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch('/wallet/add-cash', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount })
+                });
+
+                const text = await response.text();
+                console.log('Raw response:', text);
+
+                const data = JSON.parse(text);
+                if (!data.success) {
+                    throw new Error(data.error || 'Payment initiation failed');
+                }
+
+                Swal.close();
+
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: 'INR',
+                    name: 'Your Company Name',
+                    description: 'Wallet Recharge',
+                    order_id: data.orderId,
+                    handler: async function (response) {
+                        try {
+                            // Show verification loading
+                            Swal.fire({
+                                title: 'Verifying',
+                                html: 'Please wait while we verify your payment...',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            const verifyResponse = await fetch('/wallet/verify-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    amount: data.amount
+                                })
+                            });
+
+                            const verifyData = await verifyResponse.json();
+                            if (verifyData.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Payment Successful!',
+                                    text: 'Your wallet has been updated.',
+                                    confirmButtonText: 'Great!',
+                                    confirmButtonColor: 'var(--accent-color)'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Verification Failed',
+                                    text: verifyData.error || 'Unable to verify your payment',
+                                    confirmButtonColor: 'var(--accent-color)'
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error verifying payment:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Verification Error',
+                                text: 'Unable to verify your payment. Please contact support.',
+                                confirmButtonColor: 'var(--accent-color)'
+                            });
+                        }
+                    },
+                    prefill: {
+                        name: data.user.name || '',
+                        email: data.user.email || ''
+                    },
+                    theme: {
+                        color: 'var(--accent-color)'
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Payment Cancelled',
+                                text: 'You have cancelled the payment.',
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                console.error('Error initiating payment:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Error',
+                    text: 'Failed to initiate payment: ' + error.message,
+                    confirmButtonColor: 'var(--accent-color)'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

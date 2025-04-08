@@ -3,6 +3,7 @@ const User = require('../../models/userSchema');
 const mongoose = require('mongoose');
 const Order = require('../../models/orderSchema');
 const Offer = require('../../models/offerSchema');
+const Wallet = require('../../models/walletSchema');
 
 const renderOrderManage = async (req, res) => {
     try {
@@ -225,68 +226,78 @@ function getBadgeClass(status) {
 }
 const updateAllOrderItems = async (req, res) => {
     try {
-        const { orderId } = req.params;
-        const { status, productIds } = req.body;
-
-        if (!mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({ success: false, message: 'Invalid order ID' });
+      const { orderId } = req.params;
+      const { status, productIds } = req.body;
+  
+      if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return res.status(400).json({ success: false, message: 'Invalid order ID' });
+      }
+  
+      const order = await Order.findById(orderId);
+      if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+  
+      if (!order.history) order.history = [];
+  
+      let updatedCount = 0;
+      let skippedCount = 0;
+  
+      order.orderItems.forEach(item => {
+        if (productIds.includes(item._id.toString())) {
+          if (item.status === 'Returned' || 
+              (item.status === 'Delivered' && status !== 'Delivered') || 
+              (item.status === 'Cancelled' && status !== 'Cancelled')) {
+            skippedCount++;
+            return;
+          }
+          item.status = status;
+          updatedCount++;
         }
-
-        const order = await Order.findById(orderId);
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-        if (!order.history) order.history = [];
-
-        let updatedCount = 0;
-        let skippedCount = 0;
-
-        order.orderItems.forEach(item => {
-            if (productIds.includes(item._id.toString())) {
-              
-                if (item.status === 'Returned') {
-                    skippedCount++;
-                    return;
-                }
-                if (item.status === 'Delivered' && status !== 'Delivered') return;
-                if (item.status === 'Cancelled' && status !== 'Cancelled') return;
-
-                item.status = status;
-                updatedCount++;
-            }
+      });
+  
+      const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
+      const allShipped = order.orderItems.every(item => item.status === 'Shipped');
+      const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
+      const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
+      const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
+  
+      let newOrderStatus = order.status;
+      if (allDelivered) newOrderStatus = 'Delivered';
+      else if (allShipped) newOrderStatus = 'Shipped'; // Add this condition
+      else if (allCancelled) newOrderStatus = 'Cancelled';
+      else if (anyCancelled && anyDelivered) newOrderStatus = 'Partially Cancelled';
+      else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
+      else if (anyDelivered) newOrderStatus = 'Partially Delivered';
+      else newOrderStatus = status === 'Pending' ? 'Pending' : status === 'Processing' ? 'Processing' : 'Shipped';
+  
+      if (order.status !== newOrderStatus) {
+        order.status = newOrderStatus;
+        order.timeline.push({
+          title: newOrderStatus,
+          text: `Order status updated to ${newOrderStatus}`,
+          date: new Date(),
+          completed: true,
         });
-
-        const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
-        const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
-        const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
-
-        let newOrderStatus = order.status;
-        if (allDelivered) newOrderStatus = 'Delivered';
-        else if (allCancelled) newOrderStatus = 'Cancelled';
-        else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
-        else if (order.orderItems.some(item => item.status === 'Delivered')) newOrderStatus = 'Partially Delivered';
-        else newOrderStatus = status === 'Pending' ? 'Pending' : 'Processing';
-
-        if (order.status !== newOrderStatus) order.status = newOrderStatus;
-
-        order.history.push({
-            status: 'Bulk Update',
-            timestamp: new Date(),
-            notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} returned item(s) skipped` : ''}`,
-            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-        });
-
-        await order.save();
-
-        res.json({
-            success: true,
-            message: `${updatedCount} product statuses updated successfully${skippedCount > 0 ? `, ${skippedCount} returned item(s) not modified` : ''}`,
-            orderStatus: newOrderStatus
-        });
+      }
+  
+      order.history.push({
+        status: 'Bulk Update',
+        timestamp: new Date(),
+        notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} item(s) skipped` : ''}`,
+        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+      });
+  
+      await order.save();
+  
+      res.json({
+        success: true,
+        message: `${updatedCount} item(s) updated${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
+        orderStatus: newOrderStatus
+      });
     } catch (error) {
-        console.error('Error updating all order items:', error);
-        res.status(500).json({ success: false, message: error.message });
+      console.error('Error updating all order items:', error);
+      res.status(500).json({ success: false, message: 'Server error occurred' });
     }
-};
+  };
 const rejectReturnRequest = async (req, res) => {
     try {
         const { orderId, productId } = req.body;
@@ -323,6 +334,31 @@ const rejectReturnRequest = async (req, res) => {
     }
 };
 
+
+const refundToWallet = async (userId, amount, description, orderId) => {
+    try {
+        let wallet = await Wallet.findOne({ user: userId });
+        if (!wallet) {
+            wallet = new Wallet({ user: userId, balance: 0, currency: 'INR', transactions: [] });
+        }
+
+        wallet.balance += amount;
+        wallet.transactions.push({
+            type: 'credit',
+            amount: amount,
+            description: description,
+            date: new Date(),
+            orderId: orderId,
+        });
+
+        await wallet.save();
+        console.log(`Refunded ${amount} to wallet for user ${userId}`);
+    } catch (error) {
+        console.error('Error refunding to wallet:', error);
+        throw error;
+    }
+};
+
 const acceptReturnRequest = async (req, res) => {
     try {
         const { orderId, productId } = req.body;
@@ -331,7 +367,12 @@ const acceptReturnRequest = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
         }
 
-        const order = await Order.findById(orderId).populate('user');
+        const order = await Order.findById(orderId)
+        .populate('user','name email')
+        .populate({
+            path: 'orderItems.productId',
+                select: 'productName'
+        })
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
         const item = order.orderItems.find(item => item._id.toString() === productId);
@@ -366,6 +407,17 @@ const acceptReturnRequest = async (req, res) => {
 
         await order.save();
 
+        const refundAmount = item.price * item.quantity;
+        if (order.paymentMethod !== 'cod' && refundAmount > 0) {
+            const productName = item.productId?.productName || 'Unknown Product';
+            await refundToWallet(
+                order.user._id,
+                refundAmount,
+                `Refund for returned product ${item.productId.productName} in order ${order.orderID}`,
+                order._id
+            );
+        }
+
         res.json({
             success: true,
             message: 'Return accepted successfully',
@@ -373,6 +425,65 @@ const acceptReturnRequest = async (req, res) => {
         });
     } catch (error) {
         console.error('Error accepting return:', error);
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+};
+const cancelOrderItem = async (req, res) => {
+    try {
+        const { orderId, productId } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ success: false, message: 'Invalid order ID or product ID' });
+        }
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        const item = order.orderItems.find(item => item._id.toString() === productId);
+        if (!item) return res.status(404).json({ success: false, message: 'Product not found in order' });
+
+        // Prevent cancellation if already in certain states
+        if (['Cancelled', 'Delivered', 'Returned'].includes(item.status)) {
+            return res.status(400).json({ success: false, message: `Cannot cancel item with status ${item.status}` });
+        }
+
+        item.status = 'Cancelled';
+
+        // Update order status based on item statuses
+        const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
+        const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
+        const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
+
+        let newOrderStatus = order.status;
+        if (allCancelled) {
+            newOrderStatus = 'Cancelled';
+        } else if (anyCancelled && !anyDelivered) {
+            newOrderStatus = 'Partially Cancelled';
+        } else if (anyCancelled && anyDelivered) {
+            newOrderStatus = 'Partially Cancelled';
+        } else {
+            newOrderStatus = order.status; // Keep existing status if no change needed
+        }
+
+        order.status = newOrderStatus;
+
+        if (!order.history) order.history = [];
+        order.history.push({
+            status: 'Item Cancelled',
+            timestamp: new Date(),
+            notes: `Product ${productId} cancelled`,
+            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+        });
+
+        await order.save();
+
+        res.json({
+            success: true,
+            message: 'Product cancelled successfully',
+            orderStatus: newOrderStatus
+        });
+    } catch (error) {
+        console.error('Error cancelling order item:', error);
         res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
 };
@@ -385,5 +496,6 @@ module.exports = {
     renderReturnRequestsList,
     updateAllOrderItems,
     acceptReturnRequest,
-    rejectReturnRequest
+    rejectReturnRequest,
+    cancelOrderItem
 }

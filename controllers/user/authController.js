@@ -351,13 +351,11 @@ const loadShopPage = async (req, res) => {
         const limit = 9;
         const skip = (page - 1) * limit;
 
-        // Build query object
         const query = {
             status: "Available",
             quantity: { $gt: 0 }
         };
 
-        // Category filter
         const selectedCategoryName = req.query.category;
         let selectedCategoryId = null;
         if (selectedCategoryName) {
@@ -369,14 +367,12 @@ const loadShopPage = async (req, res) => {
                 selectedCategoryId = selectedCategory._id;
                 query.category = selectedCategoryId;
             } else {
-              
                 query.category = null;
             }
         } else {
             query.category = { $in: categoryIds };
         }
 
-      
         const searchQuery = req.query.query?.trim();
         if (searchQuery) {
             query.$or = [
@@ -385,19 +381,16 @@ const loadShopPage = async (req, res) => {
             ];
         }
 
-        // Skin type filter
         const selectedSkinType = req.query.skinType;
         if (selectedSkinType && selectedSkinType !== '') {
             query.skintype = selectedSkinType;
         }
 
-        // Skin concern filter
         const selectedSkinConcern = req.query.skinConcern;
         if (selectedSkinConcern && selectedSkinConcern !== '') {
             query.skinConcern = selectedSkinConcern;
         }
 
-        // Price range filter
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
         if (minPrice || maxPrice) {
@@ -406,7 +399,6 @@ const loadShopPage = async (req, res) => {
             if (maxPrice) query.salePrice.$lte = maxPrice;
         }
 
-        // Sorting
         let sortOption = {};
         switch (req.query.sort) {
             case 'price-low':
@@ -419,10 +411,9 @@ const loadShopPage = async (req, res) => {
                 sortOption = { salesCount: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 }; // newest
+                sortOption = { createdAt: -1 };
         }
 
-        // Execute queries
         const totalProducts = await product.countDocuments(query);
         const products = await product
             .find(query)
@@ -431,7 +422,17 @@ const loadShopPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        // Apply offers
+        // Add wishlist status to each product
+        if (userData && userData.wishlist) {
+            products.forEach(prod => {
+                prod.inWishlist = userData.wishlist.some(id => id.toString() === prod._id.toString());
+            });
+        } else {
+            products.forEach(prod => {
+                prod.inWishlist = false;
+            });
+        }
+
         products.forEach(product => {
             if (product.productOffer && product.productOffer > 0) {
                 product.salePrice = Math.floor(product.regularPrice * (1 - product.productOffer / 100));
@@ -443,7 +444,6 @@ const loadShopPage = async (req, res) => {
 
         const totalPages = Math.ceil(totalProducts / limit);
 
-        // Category counts for sidebar
         const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
             const count = await product.countDocuments({
                 category: cat._id,
@@ -453,9 +453,11 @@ const loadShopPage = async (req, res) => {
             return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
         }));
 
-        // Cart count
         const cart = user ? await Cart.findOne({ user: user._id }) : null;
         const cartCount = cart ? cart.items.length : 0;
+
+        // Wishlist count
+        const wishlistCount = userData && userData.wishlist ? userData.wishlist.length : 0;
 
         res.render("shop", {
             user: userData,
@@ -471,7 +473,8 @@ const loadShopPage = async (req, res) => {
             maxPrice,
             sortBy: req.query.sort || 'newest',
             searchQuery: searchQuery || '',
-            cartCount
+            cartCount,
+            wishlistCount // Pass wishlist count to update header
         });
 
     } catch (error) {

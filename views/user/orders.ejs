@@ -405,18 +405,18 @@
                         <div class="order-footer">
                             <div class="status-payment-container">
                                 <span class="status-badge status-<%= 
-                                    order.status === 'Delivered' ? 'completed' :
-                                    order.status === 'Cancelled' ? 'cancelled' :
-                                    order.status === 'Pending' ? 'unfulfilled' :
-                                    order.status === 'Processing' ? 'pending' :
-                                    order.status === 'Shipped' ? 'completed' :
-                                    order.status === 'Payment Pending' ? 'pending' :
-                                    order.status === 'Partially Delivered' ? 'completed' :
-                                    order.status === 'Partially Cancelled' ? 'cancelled' :
-                                    order.status === 'Return Requested' ? 'pending' :
-                                    order.status === 'Returned' ? 'completed' :
-                                    order.status === 'Partially Returned' ? 'completed' : 'unfulfilled'
-                                %>">
+    order.status === 'Delivered' ? 'completed' :
+    order.status === 'Cancelled' ? 'cancelled' :
+    order.status === 'Pending' ? 'unfulfilled' :
+    order.status === 'Processing' ? 'pending' :
+    order.status === 'Shipped' ? 'completed' :
+    order.status === 'Payment Pending' ? 'pending' :
+    order.status === 'Partially Delivered' ? 'completed' :
+    order.status === 'Partially Cancelled' ? 'cancelled' :
+    order.status === 'Return Requested' ? 'pending' :
+    order.status === 'Returned' ? 'completed' :
+    order.status === 'Partially Returned' ? 'completed' : 'unfulfilled'
+%>">
                                     <i class="<%= 
                                         order.status === 'Delivered' || order.status === 'Shipped' ? 'fas fa-truck' :
                                         order.status === 'Cancelled' ? 'fas fa-times-circle' :

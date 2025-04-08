@@ -11,6 +11,7 @@ const storage = require('../utils/multer')
 const upload = require ('../utils/multer')
 const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
+const couponController = require('../controllers/admin/coupenController')
 
 
 
@@ -63,5 +64,14 @@ router.put('/:orderId/update-product-status', adminAuth, orderController.updateP
 router.post('/order/update-all-items/:orderId', orderController.updateAllOrderItems);
 router.post('/order/accept-return',orderController.acceptReturnRequest);
 router.post('/order/reject-return',orderController.rejectReturnRequest);
+router.post('/order/cancel-item', orderController.cancelOrderItem);
 
+
+
+//coupon routes
+router.get("/coupons", adminAuth, couponController.getCouponManagePage);
+router.post("/coupon/add", adminAuth, couponController.addCoupon);
+router.put('/coupons/update/:id', adminAuth, couponController.updateCoupon);
+router.get('/coupon/:id', adminAuth, couponController.getCouponById);
+router.delete('/coupon/delete/:id', adminAuth, couponController.deleteCoupon);
 module.exports = router;

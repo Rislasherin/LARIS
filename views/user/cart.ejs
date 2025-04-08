@@ -235,127 +235,275 @@
   <%- include('../partials/user/footer') %>
 
   <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Notification container setup
-    let notificationContainer = document.getElementById('notification-container');
-    if (!notificationContainer) {
-        notificationContainer = document.createElement('div');
-        notificationContainer.id = 'notification-container';
-        notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
-        document.body.appendChild(notificationContainer);
-    }
-
-    // Function to show notification
-    function showNotification(message, isSuccess = true) {
-        const notification = document.createElement('div');
-        notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-        notification.textContent = message;
-        notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
-        
-        notificationContainer.appendChild(notification);
-        notification.offsetWidth; // Trigger reflow
-        notification.style.transform = 'translateX(0)';
-        
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
-
-    // Update order summary
-    function updateOrderSummary(data) {
-        document.getElementById('subtotal').textContent = `₹${data.subtotal.toFixed(2)}`;
-        if (data.discount > 0) {
-            const discountElement = document.getElementById('discount');
-            if (!discountElement) {
-                const discountDiv = document.createElement('div');
-                discountDiv.className = 'flex justify-between text-sm text-green-600';
-                discountDiv.innerHTML = `<span>Discount</span><span id="discount">-₹${data.discount.toFixed(2)}</span>`;
-                document.getElementById('shipping').parentElement.insertAdjacentElement('beforebegin', discountDiv);
-            } else {
-                discountElement.textContent = `-₹${data.discount.toFixed(2)}`;
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Notification container setup
+        let notificationContainer = document.getElementById('notification-container');
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.id = 'notification-container';
+            notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
+            document.body.appendChild(notificationContainer);
         }
-        document.getElementById('shipping').textContent = `₹${data.shippingCost.toFixed(2)}`;
-        document.getElementById('tax').textContent = `₹${data.tax.toFixed(2)}`;
-        document.getElementById('total').textContent = `₹${data.total.toFixed(2)}`;
-        const cartCountElement = document.getElementById('cart-count');
-        if (cartCountElement) cartCountElement.textContent = data.cartCount;
-    }
-
-    // Handle quantity updates
-    document.querySelectorAll('.update-quantity-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const productId = this.getAttribute('data-product-id');
-            const action = this.getAttribute('data-action');
-            const quantityInput = this.parentElement.querySelector('.quantity-input');
-            const currentQuantity = parseInt(quantityInput.value);
-            const maxQuantity = parseInt(quantityInput.getAttribute('max'));
-
-            fetch('/cart/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId, action })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const newQuantity = action === 'increase' ? currentQuantity + 1 : currentQuantity - 1;
-                    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
-                        quantityInput.value = newQuantity;
-                        const totalPriceElement = quantityInput.closest('.cart-item').querySelector('.total-price');
-                        const effectivePrice = parseFloat(totalPriceElement.getAttribute('data-total')) / currentQuantity;
-                        totalPriceElement.textContent = `₹${(effectivePrice * newQuantity).toFixed(2)}`;
-                        totalPriceElement.setAttribute('data-total', (effectivePrice * newQuantity).toFixed(2));
-                        updateOrderSummary(data);
-                        showNotification(`Quantity ${action === 'increase' ? 'increased' : 'decreased'} successfully!`);
+    
+        // Function to show notification
+        function showNotification(message, isSuccess = true) {
+            const notification = document.createElement('div');
+            notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+            notification.textContent = message;
+            notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
+            
+            notificationContainer.appendChild(notification);
+            notification.offsetWidth; // Trigger reflow
+            notification.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    
+        // Debounced notification for quantity updates
+        const debouncedShowNotification = debounce(showNotification, 1000); // 1-second delay
+    
+        // Update order summary
+        function updateOrderSummary(data) {
+            document.getElementById('subtotal').textContent = `₹${data.subtotal.toFixed(2)}`;
+            if (data.discount > 0) {
+                const discountElement = document.getElementById('discount');
+                if (!discountElement) {
+                    const discountDiv = document.createElement('div');
+                    discountDiv.className = 'flex justify-between text-sm text-green-600';
+                    discountDiv.innerHTML = `<span>Discount</span><span id="discount">-₹${data.discount.toFixed(2)}</span>`;
+                    document.getElementById('shipping').parentElement.insertAdjacentElement('beforebegin', discountDiv);
+                } else {
+                    discountElement.textContent = `-₹${data.discount.toFixed(2)}`;
+                }
+            }
+            document.getElementById('shipping').textContent = `₹${data.shippingCost.toFixed(2)}`;
+            document.getElementById('tax').textContent = `₹${data.tax.toFixed(2)}`;
+            document.getElementById('total').textContent = `₹${data.total.toFixed(2)}`;
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) cartCountElement.textContent = data.cartCount;
+        }
+    
+        // Handle quantity updates
+        document.querySelectorAll('.update-quantity-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const productId = this.getAttribute('data-product-id');
+                const action = this.getAttribute('data-action');
+                const quantityInput = this.parentElement.querySelector('.quantity-input');
+                const currentQuantity = parseInt(quantityInput.value);
+                const maxQuantity = parseInt(quantityInput.getAttribute('max'));
+    
+                fetch('/cart/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId, action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const newQuantity = action === 'increase' ? currentQuantity + 1 : currentQuantity - 1;
+                        if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+                            quantityInput.value = newQuantity;
+                            const totalPriceElement = quantityInput.closest('.cart-item').querySelector('.total-price');
+                            const effectivePrice = parseFloat(totalPriceElement.getAttribute('data-total')) / currentQuantity;
+                            totalPriceElement.textContent = `₹${(effectivePrice * newQuantity).toFixed(2)}`;
+                            totalPriceElement.setAttribute('data-total', (effectivePrice * newQuantity).toFixed(2));
+                            updateOrderSummary(data);
+                            // Use debounced notification instead of direct call
+                            debouncedShowNotification(`Quantity ${action === 'increase' ? 'increased' : 'decreased'} successfully!`);
+                        } else {
+                            showNotification(`Cannot ${action} quantity beyond limits`, false);
+                        }
                     } else {
-                        showNotification(`Cannot ${action} quantity beyond limits`, false);
+                        showNotification(data.message || 'Failed to update quantity', false);
                     }
-                } else {
-                    showNotification(data.message || 'Failed to update quantity', false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('An error occurred. Please try again.', false);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred. Please try again.', false);
+                });
+            });
+        });
+    
+        // Function to rebuild cart items (unchanged)
+        function rebuildCartItems(cartItems) {
+            const cartItemsContainer = document.getElementById('cart-items');
+            cartItemsContainer.innerHTML = ''; // Clear existing items
+    
+            cartItems.forEach(item => {
+                const regularPrice = item.product.regularPrice;
+                const productOffer = item.product.productOffer || 0;
+                const categoryOffer = item.product.category?.categoryOffer || 0;
+                const effectiveOffer = Math.max(productOffer, categoryOffer);
+                const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
+    
+                const itemHtml = `
+                  <div class="border-b last:border-b-0 cart-item" data-product-id="${item.product._id}">
+                    <div class="md:grid md:grid-cols-12 gap-4 p-4 flex flex-wrap">
+                      <div class="md:col-span-6 flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto">
+                        <div class="w-20 h-20 flex-shrink-0">
+                          <img 
+                            src="/uploads/product-images/${item.product.productImage?.[0] || 'placeholder.jpg'}" 
+                            alt="${item.product.productName}" 
+                            class="w-full h-full object-cover rounded"
+                            onerror="this.src='/images/placeholder.jpg'"
+                          >
+                        </div>
+                        <div>
+                          <h3 class="font-medium text-gray-800">${item.product.productName}</h3>
+                          <p class="text-sm text-gray-500 mt-1 hidden md:block">
+                            ${item.product.description ? item.product.description.substring(0, 40) + '...' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
+                        <div class="md:text-center">
+                          ${regularPrice > effectivePrice ? `
+                            <div class="flex md:flex-col md:items-center">
+                              <span class="text-gray-500 line-through text-sm mr-2 md:mr-0">₹${regularPrice.toFixed(2)}</span>
+                              <span class="text-gray-900 font-medium">₹${effectivePrice.toFixed(2)}</span>
+                            </div>
+                            ${effectiveOffer > 0 ? `<span class="discount-badge md:mt-1 md:inline-block hidden">${effectiveOffer}% off</span>` : ''}
+                          ` : `
+                            <span class="text-gray-900 font-medium">₹${regularPrice.toFixed(2)}</span>
+                          `}
+                        </div>
+                      </div>
+                      <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
+                        <div class="flex items-center border rounded">
+                          <button 
+                            data-action="decrease" 
+                            data-product-id="${item.product._id}"
+                            class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
+                          >-</button>
+                          <input 
+                            type="number" 
+                            name="quantity" 
+                            value="${item.quantity}" 
+                            min="1" 
+                            max="${item.product.quantity + item.quantity}" 
+                            class="quantity-input text-center w-10"
+                            readonly
+                          >
+                          <button 
+                            data-action="increase" 
+                            data-product-id="${item.product._id}"
+                            class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
+                          >+</button>
+                        </div>
+                      </div>
+                      <div class="md:col-span-2 flex md:justify-end items-center w-full md:w-auto justify-between">
+                        <span class="text-gray-900 font-medium total-price md:text-right" data-total="${(effectivePrice * item.quantity).toFixed(2)}">
+                          ₹${(effectivePrice * item.quantity).toFixed(2)}
+                        </span>
+                        <form action="/cart/remove" method="POST" class="remove-form ml-4">
+                          <input type="hidden" name="productId" value="${item.product._id}">
+                          <button type="submit" class="text-gray-400 hover:text-red-500">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                cartItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
+            });
+    
+            // Reattach event listeners
+            attachEventListeners();
+        }
+    
+        // Function to attach event listeners
+        function attachEventListeners() {
+            document.querySelectorAll('.update-quantity-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const productId = this.getAttribute('data-product-id');
+                    const action = this.getAttribute('data-action');
+                    const quantityInput = this.parentElement.querySelector('.quantity-input');
+                    const currentQuantity = parseInt(quantityInput.value);
+                    const maxQuantity = parseInt(quantityInput.getAttribute('max'));
+    
+                    fetch('/cart/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId, action })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const newQuantity = action === 'increase' ? currentQuantity + 1 : currentQuantity - 1;
+                            if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+                                quantityInput.value = newQuantity;
+                                const totalPriceElement = quantityInput.closest('.cart-item').querySelector('.total-price');
+                                const effectivePrice = parseFloat(totalPriceElement.getAttribute('data-total')) / currentQuantity;
+                                totalPriceElement.textContent = `₹${(effectivePrice * newQuantity).toFixed(2)}`;
+                                totalPriceElement.setAttribute('data-total', (effectivePrice * newQuantity).toFixed(2));
+                                updateOrderSummary(data);
+                                debouncedShowNotification(`Quantity ${action === 'increase' ? 'increased' : 'decreased'} successfully!`);
+                            } else {
+                                showNotification(`Cannot ${action} quantity beyond limits`, false);
+                            }
+                        } else {
+                            showNotification(data.message || 'Failed to update quantity', false);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('An error occurred. Please try again.', false);
+                    });
+                });
+            });
+        }
+    
+        // Handle remove from cart (unchanged)
+        document.querySelectorAll('.remove-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const productId = this.querySelector('input[name="productId"]').value;
+    
+                fetch('/cart/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Product removed from cart');
+                        updateOrderSummary(data);
+                        const item = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+                        if (item) item.remove();
+                        if (document.querySelectorAll('.cart-item').length === 0) {
+                            location.reload();
+                        }
+                    } else {
+                        showNotification(data.message || 'Failed to remove product', false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred. Please try again.', false);
+                });
             });
         });
     });
-
-    // Handle remove from cart
-    document.querySelectorAll('.remove-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const productId = this.querySelector('input[name="productId"]').value;
-
-            fetch('/cart/remove', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('Product removed from cart');
-                    updateOrderSummary(data);
-                    const item = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
-                    if (item) item.remove();
-                    if (document.querySelectorAll('.cart-item').length === 0) {
-                        location.reload();
-                    }
-                } else {
-                    showNotification(data.message || 'Failed to remove product', false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('An error occurred. Please try again.', false);
-            });
-        });
-    });
-});
-  </script>
+    </script>
 </body>
 </html>

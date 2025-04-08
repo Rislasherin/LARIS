@@ -10,6 +10,8 @@ const cartController = require('../controllers/user/cartController')
 const Cart = require('../models/CartSchema')
 const  checkoutController = require('../controllers/user/checkoutController')
 const OrderController = require('../controllers/user/orderController')
+const wishlistController = require('../controllers/user/wishlistController')
+const walletController = require('../controllers/user/walletController')
 
 
 // Middleware to add cartCount
@@ -75,6 +77,7 @@ router.post('/reset-password',profileController.postNewPassword)
 router.get('/product/:id', productController.productDetails);
 router.get('/productdetails/:id',productController.productDetails)
 
+
 //profile
 router.get('/userProfile',userAuth,profileController.userProfile)
 router.post('/change-password',userAuth,profileController.changePassword);
@@ -114,7 +117,16 @@ router.get('/checkout/address', checkoutController.getCheckoutAddressPage);
 router.post('/checkout/payment', checkoutController.getPaymentPage);
 router.post('/add-address', checkoutController.addAddress);
 router.post('/place-order', checkoutController.placeOrder);
+router.post('/verify-payment', checkoutController.verifyPayment);
 router.get('/order-success', checkoutController.getOrderSuccessPage);
+router.get('/order-error', checkoutController.getOrderErrorPage);
+router.post('/retry-payment', checkoutController.retryPayment);
+
+//coupon
+router.get('/coupons/available',checkoutController.getAvailableCoupons); // New route
+router.post('/coupons/apply', checkoutController.applyCoupon);
+router.post('/coupons/remove', checkoutController.removeCoupon);
+
 
 router.get('/get-address/:addressId', checkoutController.getAddress);
 router.put('/edit-address/:addressId', checkoutController.editAddress);
@@ -122,9 +134,23 @@ router.delete('/remove-address/:addressId', checkoutController.removeAddress);
 
 router.get('/orders', OrderController.getOrdersPage);
 router.get('/order-details/:orderId', OrderController.getOrderDetailsPage);
-router.post('/order/cancel-product/:orderId/:productId', OrderController.cancelProduct);
-router.post('/return', OrderController.requestReturn);
+router.post('/user/order/cancel-order/:orderId', userAuth, OrderController.cancelOrder);
+router.post('/order/cancel-order/:orderId', userAuth,OrderController.cancelOrder);
+router.post('/user/return', OrderController.requestReturn);
 
+
+
+//wishlist
+router.get('/wishlist',userAuth,wishlistController.loadWishlist)
+router.post('/wishlist/toggle', wishlistController.toggleWishlist);
+router.post('/wishlist/clear',wishlistController.clearWishlist)
+
+
+//Wallet
+router.get('/wallet', walletController.renderWalletPage);
+router.get('/wallet/transactions',  walletController.getMoreTransactions);
+router.post('/wallet/add-cash', walletController.addCashToWallet);
+router.post('/wallet/verify-payment', userAuth, walletController.verifyPayment);
 
 
 module.exports = router;

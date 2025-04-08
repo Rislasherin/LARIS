@@ -66,6 +66,38 @@
       color: white;
       border-color: #374151;
     }
+    /* Wishlist button styles */
+    .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .wishlist-btn:hover {
+      transform: scale(1.1);
+      background-color: rgba(255, 255, 255, 1);
+    }
+    .wishlist-btn i.far.fa-heart {
+      color: #6B7280;
+    }
+    .wishlist-btn i.fas.fa-heart {
+      color: #EF4444;
+    }
+    .wishlist-btn.active i.far.fa-heart {
+      display: none;
+    }
+    .wishlist-btn:not(.active) i.fas.fa-heart {
+      display: none;
+    }
   </style>
 </head>
 
@@ -270,6 +302,17 @@
                       onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden');"
                     />
                   </a>
+                  <!-- Wishlist Button -->
+<!-- Inside the products loop -->
+<button 
+  type="button" 
+  class="wishlist-btn <%= product.inWishlist ? 'active' : '' %>" 
+  onclick="toggleWishlist('<%= product._id %>', this)" 
+  aria-label="Add to wishlist"
+>
+  <i class="far fa-heart"></i>
+  <i class="fas fa-heart"></i>
+</button>
                 </div>
                 <div class="p-3 flex-grow flex flex-col">
                   <div class="flex justify-between items-start">
@@ -352,98 +395,145 @@
         </div>
 
         <!-- Pagination Section -->
-        <!-- Pagination Section -->
-<% if (totalPages > 1) { %>
-  <div class="flex justify-center mt-10">
-    <% if (currentPage > 1) { %>
-      <a href="/shop?page=<%= currentPage - 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-        class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-        Previous
-      </a>
-    <% } %>
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <a href="/shop?page=<%= i %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-        class="mx-1 px-4 py-2 <%= currentPage === i ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' %> rounded-md hover:bg-gray-200 transition-colors">
-        <%= i %>
-      </a>
-    <% } %>
-    <% if (currentPage < totalPages) { %>
-      <a href="/shop?page=<%= currentPage + 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-        class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-        Next
-      </a>
-    <% } %>
-  </div>
-<% } %>
+        <% if (totalPages > 1) { %>
+          <div class="flex justify-center mt-10">
+            <% if (currentPage > 1) { %>
+              <a href="/shop?page=<%= currentPage - 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
+                class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                Previous
+              </a>
+            <% } %>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/shop?page=<%= i %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
+                class="mx-1 px-4 py-2 <%= currentPage === i ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' %> rounded-md hover:bg-gray-200 transition-colors">
+                <%= i %>
+              </a>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+              <a href="/shop?page=<%= currentPage + 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
+                class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                Next
+              </a>
+            <% } %>
+          </div>
+        <% } %>
       </div>
     </div>
   </main>
   <%- include('../partials/user/footer') %>
 
   <script>
-
-function addToCart(productId) {
-    const button = document.querySelector(`button[onclick="addToCart('${productId}')"]`);
-    if (button.disabled) {
+    function addToCart(productId) {
+      const button = document.querySelector(`button[onclick="addToCart('${productId}')"]`);
+      if (button.disabled) {
         console.log('Button is disabled');
         return;
-    }
+      }
 
-    console.log('Adding to cart, Product ID:', productId);
-    
-    fetch('/cart/add', {
+      console.log('Adding to cart, Product ID:', productId);
+      
+      fetch('/cart/add', {
         method: 'POST',
         headers: { 
-            'Content-Type': 'application/json',
-            // Add CSRF token if you're using CSRF protection
-            // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+          'Content-Type': 'application/json',
+          // Add CSRF token if you're using CSRF protection
+          // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
         },
         body: JSON.stringify({ productId: productId, quantity: 1 })
-    })
-    .then(response => {
+      })
+      .then(response => {
         console.log('Response status:', response.status);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
-    })
-    .then(data => {
+      })
+      .then(data => {
         console.log('Response data:', data);
         if (data.success) {
-            showNotification('Product added to your cart', 'success');
-            const cartCountElement = document.getElementById('cartCount');
-            if (cartCountElement) {
-                const currentCount = parseInt(cartCountElement.textContent) || 0;
-                cartCountElement.textContent = currentCount + 1;
-            }
+          showNotification('Product added to your cart', 'success');
+          const cartCountElement = document.getElementById('cartCount');
+          if (cartCountElement) {
+            const currentCount = parseInt(cartCountElement.textContent) || 0;
+            cartCountElement.textContent = currentCount + 1;
+          }
         } else {
-            showNotification(data.message || 'Failed to add product to cart', 'error');
+          showNotification(data.message || 'Failed to add product to cart', 'error');
         }
-    })
-    .catch(error => {
+      })
+      .catch(error => {
         console.error('Error adding to cart:', error);
         showNotification('An error occurred while adding to cart', 'error');
-    });
-}
+      });
+    }
 
-      function showNotification(message, type) {
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => notification.remove());
-        
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-          <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
-          <span>${message}</span>
-        `;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => { notification.style.transform = 'translateY(0)'; }, 10);
-        setTimeout(() => {
-          notification.style.transform = 'translateY(-100px)';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }
+    // Toggle wishlist function
+    function toggleWishlist(productId, button) {
+      // Check if user is logged in
+      fetch('/wishlist/toggle', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          // Add CSRF token if you're using CSRF protection
+          // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({ productId: productId })
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // User not logged in
+            showNotification('Please login to add items to your wishlist', 'error');
+            window.location.href = '/login'; // Redirect to login page
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Wishlist response:', data);
+        if (data.success) {
+          button.classList.toggle('active');
+          const action = button.classList.contains('active') ? 'added to' : 'removed from';
+          showNotification(`Product ${action} your wishlist`, 'success');
+          
+          // Update wishlist count in header if it exists
+          const wishlistCountElement = document.getElementById('wishlistCount');
+          if (wishlistCountElement) {
+            const currentCount = parseInt(wishlistCountElement.textContent) || 0;
+            wishlistCountElement.textContent = button.classList.contains('active') ? 
+              currentCount + 1 : 
+              Math.max(0, currentCount - 1);
+          }
+        } else {
+          showNotification(data.message || 'Failed to update wishlist', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error updating wishlist:', error);
+        showNotification('An error occurred while updating your wishlist', 'error');
+      });
+    }
+
+    function showNotification(message, type) {
+      const existingNotifications = document.querySelectorAll('.notification');
+      existingNotifications.forEach(notification => notification.remove());
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => { notification.style.transform = 'translateY(0)'; }, 10);
+      setTimeout(() => {
+        notification.style.transform = 'translateY(-100px)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
       const filterToggles = document.querySelectorAll('.filter-toggle');
@@ -472,6 +562,7 @@ function addToCart(productId) {
         });
       }
 
+      
       const filterForm = document.getElementById('filterForm');
       if (filterForm) {
         filterForm.addEventListener('submit', function (event) {
