@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema({
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     regularPrice: { type: Number, required: true },
     salePrice: { type: Number,required:true },
-    quantity: { type: Number, required: true },
+    quantity: { type: Number, required: true ,default:0},
     skintype: { type: String ,default :'', required:true},
     skinConcern: { type: [String] ,required:true},
     reviewCount: { type: Number, default: 0 },
@@ -22,13 +22,7 @@ const productSchema = new mongoose.Schema({
     ingredients: [String],
     brand: { type: String },
     howToUse: {type: String,default :'',required: false},
-    variants: [{
-        size: { type: String,}, // e.g., "30ml", "50ml", "100ml"
-        quantity: { type: Number,  default: 0 },
-        regularPrice: { type: Number }, // Optional: variant-specific pricing
-        salePrice: { type: Number }     // Optional: variant-specific pricing
-    }],
 
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

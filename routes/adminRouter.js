@@ -12,6 +12,7 @@ const upload = require ('../utils/multer')
 const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
 const couponController = require('../controllers/admin/coupenController')
+const salesReportController = require('../controllers/admin/salesReportController')
 
 
 
@@ -48,6 +49,7 @@ router.get('/products',adminAuth,productController.getAllproducts)
 router.post('/addProductOffer',adminAuth,productController.addProductOffer)
 router.post('/removeProductOffer', adminAuth, productController.removeproductOffer)
 router.post('/toggleProductStatus', productController.toggleProductStatus);
+router.get('/products/data', productController.getProductData);
 
 //edit product
 router.get('/editProduct/:id',adminAuth,productController.getEditProduct)
@@ -74,4 +76,11 @@ router.post("/coupon/add", adminAuth, couponController.addCoupon);
 router.put('/coupons/update/:id', adminAuth, couponController.updateCoupon);
 router.get('/coupon/:id', adminAuth, couponController.getCouponById);
 router.delete('/coupon/delete/:id', adminAuth, couponController.deleteCoupon);
+
+
+// Sales Report Route
+router.get("/reports/sales", adminAuth,salesReportController.getSalesReport);
+router.get("/reports/sales/download/pdf", salesReportController.downloadSalesReportPDF);
+router.get("/reports/sales/download/excel", salesReportController.downloadSalesReportExcel);
+
 module.exports = router;

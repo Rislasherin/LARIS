@@ -173,12 +173,16 @@
           </div>
           <span class="ml-2 text-gray-500">(<%= product.reviewCount %> reviews)</span>
         </div>
-        <div class="text-xl text-red-500 mt-2">
-          <%= product.price %>
-          <% if (product.originalPrice) { %>
-            <span class="line-through text-gray-500 ml-2"><%= product.originalPrice %></span>
-            <span class="ml-2 text-green-500">(<%= product.offerPercentage !== null ? product.offerPercentage : 0 %>% OFF)</span>
-          <% } %>
+        <div class="mt-4">
+          <div class="text-xl text-red-500">
+            <%= product.price %> <!-- Sale Price -->
+            <% if (product.originalPrice) { %>
+              <span class="line-through text-gray-500 ml-2 text-base"><%= product.originalPrice %></span> <!-- Regular Price -->
+              <% if (product.offerPercentage) { %>
+                <span class="ml-2 text-green-500">(<%= product.offerPercentage %>% OFF)</span> <!-- Offer Percentage -->
+              <% } %>
+            <% } %>
+          </div>
         </div>
         <!-- <div class="mt-4">
           <span class="font-semibold">Brand:</span> 
@@ -219,40 +223,21 @@
             </div>
           </div>
         </div>
-
-        <div class="mt-6">
-          <span class="font-semibold">Size:</span>
-          <div class="flex space-x-2 mt-2">
-            <% product.variants.forEach((variant, index) => { %>
-              <button 
-                class="size-btn bg-white border border-gray-300 px-3 py-1 rounded hover:border-gray-800 <%= variant.quantity > 0 ? '' : 'opacity-50 cursor-not-allowed' %>" 
-                data-variant-index="<%= index %>"
-                <%= variant.quantity === 0 ? 'disabled' : '' %>
-              >
-                <%= variant.size %> <%= variant.quantity > 0 ? `(${variant.quantity} in stock)` : '(Out of stock)' %>
-              </button>
-            <% }) %>
-          </div>
-          <div id="size-error" class="text-red-500 text-sm mt-1 hidden">Please select a size</div>
-        </div>
         
         <form id="cartForm" class="mt-6">
           <input type="hidden" name="productId" value="<%= product._id %>" />
-          <input type="hidden" name="variantIndex" id="variantIndex" value="" />
+          <input type="hidden" id="maxQuantity" value="<%= product.quantity %>">
           <div class="flex items-center space-x-4">
             <div>
               <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
               <div class="flex items-center mt-1">
                 <button type="button" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-l" onclick="decrementQuantity()">-</button>
-                <input id="quantity" name="quantity" class="border border-gray-300 text-center w-12 py-1" type="number" value="1" min="1" />
+                <input id="quantity" name="quantity" class="border border-gray-300 text-center w-12 py-1" type="number" value="<%= cartCountForProduct || 1 %>" min="1" max="<%= product.quantity > 5 ? 5 : product.quantity %>">
                 <button type="button" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-r" onclick="incrementQuantity()">+</button>
               </div>
             </div>
             <div class="flex-1 flex space-x-2">
-              <button 
-                type="submit" 
-                class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors flex items-center justify-center"
-              >
+              <button type="submit" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors flex items-center justify-center">
                 <i class="fas fa-shopping-cart mr-2"></i> ADD TO CART
               </button>
             </div>
@@ -639,445 +624,413 @@
 
 
   <script>
-
-
-function showNotification(message, type) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      notification.style.transform = 'translateX(100%)';
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-      }, 10);
-
-      setTimeout(() => {
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
         notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
-
-    function changeImage(src) {
-      const mainImage = document.getElementById("mainImage");
-      mainImage.src = src;
-      
-
-      const thumbnails = document.querySelectorAll(".flex.justify-center.mt-4.space-x-4 img");
-      thumbnails.forEach(thumb => {
-        if (thumb.src === src) {
-          thumb.classList.add("border-yellow-500");
-          thumb.classList.remove("border-transparent");
-        } else {
-          thumb.classList.remove("border-yellow-500");
-          thumb.classList.add("border-transparent");
-        }
-      });
-    }
-
-    function showTab(tab) {
-  const tabs = ["description", "howToUse", "reviews"];  
-  const tabButtons = ["descTab", "howToTab", "revTab"]; 
-  
-  tabs.forEach(t => {
-    const element = document.getElementById(t);
-    if (element) {
-      element.classList.add("hidden");
-    }
-  });
-  
-  tabButtons.forEach(b => {
-    const element = document.getElementById(b);
-    if (element) {
-      element.classList.remove("border-b-2", "border-gray-800");
-      element.classList.add("text-gray-500");
-    }
-  });
-  
-  const tabElement = document.getElementById(tab);
-  const tabButtonElement = document.getElementById(tab + "Tab");
-  
-  if (tabElement) {
-    tabElement.classList.remove("hidden");
-  }
-  if (tabButtonElement) {
-    tabButtonElement.classList.add("border-b-2", "border-gray-800");
-    tabButtonElement.classList.remove("text-gray-500");
-  }
-}
-
-    function incrementQuantity() {
-      const input = document.getElementById("quantity");
-      input.value = parseInt(input.value) + 1;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 10);
+    
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
     
-    function decrementQuantity() {
-      const input = document.getElementById("quantity");
-      if (parseInt(input.value) > 1) {
-        input.value = parseInt(input.value) - 1;
-      }
-    }
-
-    document.querySelectorAll(".star-rating").forEach(star => {
-      star.addEventListener("click", function() {
-        const rating = this.dataset.rating;
-        document.getElementById("rating").value = rating;
-
-        document.querySelectorAll(".star-rating").forEach((s, index) => {
-          if (index < rating) {
-            s.classList.remove("far");
-            s.classList.add("fas");
-          } else {
-            s.classList.remove("fas");
-            s.classList.add("far");
-          }
-        });
-      });
-      
-      star.addEventListener("mouseover", function() {
-        const rating = this.dataset.rating;
+    function changeImage(src) {
+        const mainImage = document.getElementById("mainImage");
+        mainImage.src = src;
         
-        document.querySelectorAll(".star-rating").forEach((s, index) => {
-          if (index < rating) {
-            s.classList.remove("far");
-            s.classList.add("fas");
-          } else {
-            s.classList.remove("fas");
-            s.classList.add("far");
-          }
+        const thumbnails = document.querySelectorAll(".flex.justify-center.mt-4.space-x-4 img");
+        thumbnails.forEach(thumb => {
+            if (thumb.src === src) {
+                thumb.classList.add("border-yellow-500");
+                thumb.classList.remove("border-transparent");
+            } else {
+                thumb.classList.remove("border-yellow-500");
+                thumb.classList.add("border-transparent");
+            }
         });
-      });
+    }
+    
+    function showTab(tab) {
+        const tabs = ["description", "howToUse", "reviews"];
+        const tabButtons = ["descTab", "howToTab", "revTab"];
+        
+        tabs.forEach(t => {
+            const element = document.getElementById(t);
+            if (element) element.classList.add("hidden");
+        });
+        
+        tabButtons.forEach(b => {
+            const element = document.getElementById(b);
+            if (element) {
+                element.classList.remove("border-b-2", "border-gray-800");
+                element.classList.add("text-gray-500");
+            }
+        });
+        
+        const tabElement = document.getElementById(tab);
+        const tabButtonElement = document.getElementById(tab + "Tab");
+        
+        if (tabElement) tabElement.classList.remove("hidden");
+        if (tabButtonElement) {
+            tabButtonElement.classList.add("border-b-2", "border-gray-800");
+            tabButtonElement.classList.remove("text-gray-500");
+        }
+    }
+    
+    document.querySelectorAll(".star-rating").forEach(star => {
+        star.addEventListener("click", function() {
+            const rating = this.dataset.rating;
+            document.getElementById("rating").value = rating;
+    
+            document.querySelectorAll(".star-rating").forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove("far");
+                    s.classList.add("fas");
+                } else {
+                    s.classList.remove("fas");
+                    s.classList.add("far");
+                }
+            });
+        });
+        
+        star.addEventListener("mouseover", function() {
+            const rating = this.dataset.rating;
+            
+            document.querySelectorAll(".star-rating").forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove("far");
+                    s.classList.add("fas");
+                } else {
+                    s.classList.remove("fas");
+                    s.classList.add("far");
+                }
+            });
+        });
     });
-
+    
     const starContainer = document.querySelector(".star-rating").parentElement;
     starContainer.addEventListener("mouseleave", function() {
-      const currentRating = document.getElementById("rating").value;
-      
-      document.querySelectorAll(".star-rating").forEach((s, index) => {
-        if (index < currentRating) {
-          s.classList.remove("far");
-          s.classList.add("fas");
-        } else {
-          s.classList.remove("fas");
-          s.classList.add("far");
-        }
-      });
+        const currentRating = document.getElementById("rating").value;
+        
+        document.querySelectorAll(".star-rating").forEach((s, index) => {
+            if (index < currentRating) {
+                s.classList.remove("far");
+                s.classList.add("fas");
+            } else {
+                s.classList.remove("fas");
+                s.classList.add("far");
+            }
+        });
     });
-
+    
     function toggleWishlist(productId, element) {
-  const icon = element.querySelector('#wishlistIcon');
-  
-  fetch('/wishlist/toggle', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ productId: productId })
-  })
-  .then(response => {
-    if (!response.ok) {
-      if (response.status === 401) {
-        showNotification('Please login to add items to your wishlist', 'error');
-        setTimeout(() => window.location.href = '/login', 2000);
-        return;
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    if (data.success) {
-      // Toggle the icon
-      if (icon.classList.contains('far')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        showNotification('Product added to your wishlist', 'success');
-      } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        showNotification('Product removed from your wishlist', 'success');
-      }
-      
-      // Update wishlist count in header if it exists
-      const wishlistCountElement = document.getElementById('wishlistCount');
-      if (wishlistCountElement && data.wishlistCount !== undefined) {
-        wishlistCountElement.textContent = data.wishlistCount;
-      }
-    } else {
-      showNotification(data.message || 'Failed to update wishlist', 'error');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showNotification('An error occurred. Please try again.', 'error');
-  });
-}
-
-
-    function buyNow(productId) {
-      const quantity = document.getElementById("quantity").value;
-      window.location.href = `/checkout?productId=${productId}&quantity=${quantity}`;
-    }
-
-    function setupImageMagnifier() {
-  const mainImage = document.getElementById("mainImage");
-  const mainImageContainer = mainImage.parentElement;
-
-  const zoomOverlay = document.createElement("div");
-  zoomOverlay.classList.add("zoom-overlay");
-  zoomOverlay.style.position = "absolute";
-  zoomOverlay.style.top = "0";
-  zoomOverlay.style.left = "0";
-  zoomOverlay.style.width = "100%";
-  zoomOverlay.style.height = "100%";
-  zoomOverlay.style.backgroundColor = "#FFFFFF";
-  zoomOverlay.style.opacity = "0";
-  zoomOverlay.style.transition = "opacity 0.3s ease";
-  zoomOverlay.style.pointerEvents = "none";
-  zoomOverlay.style.zIndex = "5";
-  zoomOverlay.style.display = "none";
-
-  const zoomedImage = document.createElement("img");
-  zoomedImage.src = mainImage.src;
-  zoomedImage.classList.add("zoomed-image-inner");
-  zoomedImage.style.position = "absolute";
-  zoomedImage.style.top = "0";
-  zoomedImage.style.left = "0";
-  zoomedImage.style.width = "200%"; 
-  zoomedImage.style.height = "200%"; 
-  zoomedImage.style.objectFit = "cover";
-  zoomedImage.style.opacity = "0";
-  zoomedImage.style.transition = "opacity 0.3s ease";
-  zoomedImage.style.pointerEvents = "none";
-  zoomedImage.style.zIndex = "6";
-  zoomedImage.style.display = "none";
-  
-
-  mainImageContainer.appendChild(zoomOverlay);
-  mainImageContainer.appendChild(zoomedImage);
- 
-  mainImage.style.cursor = "crosshair";
-  
-  function handleThumbnailClick() {
-    const thumbnails = document.querySelectorAll(".flex.justify-center.mt-4.space-x-4 img");
-    thumbnails.forEach(thumb => {
-      thumb.addEventListener("click", function() {
-        zoomedImage.src = this.src;
-      });
-    });
-  }
-  
-  handleThumbnailClick();
-  
-  
-  mainImage.addEventListener("mouseenter", function() {
-    zoomOverlay.style.display = "block";
-    zoomedImage.style.display = "block";
-    setTimeout(() => {
-      zoomOverlay.style.opacity = "0.1";
-      zoomedImage.style.opacity = "1";
-    }, 50);
-  });
-  
-  mainImage.addEventListener("mousemove", function(e) {
-    const rect = mainImageContainer.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    
- 
-    const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
-    const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
-    
-    zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
-  });
-  
-  mainImage.addEventListener("mouseleave", function() {
-    zoomOverlay.style.opacity = "0";
-    zoomedImage.style.opacity = "0";
-    setTimeout(() => {
-      zoomOverlay.style.display = "none";
-      zoomedImage.style.display = "none";
-    }, 300);
-  });
-
-  let isTouching = false;
-  
-  mainImage.addEventListener("touchstart", function(e) {
-    e.preventDefault();
-    isTouching = true;
-    zoomOverlay.style.display = "block";
-    zoomedImage.style.display = "block";
-    setTimeout(() => {
-      zoomOverlay.style.opacity = "0.1";
-      zoomedImage.style.opacity = "1";
-    }, 50);
-    
-    const touch = e.touches[0];
-    const rect = mainImageContainer.getBoundingClientRect();
-    const x = (touch.clientX - rect.left) / rect.width;
-    const y = (touch.clientY - rect.top) / rect.height;
-    
-    const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
-    const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
-    
-    zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
-  });
-  
-  mainImage.addEventListener("touchmove", function(e) {
-    if (isTouching) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = mainImageContainer.getBoundingClientRect();
-      const x = (touch.clientX - rect.left) / rect.width;
-      const y = (touch.clientY - rect.top) / rect.height;
-      
-      const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
-      const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
-      
-      zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
-    }
-  });
-  
-  mainImage.addEventListener("touchend", function() {
-    isTouching = false;
-    zoomOverlay.style.opacity = "0";
-    zoomedImage.style.opacity = "0";
-    setTimeout(() => {
-      zoomOverlay.style.display = "none";
-      zoomedImage.style.display = "none";
-    }, 300);
-  });
-  
-  function handleResize() {
-    zoomedImage.style.width = mainImageContainer.offsetWidth * 2 + "px";
-    zoomedImage.style.height = mainImageContainer.offsetHeight * 2 + "px";
-  }
-  
-  handleResize();
-  window.addEventListener("resize", handleResize);
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-  setupImageMagnifier();
-});
-
-
-
-document.addEventListener("DOMContentLoaded", function() {
-    const cartForm = document.getElementById("cartForm");
-
-    if (cartForm) {
-      cartForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        const productId = this.querySelector('input[name="productId"]').value;
-        const quantity = this.querySelector('input[name="quantity"]').value;
-
-        fetch('/cart/add', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ productId, quantity: parseInt(quantity) })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Show success notification
-            showNotification('Product added to cart successfully!', 'success');
-
-            // Update cart count in header
-            const cartCountElement = document.getElementById('cart-count');
-            if (cartCountElement) {
-              cartCountElement.textContent = data.cartCount;
-            }
-          } else {
-            showNotification(data.message || 'Failed to add product to cart', 'error');
-            if (data.redirectUrl) {
-              setTimeout(() => window.location.href = data.redirectUrl, 2000);
-            }
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          showNotification('An error occurred. Please try again.', 'error');
-        });
-      });
-    }
-
-    
-
-    function incrementQuantity() {
-      const input = document.getElementById("quantity");
-      input.value = parseInt(input.value) + 1;
-    }
-    
-    function decrementQuantity() {
-      const input = document.getElementById("quantity");
-      if (parseInt(input.value) > 1) {
-        input.value = parseInt(input.value) - 1;
-      }
-    }
-  });
-
-  document.addEventListener("DOMContentLoaded", function() {
-    const sizeButtons = document.querySelectorAll('.size-btn');
-    const variantIndexInput = document.getElementById('variantIndex');
-    const cartForm = document.getElementById('cartForm');
-    const sizeError = document.getElementById('size-error');
-
-    sizeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (!this.disabled) {
-                sizeButtons.forEach(btn => btn.classList.remove('active', 'border-gray-800'));
-                this.classList.add('active', 'border-gray-800');
-                variantIndexInput.value = this.dataset.variantIndex;
-                sizeError.classList.add('hidden');
-            }
-        });
-    });
-
-    cartForm.addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        if (!variantIndexInput.value) {
-            sizeError.classList.remove('hidden');
-            return;
-        }
-
-        const productId = this.querySelector('input[name="productId"]').value;
-        const quantity = this.querySelector('input[name="quantity"]').value;
-        const variantIndex = variantIndexInput.value;
-
-        fetch('/cart/add', {
+        const icon = element.querySelector('#wishlistIcon');
+        
+        fetch('/wishlist/toggle', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ productId, quantity: parseInt(quantity), variantIndex: parseInt(variantIndex) })
+            body: JSON.stringify({ productId: productId })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    showNotification('Please login to add items to your wishlist', 'error');
+                    setTimeout(() => window.location.href = '/login', 2000);
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                showNotification('Product added to cart successfully!', 'success');
-                const cartCountElement = document.getElementById('cart-count');
-                if (cartCountElement) {
-                    cartCountElement.textContent = data.cartCount;
+                if (icon.classList.contains('far')) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    showNotification('Product added to your wishlist', 'success');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    showNotification('Product removed from your wishlist', 'success');
+                }
+                
+                const wishlistCountElement = document.getElementById('wishlistCount');
+                if (wishlistCountElement && data.wishlistCount !== undefined) {
+                    wishlistCountElement.textContent = data.wishlistCount;
                 }
             } else {
-                showNotification(data.message || 'Failed to add product to cart', 'error');
-                if (data.redirectUrl) {
-                    setTimeout(() => window.location.href = data.redirectUrl, 2000);
-                }
+                showNotification(data.message || 'Failed to update wishlist', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
             showNotification('An error occurred. Please try again.', 'error');
         });
+    }
+    
+    function buyNow(productId) {
+        const quantity = document.getElementById("quantity").value;
+        window.location.href = `/checkout?productId=${productId}&quantity=${quantity}`;
+    }
+    
+    function setupImageMagnifier() {
+        const mainImage = document.getElementById("mainImage");
+        const mainImageContainer = mainImage.parentElement;
+    
+        const zoomOverlay = document.createElement("div");
+        zoomOverlay.classList.add("zoom-overlay");
+        zoomOverlay.style.position = "absolute";
+        zoomOverlay.style.top = "0";
+        zoomOverlay.style.left = "0";
+        zoomOverlay.style.width = "100%";
+        zoomOverlay.style.height = "100%";
+        zoomOverlay.style.backgroundColor = "#FFFFFF";
+        zoomOverlay.style.opacity = "0";
+        zoomOverlay.style.transition = "opacity 0.3s ease";
+        zoomOverlay.style.pointerEvents = "none";
+        zoomOverlay.style.zIndex = "5";
+        zoomOverlay.style.display = "none";
+    
+        const zoomedImage = document.createElement("img");
+        zoomedImage.src = mainImage.src;
+        zoomedImage.classList.add("zoomed-image-inner");
+        zoomedImage.style.position = "absolute";
+        zoomedImage.style.top = "0";
+        zoomedImage.style.left = "0";
+        zoomedImage.style.width = "200%"; 
+        zoomedImage.style.height = "200%"; 
+        zoomedImage.style.objectFit = "cover";
+        zoomedImage.style.opacity = "0";
+        zoomedImage.style.transition = "opacity 0.3s ease";
+        zoomedImage.style.pointerEvents = "none";
+        zoomedImage.style.zIndex = "6";
+        zoomedImage.style.display = "none";
+        
+        mainImageContainer.appendChild(zoomOverlay);
+        mainImageContainer.appendChild(zoomedImage);
+        
+        mainImage.style.cursor = "crosshair";
+        
+        function handleThumbnailClick() {
+            const thumbnails = document.querySelectorAll(".flex.justify-center.mt-4.space-x-4 img");
+            thumbnails.forEach(thumb => {
+                thumb.addEventListener("click", function() {
+                    zoomedImage.src = this.src;
+                });
+            });
+        }
+        
+        handleThumbnailClick();
+        
+        mainImage.addEventListener("mouseenter", function() {
+            zoomOverlay.style.display = "block";
+            zoomedImage.style.display = "block";
+            setTimeout(() => {
+                zoomOverlay.style.opacity = "0.1";
+                zoomedImage.style.opacity = "1";
+            }, 50);
+        });
+        
+        mainImage.addEventListener("mousemove", function(e) {
+            const rect = mainImageContainer.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
+            const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
+            
+            zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
+        });
+        
+        mainImage.addEventListener("mouseleave", function() {
+            zoomOverlay.style.opacity = "0";
+            zoomedImage.style.opacity = "0";
+            setTimeout(() => {
+                zoomOverlay.style.display = "none";
+                zoomedImage.style.display = "none";
+            }, 300);
+        });
+    
+        let isTouching = false;
+        
+        mainImage.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            isTouching = true;
+            zoomOverlay.style.display = "block";
+            zoomedImage.style.display = "block";
+            setTimeout(() => {
+                zoomOverlay.style.opacity = "0.1";
+                zoomedImage.style.opacity = "1";
+            }, 50);
+            
+            const touch = e.touches[0];
+            const rect = mainImageContainer.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) / rect.width;
+            const y = (touch.clientY - rect.top) / rect.height;
+            
+            const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
+            const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
+            
+            zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
+        });
+        
+        mainImage.addEventListener("touchmove", function(e) {
+            if (isTouching) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = mainImageContainer.getBoundingClientRect();
+                const x = (touch.clientX - rect.left) / rect.width;
+                const y = (touch.clientY - rect.top) / rect.height;
+                
+                const posX = -x * (zoomedImage.offsetWidth - mainImageContainer.offsetWidth);
+                const posY = -y * (zoomedImage.offsetHeight - mainImageContainer.offsetHeight);
+                
+                zoomedImage.style.transform = `translate(${posX}px, ${posY}px)`;
+            }
+        });
+        
+        mainImage.addEventListener("touchend", function() {
+            isTouching = false;
+            zoomOverlay.style.opacity = "0";
+            zoomedImage.style.opacity = "0";
+            setTimeout(() => {
+                zoomOverlay.style.display = "none";
+                zoomedImage.style.display = "none";
+            }, 300);
+        });
+        
+        function handleResize() {
+            zoomedImage.style.width = mainImageContainer.offsetWidth * 2 + "px";
+            zoomedImage.style.height = mainImageContainer.offsetHeight * 2 + "px";
+        }
+        
+        handleResize();
+        window.addEventListener("resize", handleResize);
+    }
+    
+    function incrementQuantity() {
+  const input = document.getElementById("quantity");
+  const productId = document.querySelector('input[name="productId"]').value;
+  const current = parseInt(input.value);
+
+  // Fetch real-time stock and cart quantity
+  fetch(`/product/${productId}/stock`, { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+      const currentStock = data.quantity;
+      fetch('/cart/get-quantity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId })
+      })
+        .then(response => response.json())
+        .then(cartData => {
+          const currentCartQuantity = cartData.quantity || 0;
+          const totalAvailableStock = currentStock + currentCartQuantity;
+          const maxAllowed = Math.min(totalAvailableStock, 5);
+          const totalAllowed = maxAllowed - currentCartQuantity;
+
+          if (current < totalAllowed) {
+            input.value = current + 1;
+          } else {
+            showNotification(
+              `Only ${totalAllowed} more items can be added (total limit: ${maxAllowed})`,
+              'error'
+            );
+          }
+        });
+    })
+    .catch(error => {
+      console.error('Error fetching stock:', error);
+      showNotification('Unable to verify stock', 'error');
+    });
+}
+
+function decrementQuantity() {
+  const input = document.getElementById("quantity");
+  const current = parseInt(input.value);
+  if (current > 1) {
+    input.value = current - 1;
+  }
+}
+
+document.getElementById("cartForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const productId = this.querySelector('input[name="productId"]').value;
+  const quantityInput = document.getElementById("quantity");
+  const selectedQuantity = parseInt(quantityInput.value);
+
+  // Fetch current stock
+  fetch(`/product/${productId}/stock`, { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+      const currentStock = data.quantity;
+
+      // Fetch current cart quantity
+      fetch('/cart/get-quantity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId })
+      })
+        .then(response => response.json())
+        .then(cartData => {
+          const currentCartQuantity = cartData.quantity || 0;
+          const totalAvailableStock = currentStock + currentCartQuantity; // Total stock including cart
+          const maxAllowed = Math.min(totalAvailableStock, 5); // Cap at 5 or total stock
+          const totalQuantity = currentCartQuantity + selectedQuantity;
+
+          if (totalQuantity > maxAllowed) {
+            showNotification(
+              `Only ${maxAllowed - currentCartQuantity} more items can be added (total limit: ${maxAllowed})`,
+              'error'
+            );
+            return;
+          }
+
+          // Proceed with adding to cart
+          fetch('/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, quantity: selectedQuantity })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showNotification('Product added to cart!', 'success');
+                const cartCountElement = document.getElementById('cart-count');
+                if (cartCountElement) {
+                  cartCountElement.textContent = data.cartCount || (parseInt(cartCountElement.textContent) + 1);
+                }
+                quantityInput.value = 1; // Reset to 1
+              } else {
+                showNotification(data.message || 'Failed to add to cart', 'error');
+                if (data.redirectUrl) {
+                  setTimeout(() => window.location.href = data.redirectUrl, 2000);
+                }
+              }
+            });
+        });
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification('An error occurred', 'error');
     });
 });
-  </script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    setupImageMagnifier();
+})
+    </script>
 </body>
 </html>

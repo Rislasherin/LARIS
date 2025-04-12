@@ -15,7 +15,7 @@ const getOrdersPage = async (req, res) => {
 
     const orders = await Order.find({ 
       user: userId,
-      status: { $nin: ['Payment Pending', 'Payment Failed'] } // Exclude failed or pending payments
+      status: { $nin: ['Payment Pending', 'Payment Failed'] }
     })
       .populate({
         path: 'orderItems.productId',
@@ -35,7 +35,10 @@ const getOrdersPage = async (req, res) => {
         image: item.productId?.productImage?.length > 0 
           ? `/uploads/product-images/${item.productId.productImage[0].trim()}` 
           : '/default-image.jpg'
-      }))
+      })),
+      paymentStatus: order.paymentMethod === 'cod' 
+        ? (order.status === 'Delivered' ? 'Completed' : 'Pending') 
+        : (order.status === 'Payment Pending' ? 'Pending' : 'Completed')
     }));
 
     res.render('orders', { orders: formattedOrders, user: req.session.user, message: null });
@@ -193,103 +196,103 @@ const refundToWallet = async (userId, amount, description, orderId) => {
 };
 
 const cancelProduct = async (req, res) => {
-    
-    try {
-      const { orderId, productId } = req.params;
-      const { reason = "No reason provided" } = req.body;
-      const userId = req.session.user?._id;
-  
-      console.log('Cancel Product Request:', { orderId, productId, reason, userId });
-  
-      if (!orderId || !productId) {
-        return res.status(400).json({ success: false, message: 'Missing required fields' });
-      }
-  
-      const order = await Order.findOne({ _id: orderId, user: userId }).populate('orderItems.productId');
-      if (!order) {
-        console.log('Order not found:', { orderId, userId });
-        return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-  
-      const productIndex = order.orderItems.findIndex(item => 
-        item.productId._id.toString() === productId.toString()
-      );
-      if (productIndex === -1) {
-        console.log('Product not found in order:', { productId });
-        return res.status(404).json({ success: false, message: 'Product not found in order' });
-      }
-  
-      const product = order.orderItems[productIndex];
-  
-      if (['Cancelled', 'Delivered', 'Cancellation Requested', 'Returned'].includes(product.status)) {
-        console.log('Product cannot be cancelled:', { productId, status: product.status });
-        return res.status(400).json({ success: false, message: `Product cannot be cancelled (Current status: ${product.status})` });
-      }
-  
-      product.status = 'Cancelled';
-  
-      const productDoc = await Product.findById(product.productId._id);
-      if (!productDoc) {
-        console.log('Product not found in inventory:', { productId: product.productId._id });
-        return res.status(500).json({ success: false, message: 'Product not found in inventory' });
-      }
-      productDoc.stock += product.quantity;
-      await productDoc.save();
-  
-      const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
-      const someCancelled = order.orderItems.some(item => item.status === 'Cancelled');
-      const someDelivered = order.orderItems.some(item => item.status === 'Delivered');
-  
-      if (allCancelled) {
-        order.status = 'Cancelled';
-        order.refundStatus = order.paymentMethod !== 'cod' ? 'Pending' : 'Not Applicable';
-      } else if (someCancelled && someDelivered) {
-        order.status = 'Partially Cancelled';
-        order.refundStatus = order.paymentMethod !== 'cod' ? 'Partially Processed' : 'Not Applicable';
-      } else if (someCancelled) {
-        order.status = 'Partially Cancelled';
-      }
-  
-      order.timeline.push({
-        title: 'Product Cancelled',
-        text: `Product: ${product.productId.productName}, Reason: ${reason}`,
-        date: new Date(),
-        completed: true,
-      });
-  
-      order.history.push({
-        status: product.status,
-        timestamp: new Date(),
-        notes: `Product cancelled by user. Reason: ${reason}`,
-        updatedBy: userId,
-      });
-  
-      await order.save();
-  
-      const refundAmount = product.price * product.quantity;
-      if (order.paymentMethod !== 'cod' && refundAmount > 0) {
-        await refundToWallet(
-          userId,
-          refundAmount,
-          `Refund for cancelled product ${product.productId.productName} in order ${order.orderID}`,
-          order._id
-        );
-      }
-  
-      res.json({ success: true, message: 'Product cancelled successfully' });
-    } catch (error) {
-      console.error('Error in cancelProduct:', error.message, error.stack);
-      res.status(500).json({ success: false, message: 'Internal Server Error: ' + error.message });
+  try {
+    const { orderId, productId } = req.params;
+    const { reason = "No reason provided" } = req.body;
+    const userId = req.session.user?._id;
+
+    console.log('Cancel Product Request:', { orderId, productId, reason, userId });
+
+    if (!orderId || !productId) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
-  };
-  
+
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate('orderItems.productId');
+    if (!order) {
+      console.log('Order not found:', { orderId, userId });
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const productIndex = order.orderItems.findIndex(item => 
+      item.productId._id.toString() === productId.toString()
+    );
+    if (productIndex === -1) {
+      console.log('Product not found in order:', { productId });
+      return res.status(404).json({ success: false, message: 'Product not found in order' });
+    }
+
+    const product = order.orderItems[productIndex];
+
+    if (['Cancelled', 'Delivered', 'Cancellation Requested', 'Returned'].includes(product.status)) {
+      console.log('Product cannot be cancelled:', { productId, status: product.status });
+      return res.status(400).json({ success: false, message: `Product cannot be cancelled (Current status: ${product.status})` });
+    }
+
+    product.status = 'Cancelled';
+
+    const productDoc = await Product.findById(product.productId._id);
+    if (!productDoc) {
+      console.log('Product not found in inventory:', { productId: product.productId._id });
+      return res.status(500).json({ success: false, message: 'Product not found in inventory' });
+    }
+
+    // Use 'quantity' instead of 'stock' for restocking
+    productDoc.quantity += product.quantity;
+    console.log(`Restocking product ${product.productId._id}: Increased quantity by ${product.quantity} to ${productDoc.quantity}`);
+    await productDoc.save();
+
+    const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
+    const someCancelled = order.orderItems.some(item => item.status === 'Cancelled');
+    const someDelivered = order.orderItems.some(item => item.status === 'Delivered');
+
+    if (allCancelled) {
+      order.status = 'Cancelled';
+      order.refundStatus = order.paymentMethod !== 'cod' ? 'Pending' : 'Not Applicable';
+    } else if (someCancelled && someDelivered) {
+      order.status = 'Partially Cancelled';
+      order.refundStatus = order.paymentMethod !== 'cod' ? 'Partially Processed' : 'Not Applicable';
+    } else if (someCancelled) {
+      order.status = 'Partially Cancelled';
+    }
+
+    order.timeline.push({
+      title: 'Product Cancelled',
+      text: `Product: ${product.productId.productName}, Reason: ${reason}`,
+      date: new Date(),
+      completed: true,
+    });
+
+    order.history.push({
+      status: product.status,
+      timestamp: new Date(),
+      notes: `Product cancelled by user. Reason: ${reason}`,
+      updatedBy: userId,
+    });
+
+    await order.save();
+
+    const refundAmount = product.price * product.quantity;
+    if (order.paymentMethod !== 'cod' && refundAmount > 0) {
+      await refundToWallet(
+        userId,
+        refundAmount,
+        `Refund for cancelled product ${product.productId.productName} in order ${order.orderID}`,
+        order._id
+      );
+    }
+
+    res.json({ success: true, message: 'Product cancelled successfully' });
+  } catch (error) {
+    console.error('Error in cancelProduct:', error.message, error.stack);
+    res.status(500).json({ success: false, message: 'Internal Server Error: ' + error.message });
+  }
+};
   // Cancel Entire Order
   const cancelOrder = async (req, res) => {
     try {
       const { orderId } = req.params;
       const { reason = "No reason provided" } = req.body;
       const userId = req.session.user?._id;
-  
   
       if (!orderId) {
         return res.status(400).json({ success: false, message: 'Order ID is required' });
@@ -316,7 +319,8 @@ const cancelProduct = async (req, res) => {
           item.status = 'Cancelled';
           const productDoc = await Product.findById(item.productId);
           if (productDoc) {
-            productDoc.stock += item.quantity;
+            productDoc.quantity += item.quantity; // Changed from stock to quantity
+            console.log(`Restocking product ${item.productId._id}: Increased quantity by ${item.quantity} to ${productDoc.quantity}`);
             await productDoc.save();
           }
           refundAmount += item.price * item.quantity;
@@ -341,12 +345,11 @@ const cancelProduct = async (req, res) => {
       });
   
       await order.save();
-
-
+  
       if (order.paymentMethod !== 'cod' && refundAmount > 0) {
         await refundToWallet(userId, refundAmount, `Refund for cancelled order ${order.orderID}`, order._id);
-    }
-
+      }
+  
       res.json({ success: true, message: 'Order cancelled successfully' });
     } catch (error) {
       console.error('Error in cancelOrder:', error.message, error.stack);

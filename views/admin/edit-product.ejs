@@ -48,12 +48,7 @@
       font-size: 0.875rem;
       margin-top: 0.25rem;
     }
-    .variant-entry {
-      display: flex;
-      align-items: flex-end;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
+  
   </style>
 </head>
 
@@ -125,44 +120,12 @@
               <label class="block mb-2">Skin Concern</label>
               <input name="skinConcern" class="w-full p-2 bg-gray-700 rounded border border-gray-600" value="<%= product.skinConcern || ''%>" type="text"/>
             </div>
-          </div>
 
-          <!-- Product Variants Section -->
-          <div class="bg-gray-700 p-6 rounded-lg mb-8">
-            <h2 class="text-xl font-bold mb-4">Product Variants *</h2>
-            <p class="text-gray-400 mb-4">Add at least one variant with size and quantity.</p>
-
-            <div id="variantContainer" class="space-y-4">
-              <% if (product.variants && product.variants.length > 0) { %>
-                <% product.variants.forEach((variant, index) => { %>
-                  <div class="variant-entry">
-                    <div class="flex-1">
-                      <label class="block mb-1">Size *</label>
-                      <input name="variants[<%= index %>][size]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="text" value="<%= variant.size %>" required />
-                    </div>
-                    <div class="flex-1">
-                      <label class="block mb-1">Quantity *</label>
-                      <input name="variants[<%= index %>][quantity]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" min="0" value="<%= variant.quantity %>" required />
-                    </div>
-                    <button type="button" class="remove-variant px-2 py-1 bg-red-600 text-white rounded">-</button>
-                  </div>
-                <% }) %>
-              <% } else { %>
-                <div class="variant-entry">
-                  <div class="flex-1">
-                    <label class="block mb-1">Size *</label>
-                    <input name="variants[0][size]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="text" placeholder="e.g., 30ml" required />
-                  </div>
-                  <div class="flex-1">
-                    <label class="block mb-1">Quantity *</label>
-                    <input name="variants[0][quantity]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" min="0" required />
-                  </div>
-                  <button type="button" class="remove-variant px-2 py-1 bg-red-600 text-white rounded">-</button>
-                </div>
-              <% } %>
-            </div>
-            <button type="button" id="addVariant" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded">Add Variant</button>
-            <div id="variants-error" class="error-message"></div>
+            <div class="input-container">
+              <label class="block mb-1">Stock Quantity *</label>
+              <input name="quantity" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" value="<%= product.quantity %>"/>
+              <div id="quantity-error" class="error-message"></div>
+            </div> 
           </div>
 
           <!-- Product Images Section -->
@@ -236,25 +199,6 @@
         document.getElementById('imageInput').value = '';
       });
 
-      // Variant handling
-      document.getElementById('addVariant').addEventListener('click', function() {
-        const variantContainer = document.getElementById('variantContainer');
-        const variantCount = variantContainer.children.length;
-        const newVariant = `
-          <div class="variant-entry">
-            <div class="flex-1">
-              <label class="block mb-1">Size *</label>
-              <input name="variants[${variantCount}][size]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="text" placeholder="e.g., 30ml" required />
-            </div>
-            <div class="flex-1">
-              <label class="block mb-1">Quantity *</label>
-              <input name="variants[${variantCount}][quantity]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" min="0" required />
-            </div>
-            <button type="button" class="remove-variant px-2 py-1 bg-red-600 text-white rounded">-</button>
-          </div>`;
-        variantContainer.insertAdjacentHTML('beforeend', newVariant);
-      });
-
       document.getElementById('variantContainer').addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-variant')) {
           e.target.parentElement.remove();
@@ -304,16 +248,11 @@
           });
           
           console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
           
-          let result;
-          const responseText = await response.text();
-          try {
-            result = JSON.parse(responseText);
-          } catch (e) {
-            console.error('Failed to parse JSON response:', responseText);
-            throw new Error('Invalid server response');
-          }
-          
+    const result = await response.json();
+    console.log('Parsed result:', result);
+
           if (response.ok && result.success) {
             Swal.fire({
               icon: 'success',
@@ -452,78 +391,58 @@
     }
   
     function validateForm() {
-      clearErrorMessages();
-      const name = document.getElementsByName('productName')[0].value.trim();
-      const description = document.getElementById('descriptionid').value.trim();
-      const price = document.getElementsByName('regularPrice')[0].value.trim();
-      const saleprice = document.getElementsByName('salePrice')[0].value.trim();
-      let isValid = true;
-  
-      if (!name) {
-        displayErrorMessage('productName-error', 'Please enter a product name.');
-        isValid = false;
-      }
-  
-      if (!description) {
-        displayErrorMessage('description-error', 'Please enter a product description.');
-        isValid = false;
-      }
-  
-      if (!price || !/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
-        displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99).');
-        isValid = false;
-      }
-  
-      if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
-        displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99).');
-        isValid = false;
-      }
-  
-      if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
-        displayErrorMessage('salePrice-error', 'Sale price must be less than regular price.');
-        isValid = false;
-      }
+  clearErrorMessages();
+  const name = document.getElementsByName('productName')[0].value.trim();
+  const description = document.getElementById('descriptionid').value.trim();
+  const howToUse = document.getElementsByName('howToUse')[0].value.trim();
+  const price = document.getElementsByName('regularPrice')[0].value.trim();
+  const saleprice = document.getElementsByName('salePrice')[0].value.trim();
+  const quantity = document.getElementsByName('quantity')[0].value.trim();
+  let isValid = true;
 
-      const variantSizes = document.querySelectorAll('[name^="variants"][name$="[size]"]');
-      const variantQuantities = document.querySelectorAll('[name^="variants"][name$="[quantity]"]');
-      if (variantSizes.length === 0) {
-        displayErrorMessage('variants-error', 'Please add at least one variant.');
-        Swal.fire({
-          icon: 'error',
-          title: 'Variants Required',
-          text: 'Please add at least one product variant.',
-          confirmButtonColor: '#d33',
-        });
-        isValid = false;
-      } else {
-        variantSizes.forEach((sizeInput, index) => {
-          if (!sizeInput.value.trim()) {
-            displayErrorMessage('variants-error', 'All variant sizes are required.');
-            isValid = false;
-          }
-          const qty = variantQuantities[index].value;
-          if (!qty || !/^\d+$/.test(qty) || parseInt(qty) < 0) {
-            displayErrorMessage('variants-error', 'All variant quantities must be non-negative integers.');
-            isValid = false;
-          }
-        });
-      }
-  
-      const imageCount = document.querySelectorAll('#image-preview-container .thumbnail').length;
-      if (imageCount < 3) {
-        displayErrorMessage('images-error', 'Please select at least 3 images.');
-        Swal.fire({
-          icon: 'error',
-          title: 'Image Required',
-          text: 'Please upload at least 3 product images.',
-          confirmButtonColor: '#d33',
-        });
-        isValid = false;
-      }
-  
-      return isValid;
-    }
-  
+  if (!name) {
+    displayErrorMessage('productName-error', 'Please enter a product name.');
+    isValid = false;
+  }
+  if (!description) {
+    displayErrorMessage('description-error', 'Please enter a product description.');
+    isValid = false;
+  }
+  if (!howToUse) {
+    displayErrorMessage('howToUse-error', 'Please enter how to use instructions.');
+    isValid = false;
+  }
+  if (!price || !/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
+    displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99).');
+    isValid = false;
+  }
+  if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
+    displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99).');
+    isValid = false;
+  }
+  if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
+    displayErrorMessage('salePrice-error', 'Sale price must be less than regular price.');
+    isValid = false;
+  }
+  if (!quantity || !/^\d+$/.test(quantity) || parseInt(quantity) < 0) {
+    displayErrorMessage('quantity-error', 'Please enter a valid non-negative integer for quantity.');
+    isValid = false;
+  }
+
+  const imageCount = document.querySelectorAll('#image-preview-container .thumbnail').length;
+  if (imageCount < 3) {
+    displayErrorMessage('images-error', 'Please select at least 3 images.');
+    Swal.fire({
+      icon: 'error',
+      title: 'Image Required',
+      text: 'Please upload at least 3 product images.',
+      confirmButtonColor: '#d33',
+    });
+    isValid = false;
+  }
+
+  return isValid;
+}
     function checkImageCount() {
       const imageCount = document.querySelectorAll('#image-preview-container .thumbnail').length;
       if (imageCount < 3) {

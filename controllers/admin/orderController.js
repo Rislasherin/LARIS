@@ -89,109 +89,163 @@ const getOrderById = async (req, res) => {
 };
 
 const updateOrderStatus = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-        const orderId = req.params.orderId;
-        const newStatus = req.body.status; 
-        const notes = req.body.notes; 
-        console.log('Updating order status:', { orderId, newStatus });
-
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: "Order not found" });
+      const orderId = req.params.orderId;
+      const newStatus = req.body.status;
+      const notes = req.body.notes;
+      console.log('Updating order status:', { orderId, newStatus });
+  
+      const order = await Order.findById(orderId).session(session);
+      if (!order) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+  
+      const currentStatus = order.status;
+  
+      // Restore stock if setting to Cancelled
+      if (newStatus === 'Cancelled' && currentStatus !== 'Cancelled') {
+        for (const item of order.orderItems) {
+          if (!['Cancelled', 'Returned'].includes(item.status)) {
+            const product = await Product.findById(item.productId).session(session);
+            if (product) {
+              product.quantity += item.quantity;
+              await product.save({ session });
+            }
+            item.status = 'Cancelled';
+          }
         }
-
-        const currentStatus = order.orderStatus || order.status; 
-
-    
-        order.orderStatus = newStatus;
-        order.status = newStatus;
-        
-
-        if (order.history) {
-            order.history.push({
-                status: newStatus,
-                timestamp: new Date(),
-                notes: notes || `Status changed to ${newStatus}`,
-                updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-            });
-        }
-
-        await order.save();
-        res.json({ success: true, message: "Order status updated successfully!" });
-
+      }
+  
+      order.status = newStatus;
+      order.orderStatus = newStatus; // Maintain consistency (orderStatus seems unused but included)
+  
+      if (!order.history) order.history = [];
+      order.history.push({
+        status: newStatus,
+        timestamp: new Date(),
+        notes: notes || `Status changed to ${newStatus}`,
+        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+      });
+  
+      // Update timeline
+      if (!order.timeline) order.timeline = [];
+      order.timeline.push({
+        title: newStatus,
+        text: `Order status updated to ${newStatus}`,
+        date: new Date(),
+        completed: true
+      });
+  
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.json({ success: true, message: 'Order status updated successfully!' });
     } catch (error) {
-        console.error("Error updating order status:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Error updating order status:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-};
+  };
 
 const updateProductStatus = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-        const { orderId } = req.params;
-        const { productStatuses } = req.body;
-        console.log('Request body:', req.body);
-
-        const order = await Order.findOne({ _id: orderId });
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+      const { orderId } = req.params;
+      const { productStatuses } = req.body;
+      console.log('Request body:', req.body);
+  
+      const order = await Order.findOne({ _id: orderId }).session(session);
+      if (!order) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+  
+      if (order.status === 'Cancelled' || order.status === 'Returned') {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ success: false, message: 'Cannot update products in Cancelled or Returned orders' });
+      }
+  
+      for (const { productId, status } of productStatuses) {
+        const item = order.orderItems.find(i => i._id.toString() === productId);
+        if (!item) {
+          console.log(`Item ${productId} not found in order`);
+          continue;
         }
-
-        if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
-            return res.status(400).json({ success: false, message: 'Cannot update products in Cancelled or Returned orders' });
+  
+        if (item.status === 'Cancelled' || item.status === 'Returned') {
+          console.log(`Skipping ${productId}: Already ${item.status}`);
+          continue;
         }
-
-        for (const { productId, status } of productStatuses) {
-            const product = order.products.find(p => p._id.toString() === productId);
-            if (!product) {
-                console.log(`Product ${productId} not found in order`);
-                continue;
-            }
-
-            if (product.productStatus === 'Cancelled' || product.productStatus === 'Returned') {
-                console.log(`Skipping ${productId}: Already ${product.productStatus}`);
-                continue;
-            }
-            if (product.productStatus === 'Shipped' && (status === 'Pending' || status === 'Processing')) {
-                console.log(`Skipping ${productId}: Cannot revert Shipped to ${status}`);
-                continue;
-            }
-            if (product.productStatus === 'Processing' && status === 'Pending') {
-                console.log(`Skipping ${productId}: Cannot revert Processing to Pending`);
-                continue;
-            }
-
-            product.productStatus = status;
-            console.log(`Updated ${productId} to ${status}`);
+        if (item.status === 'Shipped' && (status === 'Pending' || status === 'Processing')) {
+          console.log(`Skipping ${productId}: Cannot revert Shipped to ${status}`);
+          continue;
         }
-
-        const productCount = order.products.length;
-        const deliveredCount = order.products.filter(p => p.productStatus === 'Delivered').length;
-
-        if (productCount > 1) { 
-            if (deliveredCount > 0 && deliveredCount < productCount) {
-                order.orderStatus = 'Partially Delivered';
-                console.log('Order status set to Partially Delivered');
-            } else if (deliveredCount === productCount) {
-                order.orderStatus = 'Delivered';
-                console.log('Order status set to Delivered');
-            }
+        if (item.status === 'Processing' && status === 'Pending') {
+          console.log(`Skipping ${productId}: Cannot revert Processing to Pending`);
+          continue;
         }
-
-       
-        const allCancelled = order.products.every(p => p.productStatus === 'Cancelled');
-        if (allCancelled) {
-            order.orderStatus = 'Cancelled';
-            console.log('All products cancelled - updating order to Cancelled');
+  
+        // Restore stock if setting to Cancelled
+        if (status === 'Cancelled' && item.status !== 'Cancelled') {
+          const product = await Product.findById(item.productId).session(session);
+          if (product) {
+            product.quantity += item.quantity;
+            await product.save({ session });
+          }
         }
-
-        await order.save();
-        res.json({ success: true, message: 'Product statuses updated successfully!' });
-
+  
+        item.status = status;
+        console.log(`Updated ${productId} to ${status}`);
+      }
+  
+      const itemCount = order.orderItems.length;
+      const deliveredCount = order.orderItems.filter(i => i.status === 'Delivered').length;
+  
+      if (itemCount > 1) {
+        if (deliveredCount > 0 && deliveredCount < itemCount) {
+          order.status = 'Partially Delivered';
+          console.log('Order status set to Partially Delivered');
+        } else if (deliveredCount === itemCount) {
+          order.status = 'Delivered';
+          console.log('Order status set to Delivered');
+        }
+      }
+  
+      const allCancelled = order.orderItems.every(i => i.status === 'Cancelled');
+      if (allCancelled) {
+        order.status = 'Cancelled';
+        console.log('All items cancelled - updating order to Cancelled');
+      }
+  
+      if (!order.history) order.history = [];
+      order.history.push({
+        status: 'Product Status Update',
+        timestamp: new Date(),
+        notes: `Updated product statuses`,
+        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+      });
+  
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.json({ success: true, message: 'Product statuses updated successfully!' });
     } catch (error) {
-        console.error('Error updating product status:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Error updating product status:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-};
+  };
 
 const renderReturnRequestsList = async (req, res) => {
     try {
@@ -225,34 +279,54 @@ function getBadgeClass(status) {
     }
 }
 const updateAllOrderItems = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
       const { orderId } = req.params;
       const { status, productIds } = req.body;
   
       if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({ success: false, message: 'Invalid order ID' });
       }
   
-      const order = await Order.findById(orderId);
-      if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+      const order = await Order.findById(orderId).session(session);
+      if (!order) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
   
       if (!order.history) order.history = [];
   
       let updatedCount = 0;
       let skippedCount = 0;
   
-      order.orderItems.forEach(item => {
+      for (const item of order.orderItems) {
         if (productIds.includes(item._id.toString())) {
-          if (item.status === 'Returned' || 
-              (item.status === 'Delivered' && status !== 'Delivered') || 
-              (item.status === 'Cancelled' && status !== 'Cancelled')) {
+          if (
+            item.status === 'Returned' ||
+            (item.status === 'Delivered' && status !== 'Delivered') ||
+            (item.status === 'Cancelled' && status !== 'Cancelled')
+          ) {
             skippedCount++;
-            return;
+            continue;
           }
+  
+          // Restore stock if setting to Cancelled
+          if (status === 'Cancelled' && item.status !== 'Cancelled') {
+            const product = await Product.findById(item.productId).session(session);
+            if (product) {
+              product.quantity += item.quantity;
+              await product.save({ session });
+            }
+          }
+  
           item.status = status;
           updatedCount++;
         }
-      });
+      }
   
       const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
       const allShipped = order.orderItems.every(item => item.status === 'Shipped');
@@ -262,7 +336,7 @@ const updateAllOrderItems = async (req, res) => {
   
       let newOrderStatus = order.status;
       if (allDelivered) newOrderStatus = 'Delivered';
-      else if (allShipped) newOrderStatus = 'Shipped'; // Add this condition
+      else if (allShipped) newOrderStatus = 'Shipped';
       else if (allCancelled) newOrderStatus = 'Cancelled';
       else if (anyCancelled && anyDelivered) newOrderStatus = 'Partially Cancelled';
       else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
@@ -275,7 +349,7 @@ const updateAllOrderItems = async (req, res) => {
           title: newOrderStatus,
           text: `Order status updated to ${newOrderStatus}`,
           date: new Date(),
-          completed: true,
+          completed: true
         });
       }
   
@@ -286,7 +360,9 @@ const updateAllOrderItems = async (req, res) => {
         updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
       });
   
-      await order.save();
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
   
       res.json({
         success: true,
@@ -294,6 +370,8 @@ const updateAllOrderItems = async (req, res) => {
         orderStatus: newOrderStatus
       });
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       console.error('Error updating all order items:', error);
       res.status(500).json({ success: false, message: 'Server error occurred' });
     }
@@ -360,133 +438,236 @@ const refundToWallet = async (userId, amount, description, orderId) => {
 };
 
 const acceptReturnRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-        const { orderId, productId } = req.body;
-
-        if (!orderId || !productId) {
-            return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
-        }
-
-        const order = await Order.findById(orderId)
-        .populate('user','name email')
-        .populate({
-            path: 'orderItems.productId',
-                select: 'productName'
-        })
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-        const item = order.orderItems.find(item => item._id.toString() === productId);
-        if (!item || item.status !== 'Return Requested') {
-            return res.status(400).json({ success: false, message: 'No return request found for this item' });
-        }
-
-        item.status = 'Returned';
-        
-        const allReturned = order.orderItems.every(item => item.status === 'Returned');
-        const anyReturned = order.orderItems.some(item => item.status === 'Returned');
-        const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-
-        if (allReturned) {
-            order.status = 'Returned';
-            order.refundStatus = 'Processed';
-        } else if (anyReturned && anyDelivered) {
-            order.status = 'Partially Returned';
-            order.refundStatus = 'Partially Processed';
-        } else if (anyReturned) {
-            order.status = 'Partially Returned';
-            order.refundStatus = 'Partially Processed';
-        }
-
-        if (!order.history) order.history = [];
-        order.history.push({
-            status: 'Return Accepted',
-            timestamp: new Date(),
-            notes: `Return accepted for product ${productId}`,
-            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-        });
-
-        await order.save();
-
-        const refundAmount = item.price * item.quantity;
-        if (order.paymentMethod !== 'cod' && refundAmount > 0) {
-            const productName = item.productId?.productName || 'Unknown Product';
-            await refundToWallet(
-                order.user._id,
-                refundAmount,
-                `Refund for returned product ${item.productId.productName} in order ${order.orderID}`,
-                order._id
-            );
-        }
-
-        res.json({
-            success: true,
-            message: 'Return accepted successfully',
-            orderStatus: order.status
-        });
+      const { orderId, productId } = req.body;
+  
+      if (!orderId || !productId) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
+      }
+  
+      const order = await Order.findById(orderId)
+        .populate('user', 'name email')
+        .populate({ path: 'orderItems.productId', select: 'productName' })
+        .session(session);
+      if (!order) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+  
+      const item = order.orderItems.find(item => item._id.toString() === productId);
+      if (!item || item.status !== 'Return Requested') {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ success: false, message: 'No return request found for this item' });
+      }
+  
+      // Restore stock
+      const product = await Product.findById(item.productId).session(session);
+      if (product) {
+        product.quantity += item.quantity;
+        await product.save({ session });
+      }
+  
+      item.status = 'Returned';
+  
+      const allReturned = order.orderItems.every(item => item.status === 'Returned');
+      const anyReturned = order.orderItems.some(item => item.status === 'Returned');
+      const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
+  
+      if (allReturned) {
+        order.status = 'Returned';
+        order.refundStatus = 'Processed';
+      } else if (anyReturned && anyDelivered) {
+        order.status = 'Partially Returned';
+        order.refundStatus = 'Partially Processed';
+      } else if (anyReturned) {
+        order.status = 'Partially Returned';
+        order.refundStatus = 'Partially Processed';
+      }
+  
+      if (!order.history) order.history = [];
+      order.history.push({
+        status: 'Return Accepted',
+        timestamp: new Date(),
+        notes: `Return accepted for product ${productId}`,
+        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+      });
+  
+      const refundAmount = item.price * item.quantity;
+      if (order.paymentMethod !== 'cod' && refundAmount > 0) {
+        const productName = item.productId?.productName || 'Unknown Product';
+        await refundToWallet(
+          order.user._id,
+          refundAmount,
+          `Refund for returned product ${productName} in order ${order.orderID}`,
+          order._id
+        );
+      }
+  
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.json({
+        success: true,
+        message: 'Return accepted successfully',
+        orderStatus: order.status
+      });
     } catch (error) {
-        console.error('Error accepting return:', error);
-        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Error accepting return:', error);
+      res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
-};
-const cancelOrderItem = async (req, res) => {
+  };
+  const cancelOrderItem = async (req, res) => {
     try {
-        const { orderId, productId } = req.body;
-
-        if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ success: false, message: 'Invalid order ID or product ID' });
+      const { orderId, productId } = req.body;
+  
+      if (!mongoose.Types.ObjectId.isValid(orderId) || !mongoose.Types.ObjectId.isValid(productId)) {
+        return res.status(400).json({ success: false, message: 'Invalid order ID or product ID' });
+      }
+  
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+  
+      const item = order.orderItems.find(item => item._id.toString() === productId);
+      if (!item) {
+        return res.status(404).json({ success: false, message: 'Product not found in order' });
+      }
+  
+      if (['Cancelled', 'Delivered', 'Returned'].includes(item.status)) {
+        return res.status(400).json({ success: false, message: `Cannot cancel item with status ${item.status}` });
+      }
+  
+      // Restore stock
+      let product;
+      try {
+        product = await Product.findById(item.productId);
+        if (product) {
+          product.quantity += item.quantity;
+          await product.save();
         }
-
-        const order = await Order.findById(orderId);
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-        const item = order.orderItems.find(item => item._id.toString() === productId);
-        if (!item) return res.status(404).json({ success: false, message: 'Product not found in order' });
-
-        // Prevent cancellation if already in certain states
-        if (['Cancelled', 'Delivered', 'Returned'].includes(item.status)) {
-            return res.status(400).json({ success: false, message: `Cannot cancel item with status ${item.status}` });
-        }
-
+  
         item.status = 'Cancelled';
-
-        // Update order status based on item statuses
+  
         const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
         const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
         const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-
+  
         let newOrderStatus = order.status;
         if (allCancelled) {
-            newOrderStatus = 'Cancelled';
+          newOrderStatus = 'Cancelled';
         } else if (anyCancelled && !anyDelivered) {
-            newOrderStatus = 'Partially Cancelled';
+          newOrderStatus = 'Partially Cancelled';
         } else if (anyCancelled && anyDelivered) {
-            newOrderStatus = 'Partially Cancelled';
-        } else {
-            newOrderStatus = order.status; // Keep existing status if no change needed
+          newOrderStatus = 'Partially Cancelled';
         }
-
+  
         order.status = newOrderStatus;
-
+  
         if (!order.history) order.history = [];
         order.history.push({
-            status: 'Item Cancelled',
-            timestamp: new Date(),
-            notes: `Product ${productId} cancelled`,
-            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+          status: 'Item Cancelled',
+          timestamp: new Date(),
+          notes: `Product ${productId} cancelled`,
+          updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
         });
-
+  
         await order.save();
-
+  
         res.json({
-            success: true,
-            message: 'Product cancelled successfully',
-            orderStatus: newOrderStatus
+          success: true,
+          message: 'Product cancelled successfully',
+          orderStatus: newOrderStatus
         });
+      } catch (error) {
+        // Rollback stock
+        if (product) {
+          product.quantity -= item.quantity;
+          await product.save();
+        }
+        throw error;
+      }
     } catch (error) {
-        console.error('Error cancelling order item:', error);
-        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+      console.error('Error cancelling order item:', error);
+      res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
-};
+  };
+  const cancelOrder = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const orderId = req.params.orderId;
+  
+      if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ success: false, message: 'Invalid order ID' });
+      }
+  
+      const order = await Order.findById(orderId).session(session);
+      if (!order) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+  
+      if (['Cancelled', 'Delivered', 'Returned'].includes(order.status)) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ success: false, message: `Cannot cancel order with status ${order.status}` });
+      }
+  
+      // Restore stock for non-cancelled/non-returned items
+      for (const item of order.orderItems) {
+        if (!['Cancelled', 'Returned'].includes(item.status)) {
+          const product = await Product.findById(item.productId).session(session);
+          if (product) {
+            product.quantity += item.quantity;
+            await product.save({ session });
+          }
+          item.status = 'Cancelled';
+        }
+      }
+  
+      order.status = 'Cancelled';
+      order.orderStatus = 'Cancelled';
+  
+      if (!order.history) order.history = [];
+      order.history.push({
+        status: 'Order Cancelled',
+        timestamp: new Date(),
+        notes: 'Order cancelled by admin',
+        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+      });
+  
+      order.timeline.push({
+        title: 'Cancelled',
+        text: 'Order has been cancelled.',
+        date: new Date(),
+        completed: true
+      });
+  
+      await order.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+  
+      res.json({ success: true, message: 'Order cancelled successfully' });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Error cancelling order:', error);
+      res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+  };
 module.exports = {
     renderOrderManage,
     renderOrderDetails,
@@ -497,5 +678,6 @@ module.exports = {
     updateAllOrderItems,
     acceptReturnRequest,
     rejectReturnRequest,
-    cancelOrderItem
+    cancelOrderItem,
+    cancelOrder
 }

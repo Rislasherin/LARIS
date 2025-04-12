@@ -109,27 +109,7 @@
               <input name="quantity" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number"/>
               <div id="quantity-error" class="error-message"></div>
             </div>
-
-            <!-- Add this after the Stock Quantity field in your form -->
-<div class="input-container col-span-1 md:col-span-2">
-  <h2 class="text-xl font-bold mb-2">Product Variants</h2>
-  <div id="variantContainer" class="space-y-2">
-    <div class="variant-entry flex space-x-2 items-end">
-      <div class="flex-1">
-        <label class="block mb-1">Size *</label>
-        <input name="variants[0][size]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="text" placeholder="e.g., 30ml" required/>
-      </div>
-      <div class="flex-1">
-        <label class="block mb-1">Quantity *</label>
-        <input name="variants[0][quantity]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" min="0" required/>
-      </div>
-      <button type="button" class="remove-variant px-2 py-1 bg-red-600 text-white rounded">-</button>
-    </div>
-  </div>
-  <button type="button" id="addVariant" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded">Add Variant</button>
-  <div id="variants-error" class="error-message"></div>
-</div>
-            
+                        
             <!-- Product Images Section moved here -->
             <div class="col-span-1 md:col-span-2 bg-gray-700 p-6 rounded-lg">
               <h2 class="text-xl font-bold mb-4">Product Images *</h2>
@@ -340,121 +320,74 @@
     }
 
 
-
-
-
-    document.getElementById('addVariant').addEventListener('click', function() {
-    const variantContainer = document.getElementById('variantContainer');
-    const variantCount = variantContainer.children.length;
-    const newVariant = `
-      <div class="variant-entry flex space-x-2 items-end">
-        <div class="flex-1">
-          <label class="block mb-1">Size *</label>
-          <input name="variants[${variantCount}][size]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="text" placeholder="e.g., 30ml" required/>
-        </div>
-        <div class="flex-1">
-          <label class="block mb-1">Quantity *</label>
-          <input name="variants[${variantCount}][quantity]" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" min="0" required/>
-        </div>
-        <button type="button" class="remove-variant px-2 py-1 bg-red-600 text-white rounded">-</button>
-      </div>`;
-    variantContainer.insertAdjacentHTML('beforeend', newVariant);
-});
-
-document.getElementById('variantContainer').addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-variant')) {
-        e.target.parentElement.remove();
-    }
-});
-
     function validateForm() {
-        clearErrorMessages();
-        let isValid = true;
+  clearErrorMessages();
+  let isValid = true;
 
-        const productName = document.querySelector('[name="productName"]').value.trim();
-        if (!productName) {
-            displayErrorMessage('productName-error', 'Please enter a product name');
-            isValid = false;
-        }
+  const productName = document.querySelector('[name="productName"]').value.trim();
+  if (!productName) {
+    displayErrorMessage('productName-error', 'Please enter a product name');
+    isValid = false;
+  }
 
-        const description = document.querySelector('[name="description"]').value.trim();
-        if (!description) {
-            displayErrorMessage('description-error', 'Please enter a product description');
-            isValid = false;
-        }
+  const description = document.querySelector('[name="description"]').value.trim();
+  if (!description) {
+    displayErrorMessage('description-error', 'Please enter a product description');
+    isValid = false;
+  }
 
-        const howToUse = document.querySelector('[name="howToUse"]').value.trim();
-        if (!howToUse) {
-            displayErrorMessage('howToUse-error', 'Please enter how to use instructions');
-            isValid = false;
-        }
+  const howToUse = document.querySelector('[name="howToUse"]').value.trim();
+  if (!howToUse) {
+    displayErrorMessage('howToUse-error', 'Please enter how to use instructions');
+    isValid = false;
+  }
 
-        const regularPrice = document.querySelector('[name="regularPrice"]').value.trim();
-        if (!regularPrice || !/^\d+(\.\d{1,2})?$/.test(regularPrice) || parseFloat(regularPrice) <= 0) {
-            displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99)');
-            isValid = false;
-        }
+  const regularPrice = document.querySelector('[name="regularPrice"]').value.trim();
+  if (!regularPrice || !/^\d+(\.\d{1,2})?$/.test(regularPrice) || parseFloat(regularPrice) <= 0) {
+    displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99)');
+    isValid = false;
+  }
 
-        const salePrice = document.querySelector('[name="salePrice"]').value.trim();
-        if (salePrice) {
-            if (!/^\d+(\.\d{1,2})?$/.test(salePrice) || parseFloat(salePrice) < 0) {
-                displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99)');
-                isValid = false;
-            } else if (parseFloat(regularPrice) <= parseFloat(salePrice)) {
-                displayErrorMessage('salePrice-error', 'Sale price must be less than regular price');
-                isValid = false;
-            }
-        }
-
-        const quantity = document.querySelector('[name="quantity"]').value.trim();
-        if (!quantity || !/^\d+$/.test(quantity) || parseInt(quantity) < 0) {
-            displayErrorMessage('quantity-error', 'Please enter a valid non-negative integer for quantity');
-            isValid = false;
-        }
-        const skinType = document.querySelector('[name="skinType"]').value.trim();
-    if (!skinType) {
-        displayErrorMessage('skinType-error', 'Please enter a skin type');
-        isValid = false;
+  const salePrice = document.querySelector('[name="salePrice"]').value.trim();
+  if (salePrice) {
+    if (!/^\d+(\.\d{1,2})?$/.test(salePrice) || parseFloat(salePrice) < 0) {
+      displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99)');
+      isValid = false;
+    } else if (parseFloat(regularPrice) <= parseFloat(salePrice)) {
+      displayErrorMessage('salePrice-error', 'Sale price must be less than regular price');
+      isValid = false;
     }
+  }
 
-    // Add skinConcern validation
-    const skinConcern = document.querySelector('[name="skinConcern"]').value.trim();
-    if (!skinConcern) {
-        displayErrorMessage('skinConcern-error', 'Please enter a skin concern');
-        isValid = false;
-    }
+  const quantity = document.querySelector('[name="quantity"]').value.trim();
+  if (!quantity || !/^\d+$/.test(quantity) || parseInt(quantity) < 0) {
+    displayErrorMessage('quantity-error', 'Please enter a valid non-negative integer for quantity');
+    isValid = false;
+  }
 
+  const skinType = document.querySelector('[name="skinType"]').value.trim();
+  if (!skinType) {
+    displayErrorMessage('skinType-error', 'Please enter a skin type');
+    isValid = false;
+  }
 
-        let imageCount = 0;
-        for (let i = 1; i <= 4; i++) {
-            const input = document.getElementById(`input${i}`);
-            if (input && input.files.length > 0) imageCount++;
-        }
-        if (imageCount < 3) {
-            displayErrorMessage('images-error', 'Please upload at least 3 images');
-            isValid = false;
-        }
+  const skinConcern = document.querySelector('[name="skinConcern"]').value.trim();
+  if (!skinConcern) {
+    displayErrorMessage('skinConcern-error', 'Please enter a skin concern');
+    isValid = false;
+  }
 
+  let imageCount = 0;
+  for (let i = 1; i <= 4; i++) {
+    const input = document.getElementById(`input${i}`);
+    if (input && input.files.length > 0) imageCount++;
+  }
+  if (imageCount < 3) {
+    displayErrorMessage('images-error', 'Please upload at least 3 images');
+    isValid = false;
+  }
 
-        const variantSizes = document.querySelectorAll('[name^="variants"][name$="[size]"]');
-    const variantQuantities = document.querySelectorAll('[name^="variants"][name$="[quantity]"]');
-    if (variantSizes.length === 0) {
-        displayErrorMessage('variants-error', 'Please add at least one variant');
-        isValid = false;
-    } else {
-        variantSizes.forEach((sizeInput, index) => {
-            if (!sizeInput.value.trim()) {
-                displayErrorMessage('variants-error', 'All variant sizes are required');
-                isValid = false;
-            }
-            if (!variantQuantities[index].value || variantQuantities[index].value < 0) {
-                displayErrorMessage('variants-error', 'All variant quantities must be non-negative');
-                isValid = false;
-            }
-        });
-    }
-
-    return isValid;
+  return isValid;
 }
 
     function submitProductForm() {

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
@@ -22,50 +23,67 @@
       align-items: center;
       max-width: 350px;
     }
+
     .notification.success {
       background-color: #10B981;
       color: white;
     }
+
     .notification.error {
       background-color: #EF4444;
       color: white;
     }
+
     .skeleton-loader {
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
     }
+
     @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
     }
+
     .product-card {
       overflow: hidden;
       transform: translateY(0);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
     .product-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
+
     .filter-toggle.active {
       color: #4B5563;
       font-weight: 600;
     }
+
     .filter-toggle.active i {
       transform: rotate(180deg);
     }
+
     .category-pill {
       transition: all 0.3s ease;
     }
+
     .category-pill:hover {
       transform: translateY(-2px);
     }
+
     .category-pill.active {
       background-color: #374151;
       color: white;
       border-color: #374151;
     }
+
     /* Wishlist button styles */
     .wishlist-btn {
       position: absolute;
@@ -82,19 +100,24 @@
       transition: all 0.2s ease;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
+
     .wishlist-btn:hover {
       transform: scale(1.1);
       background-color: rgba(255, 255, 255, 1);
     }
+
     .wishlist-btn i.far.fa-heart {
       color: #6B7280;
     }
+
     .wishlist-btn i.fas.fa-heart {
       color: #EF4444;
     }
+
     .wishlist-btn.active i.far.fa-heart {
       display: none;
     }
+
     .wishlist-btn:not(.active) i.fas.fa-heart {
       display: none;
     }
@@ -103,523 +126,484 @@
 
 <body class="font-roboto bg-gray-50">
   <%- include('../partials/user/header') %>
-  <main class="container mx-auto py-8 px-6">
-    <div class="relative bg-pink-100 mb-16">
-      <img src="/images/shop1.jpg" alt="" class="w-500 h-full md:h-80 object-cover">
-      <div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-white">
-        <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">COLLECTION</h2>
-        <div class="flex items-center text-lg">
-          <a href="/" class="hover:underline">Home</a>
-          <span class="mx-2">/shop</span>
+    <main class="container mx-auto py-8 px-6">
+      <div class="relative bg-pink-100 mb-16">
+        <img src="/images/shop1.jpg" alt="" class="w-500 h-full md:h-80 object-cover">
+        <div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-white">
+          <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">COLLECTION</h2>
+          <div class="flex items-center text-lg">
+            <a href="/" class="hover:underline">Home</a>
+            <span class="mx-2">/shop</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Dynamic Category Selection Section -->
-    <div class="mb-8">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">Shop by Category</h3>
-      <div class="flex flex-wrap gap-3">
-        <a href="/shop" class="category-pill px-5 py-2 bg-white border border-gray-300 rounded-full text-gray-700 hover:shadow-md flex items-center justify-center <%= !selectedCategoryId ? 'active' : '' %>">
-          <i class="fas fa-th-large mr-2"></i>All Products
-        </a>
-        <% category.forEach(cat => { %>
-          <a href="/shop?category=<%= cat.name.toLowerCase() %>" 
-             class="category-pill px-5 py-2 bg-white border border-gray-300 rounded-full text-gray-700 hover:shadow-md flex items-center justify-center <%= selectedCategoryId && cat._id.toString() === selectedCategoryId ? 'active' : '' %>">
-            <i class="fas <%= cat.name === 'Sunscreen' ? 'fa-sun' : 
+      <!-- Dynamic Category Selection Section -->
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Shop by Category</h3>
+        <div class="flex flex-wrap gap-3">
+          <a href="/shop"
+            class="category-pill px-5 py-2 bg-white border border-gray-300 rounded-full text-gray-700 hover:shadow-md flex items-center justify-center <%= !selectedCategoryId ? 'active' : '' %>">
+            <i class="fas fa-th-large mr-2"></i>All Products
+          </a>
+          <% category.forEach(cat=> { %>
+            <a href="/shop?category=<%= cat.name.toLowerCase() %>"
+              class="category-pill px-5 py-2 bg-white border border-gray-300 rounded-full text-gray-700 hover:shadow-md flex items-center justify-center <%= selectedCategoryId && cat._id.toString() === selectedCategoryId ? 'active' : '' %>">
+              <i class="fas <%= cat.name === 'Sunscreen' ? 'fa-sun' : 
                               cat.name === 'Moisturizer' ? 'fa-tint' : 
                               cat.name === 'Serum' ? 'fa-flask' : 
                               cat.name === 'Facewash' ? 'fa-pump-soap' : 
                               cat.name === 'Cleanser' ? 'fa-soap' : 'fa-th-large' %> mr-2"></i>
-            <%= cat.name %>
-          </a>
-        <% }) %>
+              <%= cat.name %>
+            </a>
+            <% }) %>
+        </div>
       </div>
-    </div>
 
-    <div class="flex flex-col md:flex-row mb-12">
-      <!-- Filter Section -->
-      <aside class="w-full md:w-1/4 mb-8 md:mb-0 md:pr-6">
-        <form id="filterForm" action="/shop" method="GET" class="sticky top-4 bg-white border border-gray-200 p-5 rounded-lg shadow-sm">
-          <div class="flex justify-between items-center mb-4">
-            <h4 class="text-lg font-medium text-gray-700">Filter Options</h4>
-            <button type="button" id="toggleFilters" class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
-              <i class="fas fa-chevron-down"></i>
-            </button>
-          </div>
-          <div id="filterContent" class="space-y-4 md:block">
-            <% if (selectedCategoryId) { %>
-              <input type="hidden" name="category" value="<%= selectedCategoryId %>">
-            <% } %>
-            <div class="filter-section border-b border-gray-100 pb-4">
-              <button type="button" class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
-                <span>Search Products</span>
-                <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+      <div class="flex flex-col md:flex-row mb-12">
+        <!-- Filter Section -->
+        <aside class="w-full md:w-1/4 mb-8 md:mb-0 md:pr-6">
+          <form id="filterForm" action="/shop" method="GET"
+            class="sticky top-4 bg-white border border-gray-200 p-5 rounded-lg shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+              <h4 class="text-lg font-medium text-gray-700">Filter Options</h4>
+              <button type="button" id="toggleFilters"
+                class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                <i class="fas fa-chevron-down"></i>
               </button>
-              <div class="filter-content mt-2">
-                <div class="relative">
-                  <input 
-                    type="text" 
-                    name="query" 
-                    placeholder="Search products..." 
-                    value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
-                    class="w-full p-2 pl-8 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-                  >
-                  <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                </div>
-              </div>
             </div>
-            <div class="filter-section border-b border-gray-100 pb-4">
-              <button type="button" class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
-                <span>Price Range</span>
-                <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
-              </button>
-              <div class="filter-content mt-2">
-                <div class="flex items-center gap-2">
-                  <input 
-                    name="minPrice" 
-                    type="number" 
-                    placeholder="Min" 
-                    class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-gray-700 placeholder-gray-400" 
-                    value="<%= typeof minPrice !== 'undefined' && minPrice !== null ? minPrice : '' %>"
-                    min="0"
-                  >
-                  <span class="text-gray-400">-</span>
-                  <input 
-                    name="maxPrice" 
-                    type="number" 
-                    placeholder="Max" 
-                    class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-gray-700 placeholder-gray-400" 
-                    value="<%= typeof maxPrice !== 'undefined' && maxPrice !== null ? maxPrice : '' %>"
-                    min="0"
-                  >
-                </div>
-              </div>
+            <div id="filterContent" class="space-y-4 md:block">
+              <% if (selectedCategoryId) { %>
+                <input type="hidden" name="category" value="<%= selectedCategoryId %>">
+                <% } %>
+                  <div class="filter-section border-b border-gray-100 pb-4">
+                    <button type="button"
+                      class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
+                      <span>Search Products</span>
+                      <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+                    </button>
+                    <div class="filter-content mt-2">
+                      <div class="relative">
+                        <input type="text" name="query" placeholder="Search products..."
+                          value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+                          class="w-full p-2 pl-8 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-section border-b border-gray-100 pb-4">
+                    <button type="button"
+                      class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
+                      <span>Price Range</span>
+                      <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+                    </button>
+                    <div class="filter-content mt-2">
+                      <div class="flex items-center gap-2">
+                        <input name="minPrice" type="number" placeholder="Min"
+                          class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-gray-700 placeholder-gray-400"
+                          value="<%= typeof minPrice !== 'undefined' && minPrice !== null ? minPrice : '' %>" min="0">
+                        <span class="text-gray-400">-</span>
+                        <input name="maxPrice" type="number" placeholder="Max"
+                          class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400 text-gray-700 placeholder-gray-400"
+                          value="<%= typeof maxPrice !== 'undefined' && maxPrice !== null ? maxPrice : '' %>" min="0">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-section border-b border-gray-100 pb-4">
+                    <button type="button"
+                      class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
+                      <span>Skin Types</span>
+                      <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+                    </button>
+                    <div class="filter-content mt-2 space-y-2">
+                      <% const skinTypes=['Oily', 'Dry' , 'Combination' , 'Sensitive' , 'Normal' ]; %>
+                        <% skinTypes.forEach((type, index)=> { %>
+                          <label class="flex items-center cursor-pointer">
+                            <input id="skin<%= index+1 %>" type="radio" name="skinType" value="<%= type %>"
+                              <%=selectedSkinType===type ? 'checked' : '' %>
+                            class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                            />
+                            <span class="ml-2 text-gray-600">
+                              <%= type %>
+                            </span>
+                          </label>
+                          <% }) %>
+                            <label class="flex items-center cursor-pointer">
+                              <input id="skinAll" type="radio" name="skinType" value="" <%=!selectedSkinType ? 'checked'
+                                : '' %>
+                              class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                              />
+                              <span class="ml-2 text-gray-600">All Types</span>
+                            </label>
+                    </div>
+                  </div>
+                  <div class="filter-section border-b border-gray-100 pb-4">
+                    <button type="button"
+                      class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
+                      <span>Skin Concerns</span>
+                      <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+                    </button>
+                    <div class="filter-content mt-2 space-y-2">
+                      <% const skinConcerns=['Acne', 'Dehydrating' , 'Aging' , 'Dark Spots' , 'Redness' , 'Dull' ]; %>
+                        <% skinConcerns.forEach((concern, index)=> { %>
+                          <label class="flex items-center cursor-pointer">
+                            <input id="concern<%= index+1 %>" type="radio" name="skinConcern" value="<%= concern %>"
+                              <%=selectedSkinConcern===concern ? 'checked' : '' %>
+                            class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                            />
+                            <span class="ml-2 text-gray-600">
+                              <%= concern %>
+                            </span>
+                          </label>
+                          <% }) %>
+                            <label class="flex items-center cursor-pointer">
+                              <input id="concernAll" type="radio" name="skinConcern" value="" <%=!selectedSkinConcern
+                                ? 'checked' : '' %>
+                              class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                              />
+                              <span class="ml-2 text-gray-600">All Concerns</span>
+                            </label>
+                    </div>
+                  </div>
+                  <div class="filter-section border-b border-gray-100 pb-4">
+                    <button type="button"
+                      class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
+                      <span>Sort By</span>
+                      <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
+                    </button>
+                    <div class="filter-content mt-2">
+                      <select name="sort"
+                        class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
+                        <option value="newest" <%=sortBy==='newest' ? 'selected' : '' %>>Newest First</option>
+                        <option value="price-low" <%=sortBy==='price-low' ? 'selected' : '' %>>Price: Low to High
+                        </option>
+                        <option value="price-high" <%=sortBy==='price-high' ? 'selected' : '' %>>Price: High to Low
+                        </option>
+                        <option value="popular" <%=sortBy==='popular' ? 'selected' : '' %>>Most Popular</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-2 pt-2">
+                    <button type="submit"
+                      class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-700 transition-colors">
+                      Apply Filters
+                    </button>
+                    <a href="/shop"
+                      class="text-center text-sm text-gray-500 hover:text-gray-700 transition-colors">Reset Filters</a>
+                  </div>
             </div>
-            <div class="filter-section border-b border-gray-100 pb-4">
-              <button type="button" class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
-                <span>Skin Types</span>
-                <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
-              </button>
-              <div class="filter-content mt-2 space-y-2">
-                <% const skinTypes = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']; %>
-                <% skinTypes.forEach((type, index) => { %>
-                  <label class="flex items-center cursor-pointer">
-                    <input 
-                      id="skin<%= index+1 %>" 
-                      type="radio" 
-                      name="skinType" 
-                      value="<%= type %>" 
-                      <%= selectedSkinType === type ? 'checked' : '' %> 
-                      class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                    />
-                    <span class="ml-2 text-gray-600"><%= type %></span>
-                  </label>
-                <% }) %>
-                <label class="flex items-center cursor-pointer">
-                  <input 
-                    id="skinAll" 
-                    type="radio" 
-                    name="skinType" 
-                    value="" 
-                    <%= !selectedSkinType ? 'checked' : '' %> 
-                    class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                  />
-                  <span class="ml-2 text-gray-600">All Types</span>
-                </label>
-              </div>
-            </div>
-            <div class="filter-section border-b border-gray-100 pb-4">
-              <button type="button" class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
-                <span>Skin Concerns</span>
-                <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
-              </button>
-              <div class="filter-content mt-2 space-y-2">
-                <% const skinConcerns = ['Acne', 'Dehydrating', 'Aging', 'Dark Spots', 'Redness', 'Dull']; %>
-                <% skinConcerns.forEach((concern, index) => { %>
-                  <label class="flex items-center cursor-pointer">
-                    <input 
-                      id="concern<%= index+1 %>" 
-                      type="radio" 
-                      name="skinConcern" 
-                      value="<%= concern %>" 
-                      <%= selectedSkinConcern === concern ? 'checked' : '' %> 
-                      class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                    />
-                    <span class="ml-2 text-gray-600"><%= concern %></span>
-                  </label>
-                <% }) %>
-                <label class="flex items-center cursor-pointer">
-                  <input 
-                    id="concernAll" 
-                    type="radio" 
-                    name="skinConcern" 
-                    value="" 
-                    <%= !selectedSkinConcern ? 'checked' : '' %> 
-                    class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                  />
-                  <span class="ml-2 text-gray-600">All Concerns</span>
-                </label>
-              </div>
-            </div>
-            <div class="filter-section border-b border-gray-100 pb-4">
-              <button type="button" class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
-                <span>Sort By</span>
-                <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
-              </button>
-              <div class="filter-content mt-2">
-                <select name="sort" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-400 focus:border-gray-400">
-                  <option value="newest" <%= sortBy === 'newest' ? 'selected' : '' %>>Newest First</option>
-                  <option value="price-low" <%= sortBy === 'price-low' ? 'selected' : '' %>>Price: Low to High</option>
-                  <option value="price-high" <%= sortBy === 'price-high' ? 'selected' : '' %>>Price: High to Low</option>
-                  <option value="popular" <%= sortBy === 'popular' ? 'selected' : '' %>>Most Popular</option>
-                </select>
-              </div>
-            </div>
-            <div class="flex flex-col gap-2 pt-2">
-              <button type="submit" class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-700 transition-colors">
-                Apply Filters
-              </button>
-              <a href="/shop" class="text-center text-sm text-gray-500 hover:text-gray-700 transition-colors">Reset Filters</a>
-            </div>
-          </div>
-        </form>
-      </aside>
+          </form>
+        </aside>
 
-      <!-- Products Grid Section -->
-      <div class="w-full md:w-3/4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% if (products && products.length > 0) { %>
-            <% products.forEach(product => { %>
-              <div class="product-card bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-300 flex flex-col">
-                <div class="relative rounded-t-lg overflow-hidden" style="padding-top: 100%;">
-                  <div class="absolute inset-0 bg-gray-100 animate-pulse skeleton-loader"></div>
-                  <a href="/productDetails/<%= product._id %>" class="block absolute inset-0">
-                    <img 
-                      alt="<%= product.productName %>" 
-                      class="w-full h-full object-contain hover:scale-105 transition-transform duration-500 opacity-0"
-                      src="/uploads/product-images/<%= product.productImage[0] %>" 
-                      onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300?text=No+Image'" 
-                      onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden');"
-                    />
-                  </a>
-                  <!-- Wishlist Button -->
-<!-- Inside the products loop -->
-<button 
-  type="button" 
-  class="wishlist-btn <%= product.inWishlist ? 'active' : '' %>" 
-  onclick="toggleWishlist('<%= product._id %>', this)" 
-  aria-label="Add to wishlist"
->
-  <i class="far fa-heart"></i>
-  <i class="fas fa-heart"></i>
-</button>
-                </div>
-                <div class="p-3 flex-grow flex flex-col">
-                  <div class="flex justify-between items-start">
-                    <h5 class="font-medium text-gray-800 line-clamp-1 flex-1 hover:text-gray-600 transition-colors">
-                      <a href="/productDetails/<%= product._id %>"><%= product.productName %></a>
-                    </h5>
-                    <% const hasDiscount = (product.productOffer && product.productOffer > 0) || 
-                                         (product.regularPrice && product.regularPrice > product.salePrice); %>
-                    <% if (hasDiscount) { %>
-                      <% const discountPercent = product.productOffer > 0 ? 
-                           product.productOffer : 
-                           Math.round((product.regularPrice - product.salePrice) / product.regularPrice * 100); %>
-                      <% if (discountPercent > 0) { %>
+        <!-- Products Grid Section -->
+        <div class="w-full md:w-3/4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% if (products && products.length > 0) { %>
+              <% products.forEach(product => { %>
+                <div class="product-card bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-300 flex flex-col">
+                  <div class="relative rounded-t-lg overflow-hidden" style="padding-top: 100%;">
+                    <div class="absolute inset-0 bg-gray-100 animate-pulse skeleton-loader"></div>
+                    <a href="/productDetails/<%= product._id %>" class="block absolute inset-0">
+                      <img 
+                        alt="<%= product.productName %>" 
+                        class="w-full h-full object-contain hover:scale-105 transition-transform duration-500 opacity-0"
+                        src="/uploads/product-images/<%= product.productImage[0] %>" 
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300?text=No+Image'" 
+                        onload="this.classList.remove('opacity-0'); this.previousElementSibling.classList.add('hidden');"
+                      />
+                    </a>
+                    <button 
+                      type="button" 
+                      class="wishlist-btn <%= product.inWishlist ? 'active' : '' %>" 
+                      onclick="toggleWishlist('<%= product._id %>', this)" 
+                      aria-label="Add to wishlist"
+                    >
+                      <i class="far fa-heart"></i>
+                      <i class="fas fa-heart"></i>
+                    </button>
+                  </div>
+                  <div class="p-3 flex-grow flex flex-col">
+                    <div class="flex justify-between items-start">
+                      <h5 class="font-medium text-gray-800 line-clamp-1 flex-1 hover:text-gray-600 transition-colors">
+                        <a href="/productDetails/<%= product._id %>"><%= product.productName %></a>
+                      </h5>
+                      <% if (product.discountPercent && product.discountPercent > 0) { %>
                         <div class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded ml-2 whitespace-nowrap">
-                          <%= discountPercent %>% OFF
+                          <%= product.discountPercent %>% OFF
                         </div>
                       <% } %>
-                    <% } %>
-                  </div>
-                  <div class="flex items-center my-1">
-                    <div class="flex text-yellow-400 text-xs">
-                      <% const rating = product.averageRating || 0; %>
-                      <% for(let i = 1; i <= 5; i++) { %>
-                        <% if (i <= Math.floor(rating)) { %>
-                          <i class="fas fa-star"></i>
-                        <% } else if (i <= Math.ceil(rating) && i > Math.floor(rating)) { %>
-                          <i class="fas fa-star-half-alt"></i>
-                        <% } else { %>
-                          <i class="far fa-star"></i>
+                    </div>
+                    <div class="flex items-center my-1">
+                      <div class="flex text-yellow-400 text-xs">
+                        <% const rating = product.averageRating || 0; %>
+                        <% for(let i = 1; i <= 5; i++) { %>
+                          <% if (i <= Math.floor(rating)) { %>
+                            <i class="fas fa-star"></i>
+                          <% } else if (i <= Math.ceil(rating) && i > Math.floor(rating)) { %>
+                            <i class="fas fa-star-half-alt"></i>
+                          <% } else { %>
+                            <i class="far fa-star"></i>
+                          <% } %>
                         <% } %>
+                      </div>
+                      <span class="text-xs text-gray-500 ml-1"><%= product.averageRating?.toFixed(1) || '0.0' %> (<%= product.reviews?.length || 0 %>)</span>
+                    </div>
+                    <div class="text-xs text-gray-600 my-1">
+                      <% if (product.skintype) { %>
+                        <p><span class="font-semibold"></span> <%= product.skintype %></p>
+                      <% } %>
+                      <% if (product.skinConcern && product.skinConcern.length > 0) { %>
+                        <p><span class="font-semibold"></span> <%= product.skinConcern.join(', ') %></p>
                       <% } %>
                     </div>
-                    <span class="text-xs text-gray-500 ml-1"><%= product.averageRating?.toFixed(1) || '0.0' %> (<%= product.reviews?.length || 0 %>)</span>
-                  </div>
-                  <!-- Add Skin Type and Skin Concern -->
-                  <div class="text-xs text-gray-600 my-1">
-                    <% if (product.skintype) { %>
-                      <p><span class="font-semibold"></span> <%= product.skintype %></p>
-                    <% } %>
-                    <% if (product.skinConcern && product.skinConcern.length > 0) { %>
-                      <p><span class="font-semibold"></span> <%= product.skinConcern.join(', ') %></p>
-                    <% } %>
-                  </div>
-                  <div class="flex items-center my-1">
-                    <% const effectivePrice = product.productOffer > 0 ? 
-                         product.regularPrice * (1 - product.productOffer / 100) : 
-                         product.salePrice; %>
-                    <p class="text-gray-800 font-bold">
-                      ₹<%= effectivePrice.toFixed(2) %>
-                    </p>
-                    <% if (hasDiscount && product.regularPrice > effectivePrice) { %>
-                      <p class="text-gray-500 line-through ml-2 text-xs">
-                        ₹<%= product.regularPrice.toFixed(2) %>
+                    <div class="flex items-center my-1">
+                      <p class="text-gray-800 font-bold">
+                        ₹<%= product.effectivePrice.toFixed(2) %>
                       </p>
-                    <% } %>
+                      <% if (product.discountPercent && product.discountPercent > 0 && product.regularPrice > product.effectivePrice) { %>
+                        <p class="text-gray-500 line-through ml-2 text-xs">
+                          ₹<%= product.regularPrice.toFixed(2) %>
+                        </p>
+                      <% } %>
+                    </div>
+                  </div>
+                  <div class="px-3 pb-3">
+                    <button 
+                      onclick="addToCart('<%= product._id %>')" 
+                      class="w-full py-1.5 px-4 rounded text-sm transition-colors flex items-center justify-center gap-2
+                      <%= product.quantity && product.quantity > 0 ? 
+                         'bg-gray-800 text-white hover:bg-gray-700' : 
+                         'bg-gray-300 text-gray-500 cursor-not-allowed' %>"
+                      <%= product.quantity && product.quantity > 0 ? '' : 'disabled' %>
+                    >
+                      <i class="fas <%= product.quantity && product.quantity > 0 ? 'fa-shopping-cart' : 'fa-ban' %>"></i>
+                      <%= product.quantity && product.quantity > 0 ? 'Add to Cart' : 'Out of Stock' %>
+                    </button>
                   </div>
                 </div>
-                <div class="px-3 pb-3">
-                  <button 
-                    onclick="addToCart('<%= product._id %>')" 
-                    class="w-full py-1.5 px-4 rounded text-sm transition-colors flex items-center justify-center gap-2
-                    <%= product.quantity && product.quantity > 0 ? 
-                       'bg-gray-800 text-white hover:bg-gray-700' : 
-                       'bg-gray-300 text-gray-500 cursor-not-allowed' %>"
-                    <%= product.quantity && product.quantity > 0 ? '' : 'disabled' %>
-                  >
-                    <i class="fas <%= product.quantity && product.quantity > 0 ? 'fa-shopping-cart' : 'fa-ban' %>"></i>
-                    <%= product.quantity && product.quantity > 0 ? 'Add to Cart' : 'Out of Stock' %>
-                  </button>
-                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="col-span-full text-center py-12">
+                <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-500">No products match your filters.</p>
+                <a href="/shop" class="mt-4 inline-block text-gray-600 hover:underline">Clear all filters</a>
               </div>
-            <% }) %>
-          <% } else { %>
-            <div class="col-span-full text-center py-12">
-              <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
-              <p class="text-xl text-gray-500">No products match your filters.</p>
-              <a href="/shop" class="mt-4 inline-block text-gray-600 hover:underline">Clear all filters</a>
-            </div>
-          <% } %>
-        </div>
-
-        <!-- Pagination Section -->
-        <% if (totalPages > 1) { %>
-          <div class="flex justify-center mt-10">
-            <% if (currentPage > 1) { %>
-              <a href="/shop?page=<%= currentPage - 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-                class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                Previous
-              </a>
-            <% } %>
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <a href="/shop?page=<%= i %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-                class="mx-1 px-4 py-2 <%= currentPage === i ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' %> rounded-md hover:bg-gray-200 transition-colors">
-                <%= i %>
-              </a>
-            <% } %>
-            <% if (currentPage < totalPages) { %>
-              <a href="/shop?page=<%= currentPage + 1 %><%= selectedCategoryId ? '&category=' + selectedCategoryId : '' %><%= selectedSkinType ? '&skinType=' + selectedSkinType : '' %><%= selectedSkinConcern ? '&skinConcern=' + selectedSkinConcern : '' %><%= minPrice ? '&minPrice=' + minPrice : '' %><%= maxPrice ? '&maxPrice=' + maxPrice : '' %><%= searchQuery ? '&query=' + searchQuery : '' %><%= sortBy ? '&sort=' + sortBy : '' %>"
-                class="mx-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                Next
-              </a>
             <% } %>
           </div>
-        <% } %>
-      </div>
-    </div>
-  </main>
-  <%- include('../partials/user/footer') %>
+        </div>
+    </main>
+    <%- include('../partials/user/footer') %>
 
-  <script>
-    function addToCart(productId) {
-      const button = document.querySelector(`button[onclick="addToCart('${productId}')"]`);
-      if (button.disabled) {
-        console.log('Button is disabled');
+      <script>
+function addToCart(productId) {
+  const button = document.querySelector(`button[onclick="addToCart('${productId}')"]`);
+  if (button.disabled) {
+    console.log('Button is disabled');
+    return;
+  }
+
+  // Fetch product stock dynamically
+  fetch(`/product/${productId}/stock`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then(response => response.json())
+    .then(data => {
+      const availableStock = data.quantity;
+      const maxAllowed = Math.min(availableStock, 5); // Cap at 5 or stock, whichever is lower
+      const requestedQuantity = 1; // Default quantity for now
+
+      if (requestedQuantity > availableStock) {
+        showNotification(`Only ${availableStock} items available in stock`, 'error');
         return;
       }
 
-      console.log('Adding to cart, Product ID:', productId);
-      
       fetch('/cart/add', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // Add CSRF token if you're using CSRF protection
-          // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-        },
-        body: JSON.stringify({ productId: productId, quantity: 1 })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, quantity: requestedQuantity })
       })
-      .then(response => {
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Response data:', data);
-        if (data.success) {
-          showNotification('Product added to your cart', 'success');
-          const cartCountElement = document.getElementById('cartCount');
-          if (cartCountElement) {
-            const currentCount = parseInt(cartCountElement.textContent) || 0;
-            cartCountElement.textContent = currentCount + 1;
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => { throw new Error(data.message); });
           }
-        } else {
-          showNotification(data.message || 'Failed to add product to cart', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error adding to cart:', error);
-        showNotification('An error occurred while adding to cart', 'error');
-      });
-    }
-
-    // Toggle wishlist function
-    function toggleWishlist(productId, button) {
-      // Check if user is logged in
-      fetch('/wishlist/toggle', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // Add CSRF token if you're using CSRF protection
-          // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-        },
-        body: JSON.stringify({ productId: productId })
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // User not logged in
-            showNotification('Please login to add items to your wishlist', 'error');
-            window.location.href = '/login'; // Redirect to login page
-            return;
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showNotification('Product added to your cart', 'success');
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+              const currentCount = parseInt(cartCountElement.textContent) || 0;
+              cartCountElement.textContent = currentCount + 1;
+            }
+          } else {
+            showNotification(data.message || 'Failed to add product to cart', 'error');
           }
-          throw new Error(`HTTP error! status: ${response.status}`);
+        })
+        .catch(error => {
+          console.error('Error adding to cart:', error);
+          showNotification(error.message || 'An error occurred', 'error');
+        });
+    })
+    .catch(error => {
+      console.error('Error fetching stock:', error);
+      showNotification('Unable to verify stock', 'error');
+    });
+}
+        // Toggle wishlist function
+        function toggleWishlist(productId, button) {
+          // Check if user is logged in
+          fetch('/wishlist/toggle', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Add CSRF token if you're using CSRF protection
+              // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+            },
+            body: JSON.stringify({ productId: productId })
+          })
+            .then(response => {
+              if (!response.ok) {
+                if (response.status === 401) {
+                  // User not logged in
+                  showNotification('Please login to add items to your wishlist', 'error');
+                  window.location.href = '/login'; // Redirect to login page
+                  return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log('Wishlist response:', data);
+              if (data.success) {
+                button.classList.toggle('active');
+                const action = button.classList.contains('active') ? 'added to' : 'removed from';
+                showNotification(`Product ${action} your wishlist`, 'success');
+
+                // Update wishlist count in header if it exists
+                const wishlistCountElement = document.getElementById('wishlistCount');
+                if (wishlistCountElement) {
+                  const currentCount = parseInt(wishlistCountElement.textContent) || 0;
+                  wishlistCountElement.textContent = button.classList.contains('active') ?
+                    currentCount + 1 :
+                    Math.max(0, currentCount - 1);
+                }
+              } else {
+                showNotification(data.message || 'Failed to update wishlist', 'error');
+              }
+            })
+            .catch(error => {
+              console.error('Error updating wishlist:', error);
+              showNotification('An error occurred while updating your wishlist', 'error');
+            });
         }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Wishlist response:', data);
-        if (data.success) {
-          button.classList.toggle('active');
-          const action = button.classList.contains('active') ? 'added to' : 'removed from';
-          showNotification(`Product ${action} your wishlist`, 'success');
-          
-          // Update wishlist count in header if it exists
-          const wishlistCountElement = document.getElementById('wishlistCount');
-          if (wishlistCountElement) {
-            const currentCount = parseInt(wishlistCountElement.textContent) || 0;
-            wishlistCountElement.textContent = button.classList.contains('active') ? 
-              currentCount + 1 : 
-              Math.max(0, currentCount - 1);
+
+        function showNotification(message, type) {
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+      <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+      <span>${message}</span>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => { notification.style.transform = 'translateY(0)'; }, 10);
+    setTimeout(() => {
+      notification.style.transform = 'translateY(-100px)';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+        document.addEventListener('DOMContentLoaded', function () {
+          const filterToggles = document.querySelectorAll('.filter-toggle');
+          filterToggles.forEach(toggle => {
+            toggle.addEventListener('click', function () {
+              const content = this.nextElementSibling;
+              const icon = this.querySelector('i');
+              content.classList.toggle('hidden');
+              icon.classList.toggle('rotate-180');
+            });
+          });
+
+          const toggleFiltersBtn = document.getElementById('toggleFilters');
+          const filterContent = document.getElementById('filterContent');
+          if (toggleFiltersBtn && filterContent) {
+            toggleFiltersBtn.addEventListener('click', function () {
+              filterContent.classList.toggle('hidden');
+              const icon = this.querySelector('i');
+              icon.classList.toggle('rotate-180');
+            });
           }
-        } else {
-          showNotification(data.message || 'Failed to update wishlist', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error updating wishlist:', error);
-        showNotification('An error occurred while updating your wishlist', 'error');
-      });
-    }
 
-    function showNotification(message, type) {
-      const existingNotifications = document.querySelectorAll('.notification');
-      existingNotifications.forEach(notification => notification.remove());
-      
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
-        <span>${message}</span>
-      `;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => { notification.style.transform = 'translateY(0)'; }, 10);
-      setTimeout(() => {
-        notification.style.transform = 'translateY(-100px)';
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+          if (window.innerWidth >= 768) {
+            document.querySelectorAll('.filter-content').forEach(content => {
+              content.classList.remove('hidden');
+            });
+          }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const filterToggles = document.querySelectorAll('.filter-toggle');
-      filterToggles.forEach(toggle => {
-        toggle.addEventListener('click', function () {
-          const content = this.nextElementSibling;
-          const icon = this.querySelector('i');
-          content.classList.toggle('hidden');
-          icon.classList.toggle('rotate-180');
-        });
-      });
 
-      const toggleFiltersBtn = document.getElementById('toggleFilters');
-      const filterContent = document.getElementById('filterContent');
-      if (toggleFiltersBtn && filterContent) {
-        toggleFiltersBtn.addEventListener('click', function () {
-          filterContent.classList.toggle('hidden');
-          const icon = this.querySelector('i');
-          icon.classList.toggle('rotate-180');
-        });
-      }
+          const filterForm = document.getElementById('filterForm');
+          if (filterForm) {
+            filterForm.addEventListener('submit', function (event) {
+              const formData = new FormData(this);
+              const formEntries = Array.from(formData.entries());
+              formEntries.forEach(([key, value]) => {
+                if (value === '' || value === null) {
+                  formData.delete(key);
+                }
+              });
+            });
+          }
 
-      if (window.innerWidth >= 768) {
-        document.querySelectorAll('.filter-content').forEach(content => {
-          content.classList.remove('hidden');
-        });
-      }
+          const minPriceInput = document.querySelector('input[name="minPrice"]');
+          const maxPriceInput = document.querySelector('input[name="maxPrice"]');
+          if (minPriceInput && maxPriceInput) {
+            filterForm.addEventListener('submit', function (event) {
+              const minPrice = parseFloat(minPriceInput.value);
+              const maxPrice = parseFloat(maxPriceInput.value);
+              if (!isNaN(minPrice) && !isNaN(maxPrice) && minPrice > maxPrice) {
+                event.preventDefault();
+                showNotification('Minimum price cannot be greater than maximum price', 'error');
+                return false;
+              }
+            });
+          }
 
-      
-      const filterForm = document.getElementById('filterForm');
-      if (filterForm) {
-        filterForm.addEventListener('submit', function (event) {
-          const formData = new FormData(this);
-          const formEntries = Array.from(formData.entries());
-          formEntries.forEach(([key, value]) => {
-            if (value === '' || value === null) {
-              formData.delete(key);
+          const categoryPills = document.querySelectorAll('.category-pill');
+          const currentUrl = new URL(window.location.href);
+          categoryPills.forEach(pill => {
+            const pillUrl = new URL(pill.getAttribute('href'), window.location.origin);
+            if (pillUrl.pathname === currentUrl.pathname &&
+              pillUrl.searchParams.get('category') === currentUrl.searchParams.get('category')) {
+              pill.classList.add('active');
+            } else {
+              pill.classList.remove('active');
             }
           });
-        });
-      }
 
-      const minPriceInput = document.querySelector('input[name="minPrice"]');
-      const maxPriceInput = document.querySelector('input[name="maxPrice"]');
-      if (minPriceInput && maxPriceInput) {
-        filterForm.addEventListener('submit', function(event) {
-          const minPrice = parseFloat(minPriceInput.value);
-          const maxPrice = parseFloat(maxPriceInput.value);
-          if (!isNaN(minPrice) && !isNaN(maxPrice) && minPrice > maxPrice) {
-            event.preventDefault();
-            showNotification('Minimum price cannot be greater than maximum price', 'error');
-            return false;
-          }
-        });
-      }
-
-      const categoryPills = document.querySelectorAll('.category-pill');
-      const currentUrl = new URL(window.location.href);
-      categoryPills.forEach(pill => {
-        const pillUrl = new URL(pill.getAttribute('href'), window.location.origin);
-        if (pillUrl.pathname === currentUrl.pathname && 
-            pillUrl.searchParams.get('category') === currentUrl.searchParams.get('category')) {
-          pill.classList.add('active');
-        } else {
-          pill.classList.remove('active');
-        }
-      });
-
-      function fadeInImages() {
-        const productImages = document.querySelectorAll('.product-card img');
-        productImages.forEach(img => {
-          if (!img.complete) {
-            img.classList.add('opacity-0');
-            img.addEventListener('load', function() {
-              this.classList.remove('opacity-0');
-              this.previousElementSibling?.classList.add('hidden');
+          function fadeInImages() {
+            const productImages = document.querySelectorAll('.product-card img');
+            productImages.forEach(img => {
+              if (!img.complete) {
+                img.classList.add('opacity-0');
+                img.addEventListener('load', function () {
+                  this.classList.remove('opacity-0');
+                  this.previousElementSibling?.classList.add('hidden');
+                });
+              } else {
+                img.classList.remove('opacity-0');
+                img.previousElementSibling?.classList.add('hidden');
+              }
             });
-          } else {
-            img.classList.remove('opacity-0');
-            img.previousElementSibling?.classList.add('hidden');
           }
-        });
-      }
-      fadeInImages();
+          fadeInImages();
 
-    })
-  </script>
+        })
+      </script>
 </body>
+
 </html>

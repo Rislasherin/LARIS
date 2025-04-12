@@ -55,13 +55,13 @@
                         <tbody>
                             <% if (data && data.length > 0) { %>
                                 <% data.forEach(function(item) { %>
-                                    <tr class="border-b border-gray-700">
-                                        <td class="py-1"> <!-- Reduced vertical padding -->
+                                    <tr class="border-b border-gray-700" data-product-id="<%= item._id %>">
+                                        <td class="py-1">
                                             <% if (item.productImage && item.productImage.length > 0) { %>
                                                 <img src="/uploads/product-images/<%= item.productImage[0] %>" alt="<%= item.productName %>" class="product-image">
                                             <% } else { %>
                                                 <div class="bg-gray-700 product-image flex items-center justify-center">
-                                                    <i class="fas fa-image text-gray-500 text-xs"></i> <!-- Smaller icon -->
+                                                    <i class="fas fa-image text-gray-500 text-xs"></i>
                                                 </div>
                                             <% } %>
                                         </td>
@@ -73,20 +73,20 @@
                                             <% if (item.productOffer && item.productOffer > 0) { %>
                                                 <button type="button" class="offer-button bg-red-500 text-white px-1 py-0.5 rounded text-xs" data-product-id="<%= item._id %>" data-has-offer="true" onclick="removeOffer('<%= item._id %>')">Remove</button>
                                             <% } else { %>
-                                                <button type="button" class="offer-button bg-blue-500 text-white px-1 py-0.5 rounded text-xs" data-product-id="<%= item._id %>" data-has-offer="false" onclick="addOffer('<%= item._id %>')">Add</button> <!-- Shortened text -->
+                                                <button type="button" class="offer-button bg-blue-500 text-white px-1 py-0.5 rounded text-xs" data-product-id="<%= item._id %>" data-has-offer="false" onclick="addOffer('<%= item._id %>')">Add</button>
                                             <% } %>
                                         </td>
                                         <td class="py-1"><%= item.quantity %></td>
-                                        <td class="py-1 flex space-x-1"> <!-- Reduced spacing -->
+                                        <td class="py-1 flex space-x-1">
                                             <button class="<%= item.status === 'Blocked' ? 'bg-green-500' : 'bg-red-500' %> text-white px-1 py-0.5 rounded text-xs" onclick="toggleBlock(this, '<%= item._id %>', '<%= item.status %>')" data-status="<%= item.status %>">
                                                 <%= item.status === 'Blocked' ? 'Unblock' : 'Block' %>
                                             </button>
-                                            <a href="/admin/editProduct/<%= item._id %>"><i class="fas fa-edit text-gray-400 hover:text-white cursor-pointer text-xs"></i></a> <!-- Smaller icon -->
+                                            <a href="/admin/editProduct/<%= item._id %>"><i class="fas fa-edit text-gray-400 hover:text-white cursor-pointer text-xs"></i></a>
                                         </td>
                                     </tr>
                                 <% }); %>
                             <% } else { %>
-                                <tr><td colspan="8" class="py-2 text-center text-xs">No products found</td></tr> <!-- Smaller text and padding -->
+                                <tr><td colspan="8" class="py-2 text-center text-xs">No products found</td></tr>
                             <% } %>
                         </tbody>
                     </table>
@@ -266,4 +266,20 @@
         }
     });
 }
+
+function updateProductStock() {
+  fetch('/admin/products/data', { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+      data.forEach(product => {
+        const qtyCell = document.querySelector(`tr[data-product-id="${product._id}"] td:nth-child(7)`);
+        if (qtyCell && qtyCell.textContent !== product.quantity.toString()) {
+          qtyCell.textContent = product.quantity;
+        }
+      });
+    })
+    .catch(error => console.error('Error updating stock:', error));
+}
+
+setInterval(updateProductStock, 5000); // Update every 5 seconds
 </script>

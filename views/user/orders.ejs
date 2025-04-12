@@ -83,6 +83,7 @@
         }
         
         .order-grid {
+            width:607px;
             display: grid;
             grid-template-columns: 1fr;
             gap: 1rem;
@@ -375,9 +376,9 @@
                                 </span>
                             </div>
                             <div class="payment-status-container">
-                                <span class="payment-badge <%= order.status === 'Payment Pending' ? 'pending' : 'completed' %>">
-                                    <i class="<%= order.status === 'Payment Pending' ? 'fas fa-hourglass-half' : 'fas fa-check-circle' %>"></i>
-                                    <%= order.status === 'Payment Pending' ? 'Payment Pending' : 'Payment Completed' %>
+                                <span class="payment-badge <%= order.paymentStatus === 'Pending' ? 'pending' : 'completed' %>">
+                                    <i class="<%= order.paymentStatus === 'Pending' ? 'fas fa-hourglass-half' : 'fas fa-check-circle' %>"></i>
+                                    <%= order.paymentStatus %>
                                 </span>
                             </div>
                         </div>

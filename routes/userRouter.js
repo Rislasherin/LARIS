@@ -76,6 +76,7 @@ router.post('/reset-password',profileController.postNewPassword)
 
 router.get('/product/:id', productController.productDetails);
 router.get('/productdetails/:id',productController.productDetails)
+router.get('/product/:productId/stock',productController.getProductStock);
 
 
 //profile
@@ -110,6 +111,7 @@ router.post("/cart/add",userAuth, cartController.addToCart);
 router.post("/cart/update",userAuth, cartController.updateCartQuantity);
 router.post("/cart/remove", userAuth, cartController.removeFromCart);
 router.get('/cart/contents', userAuth, cartController.getCartContents);
+router.post('/cart/get-quantity',userAuth,cartController.getCartQuantity);
 
 
 //checkout
@@ -135,7 +137,7 @@ router.delete('/remove-address/:addressId', checkoutController.removeAddress);
 router.get('/orders', OrderController.getOrdersPage);
 router.get('/order-details/:orderId', OrderController.getOrderDetailsPage);
 router.post('/user/order/cancel-order/:orderId', userAuth, OrderController.cancelOrder);
-router.post('/order/cancel-order/:orderId', userAuth,OrderController.cancelOrder);
+router.post('/user/order/cancel-product/:orderId/:productId', userAuth, OrderController.cancelProduct);
 router.post('/user/return', OrderController.requestReturn);
 
 

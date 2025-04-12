@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Report Dashboard | Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #111827;
+      color: #d1d5db;
+    }
+
+    .main-content {
+      padding: 1rem;
+    }
+
+    .card {
+      background-color: #1f2937;
+      border-radius: 0.5rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .stat-card {
+      position: relative;
+      padding: 1rem;
+    }
+
+    .stat-card.sales {
+      border-left: 4px solid #4cc9f0;
+    }
+
+    .stat-card.orders {
+      border-left: 4px solid #4895ef;
+    }
+
+    .stat-card.discount {
+      border-left: 4px solid #f72585;
+    }
+
+    .stat-card.products {
+      border-left: 4px solid #7209b7;
+    }
+
+    .stat-card.categories {
+      border-left: 4px solid #f48c06;
+    }
+
+    .list-group {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .list-group-item {
+      background-color: #1f2937;
+      color: #d1d5db;
+      border-color: #374151;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .list-group-item:not(:last-child) {
+      border-bottom: 1px solid #374151;
+    }
+
+    .table {
+      width: 100%;
+      font-size: 0.75rem;
+    }
+
+    .table th {
+      background-color: #111827;
+      color: #9ca3af;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #374151;
+      white-space: nowrap;
+    }
+
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+
+    .badge.bg-success {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .badge.bg-info {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .badge.bg-warning {
+      background-color: #f59e0b;
+      color: white;
+    }
+
+    .badge.bg-danger {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .badge.bg-secondary {
+      background-color: #6b7280;
+      color: white;
+    }
+
+    .btn-primary {
+      background-color: #4f46e5;
+      color: white;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #4338ca;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid #4f46e5;
+      color: #4f46e5;
+    }
+
+    .btn-outline:hover {
+      background-color: #4f46e5;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-button {
+      position: relative;
+      padding: 0.75rem 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      background-color: #2d3748;
+      color: white;
+    }
+
+    .tab-button.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #4f46e5;
+    }
+
+    .daterangepicker {
+      background-color: #1f2937;
+      border-color: #374151;
+      color: #d1d5db;
+    }
+
+    .daterangepicker td.available:hover,
+    .daterangepicker th.available:hover {
+      background-color: #374151;
+    }
+
+    .daterangepicker td.active,
+    .daterangepicker td.active:hover {
+      background-color: #4f46e5;
+    }
+
+    .daterangepicker .drp-buttons {
+      border-top-color: #374151;
+    }
+
+    .daterangepicker .drp-selected {
+      color: #9ca3af;
+    }
+
+    .daterangepicker .btn {
+      background-color: #4f46e5;
+      color: white;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+
+    .summary-card {
+      background-color: #1f2937;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .stat-value {
+        font-size: 1rem;
+      }
+
+      .stat-title {
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="flex h-screen">
+    <% const maxPagesToShow = 5; %>
+    <%- include('../partials/admin/header') %>
+
+      <div class="flex-1 p-4 main-content">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h4 class="text-lg font-bold mb-1 text-white">Sales Report</h4>
+            <nav class="text-xs">
+              <ol class="flex">
+                <li class="text-gray-500">Dashboard</li>
+                <li class="mx-2 text-gray-500">/</li>
+                <li class="text-gray-300">Sales Report</li>
+              </ol>
+            </nav>
+          </div>
+
+          <div class="flex">
+            <!-- Replace the existing dropdown menu -->
+            <div class="dropdown relative mr-2">
+              <button class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded text-xs flex items-center"
+                type="button" id="downloadReport">
+                <i class="fas fa-download mr-1"></i> Download
+                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+              </button>
+              <div class="dropdown-menu hidden absolute right-0 mt-1 bg-gray-800 rounded shadow-lg z-10 w-32">
+                <a class="block px-4 py-2 text-xs text-gray-300 hover:bg-gray-700" href="#" id="downloadPdf">
+                  <i class="far fa-file-pdf mr-1"></i> PDF
+                </a>
+                <a class="block px-4 py-2 text-xs text-gray-300 hover:bg-gray-700" href="#" id="downloadExcel">
+                  <i class="far fa-file-excel mr-1"></i> Excel
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded p-3 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Date Range</label>
+              <div class="flex">
+                <span class="bg-gray-700 flex items-center justify-center px-2 rounded-l">
+                  <i class="far fa-calendar-alt text-gray-400"></i>
+                </span>
+                <input type="text" class="flex-1 bg-gray-700 text-gray-300 p-2 rounded-r text-xs" id="dateRangePicker"
+                  value="<%= startDate && endDate ? `${startDate} - ${endDate}` : '' %>">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Quick Select</label>
+              <select class="w-full bg-gray-700 text-gray-300 p-2 rounded text-xs" id="quickDateSelect">
+                <option value="custom" <%=quickSelect==='custom' ? 'selected' : '' %>>Custom Range</option>
+                <option value="today" <%=quickSelect==='today' ? 'selected' : '' %>>Today</option>
+                <option value="last7days" <%=quickSelect==='last7days' ? 'selected' : '' %>>Last 7 Days</option>
+                <option value="last30days" <%=quickSelect==='last30days' ? 'selected' : '' %>>Last 30 Days</option>
+                <option value="year" <%=quickSelect==='year' ? 'selected' : '' %>>Year</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Compare With</label>
+              <select class="w-full bg-gray-700 text-gray-300 p-2 rounded text-xs" id="compareWithSelect">
+                <option value="none">No Comparison</option>
+                <option value="prevPeriod">Previous Period</option>
+                <option value="prevYear">Same Period Last Year</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div class="card">
+            <div class="stat-card sales">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="stat-title">Total Sales (Delivered)</p>
+                  <h3 class="stat-value">
+                    <%= report.totalAmount ? report.totalAmount.toFixed(2) : '0.00' %>
+                  </h3>
+                  <% if (report.compareData !==null && report.compareData !==undefined) { %>
+                    <p
+                      class="text-xs <%= report.compareData.totalAmount < report.totalAmount ? 'text-green-400' : 'text-red-400' %> mt-1">
+                      <i
+                        class="fas fa-arrow-<%= report.compareData.totalAmount < report.totalAmount ? 'up' : 'down' %> mr-1"></i>
+                      <% if (report.compareData.totalAmount===0) { %>
+                        N/A (No data from <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year' %>)
+                          <% } else { %>
+                            <%= ((report.totalAmount - report.compareData.totalAmount) / report.compareData.totalAmount
+                              * 100).toFixed(1) %>% vs <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year'
+                                %>
+                                <% } %>
+                    </p>
+                    <% } %>
+                </div>
+                <div class="h-10 w-10 bg-blue-500 bg-opacity-10 flex items-center justify-center rounded">
+                  <i class="fas fa-rupee-sign text-blue-400"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orders Card -->
+          <div class="card">
+            <div class="stat-card orders">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="stat-title">Delivered Orders</p>
+                  <h3 class="stat-value">
+                    <%= report.totalOrders || 0 %>
+                  </h3>
+                  <% if (report.compareData !==null && report.compareData !==undefined) { %>
+                    <p
+                      class="text-xs <%= report.compareData.totalOrders < report.totalOrders ? 'text-green-400' : 'text-red-400' %> mt-1">
+                      <i
+                        class="fas fa-arrow-<%= report.compareData.totalOrders < report.totalOrders ? 'up' : 'down' %> mr-1"></i>
+                      <% if (report.compareData.totalOrders===0) { %>
+                        N/A (No data from <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year' %>)
+                          <% } else { %>
+                            <%= ((report.totalOrders - report.compareData.totalOrders) / report.compareData.totalOrders
+                              * 100).toFixed(1) %>% vs <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year'
+                                %>
+                                <% } %>
+                    </p>
+                    <% } %>
+                </div>
+                <div class="h-10 w-10 bg-indigo-500 bg-opacity-10 flex items-center justify-center rounded">
+                  <i class="fas fa-shopping-bag text-indigo-400"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discounts Card -->
+          <div class="card">
+            <div class="stat-card discount">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="stat-title">Discounts (Delivered)</p>
+                  <h3 class="stat-value">
+                    <%= report.totalDiscount ? report.totalDiscount.toFixed(2) : '0.00' %>
+                  </h3>
+                  <% if (report.compareData !==null && report.compareData !==undefined) { %>
+                    <p
+                      class="text-xs <%= report.compareData.totalDiscount < report.totalDiscount ? 'text-green-400' : 'text-red-400' %> mt-1">
+                      <i
+                        class="fas fa-arrow-<%= report.compareData.totalDiscount < report.totalDiscount ? 'up' : 'down' %> mr-1"></i>
+                      <% if (report.compareData.totalDiscount===0) { %>
+                        N/A (No data from <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year' %>)
+                          <% } else { %>
+                            <%= ((report.totalDiscount - report.compareData.totalDiscount) /
+                              report.compareData.totalDiscount * 100).toFixed(1) %>% vs <%= compareWith==='prevPeriod'
+                                ? 'Previous Period' : 'Last Year' %>
+                                <% } %>
+                    </p>
+                    <% } %>
+                </div>
+                <div class="h-10 w-10 bg-pink-500 bg-opacity-10 flex items-center justify-center rounded">
+                  <i class="fas fa-tag text-pink-400"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Average Order Value Card -->
+          <div class="card">
+            <div class="stat-card products">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="stat-title">Average Order Value (Delivered)</p>
+                  <h3 class="stat-value">
+                    <%= report.totalOrders && report.totalAmount ? (report.totalAmount / report.totalOrders).toFixed(2)
+                      : '0.00' %>
+                  </h3>
+                  <% if (report.compareData !==null && report.compareData !==undefined) { %>
+                    <p
+                      class="text-xs <%= (report.compareData.totalAmount / report.compareData.totalOrders || 0) < (report.totalAmount / report.totalOrders) ? 'text-green-400' : 'text-red-400' %> mt-1">
+                      <i
+                        class="fas fa-arrow-<%= (report.compareData.totalAmount / report.compareData.totalOrders || 0) < (report.totalAmount / report.totalOrders) ? 'up' : 'down' %> mr-1"></i>
+                      <% if (report.compareData.totalOrders===0) { %>
+                        N/A (No data from <%= compareWith==='prevPeriod' ? 'Previous Period' : 'Last Year' %>)
+                          <% } else { %>
+                            <%= Math.abs((((report.totalAmount / report.totalOrders) - (report.compareData.totalAmount /
+                              report.compareData.totalOrders)) / (report.compareData.totalAmount /
+                              report.compareData.totalOrders) * 100)).toFixed(1) %>% vs <%= compareWith==='prevPeriod'
+                                ? 'Previous Period' : 'Last Year' %>
+                                <% } %>
+                    </p>
+                    <% } %>
+                </div>
+                <div class="h-10 w-10 bg-purple-500 bg-opacity-10 flex items-center justify-center rounded">
+                  <i class="fas fa-chart-line text-purple-400"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-700 mb-4">
+          <ul class="flex flex-wrap">
+            <li class="mr-1">
+              <button type="button" class="tab-button active" data-tab="overview">Overview</button>
+            </li>
+            <!-- <li class="mr-1">
+              <button type="button" class="tab-button" data-tab="analytics">Analytics</button>
+            </li> -->
+            <li class="mr-1">
+              <button type="button" class="tab-button" data-tab="orders">Orders</button>
+            </li>
+            <li class="mr-1">
+              <button type="button" class="tab-button" data-tab="products">Products</button>
+            </li>
+          </ul>
+        </div>
+
+        <div id="overview" class="tab-content active">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="card">
+              <div class="stat-card products">
+                <p class="stat-title">Best Selling Products (Top 10)</p>
+                <h3 class="stat-value text-sm mb-2">
+                  <%= report.topProducts ? report.topProducts.length : 0 %> Products
+                </h3>
+                <div class="list-group">
+                  <% if (report.topProducts && report.topProducts.length) { %>
+                    <% report.topProducts.forEach((product, index)=> { %>
+                      <div class="list-group-item flex justify-between">
+                        <span class="truncate">
+                          <%= index + 1 %>. <%= product.name %>
+                        </span>
+                        <span class="text-xs font-semibold text-blue-400 ml-1">(<%= product.sales %> sold)</span>
+                      </div>
+                      <% }) %>
+                        <% } else { %>
+                          <div class="list-group-item text-gray-500">No products found</div>
+                          <% } %>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="card">
+              <div class="stat-card categories">
+                <p class="stat-title">Best Selling Categories (Top 10)</p>
+                <h3 class="stat-value text-sm mb-2">
+                  <%= report.topCategories ? report.topCategories.length : 0 %> Categories
+                </h3>
+                <div class="list-group">
+                  <% if (report.topCategories && report.topCategories.length) { %>
+                    <% report.topCategories.forEach((category, index)=> { %>
+                      <div class="list-group-item flex justify-between">
+                        <span class="truncate">
+                          <%= index + 1 %>. <%= category.name %>
+                        </span>
+                        <span class="text-xs font-semibold text-amber-400 ml-1">(<%= category.sales %> sold)</span>
+                      </div>
+                      <% }) %>
+                        <% } else { %>
+                          <div class="list-group-item text-gray-500">No categories found</div>
+                          <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="summary-card p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-gray-300">Coupon Usage</h3>
+                <div class="h-8 w-8 rounded-full bg-blue-500 bg-opacity-10 flex items-center justify-center">
+                  <i class="fas fa-ticket-alt text-blue-400 text-xs"></i>
+                </div>
+              </div>
+              <div class="flex justify-between items-end">
+                <div>
+                  <p class="text-lg font-bold text-white">
+                    <%= report.couponOrders || 0 %>
+                  </p>
+                  <p class="text-xs text-gray-400">Delivered orders with coupon</p>
+                </div>
+                <div>
+                  <p class="text-lg font-bold text-white">
+                    <%= report.totalCouponDiscount ? report.totalCouponDiscount.toFixed(2) : '0.00' %>
+                  </p>
+                  <p class="text-xs text-gray-400">Total coupon discount (Delivered)</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-card p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-gray-300">Payment Methods</h3>
+                <div class="h-8 w-8 rounded-full bg-green-500 bg-opacity-10 flex items-center justify-center">
+                  <i class="fas fa-credit-card text-green-400 text-xs"></i>
+                </div>
+              </div>
+              <div class="flex flex-col space-y-2">
+                <% const paymentMethods={}; report.orders.forEach(order=> {
+                  const method = order.paymentMethod || 'Unknown';
+                  paymentMethods[method] = (paymentMethods[method] || 0) + 1;
+                  });
+                  Object.entries(paymentMethods).forEach(([method, count]) => {
+                  const percentage = report.orders.length ? (count / report.orders.length * 100).toFixed(1) : 0;
+                  %>
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-400">
+                      <%= method %>
+                    </span>
+                    <span class="text-xs font-medium text-white">
+                      <%= count %> (<%= percentage %>%)
+                    </span>
+                  </div>
+                  <% }); %>
+              </div>
+            </div>
+
+            <div class="summary-card p-4">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-gray-300">Order Status</h3>
+                <div class="h-8 w-8 rounded-full bg-amber-500 bg-opacity-10 flex items-center justify-center">
+                  <i class="fas fa-tasks text-amber-400 text-xs"></i>
+                </div>
+              </div>
+              <div class="flex flex-col space-y-2">
+                <% const orderStatuses={}; report.orders.forEach(order=> {
+                  const status = order.status || 'Unknown';
+                  orderStatuses[status] = (orderStatuses[status] || 0) + 1;
+                  });
+                  Object.entries(orderStatuses).forEach(([status, count]) => {
+                  const percentage = report.orders.length ? (count / report.orders.length * 100).toFixed(1) : 0;
+                  let statusColor = '';
+                  switch(status) {
+                  case 'Delivered': statusColor = 'text-green-400'; break;
+                  case 'Shipped': statusColor = 'text-blue-400'; break;
+                  case 'Processing': statusColor = 'text-amber-400'; break;
+                  case 'Cancelled': statusColor = 'text-red-400'; break;
+                  default: statusColor = 'text-gray-400';
+                  }
+                  %>
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs <%= statusColor %>">
+                      <%= status %>
+                    </span>
+                    <span class="text-xs font-medium text-white">
+                      <%= count %> (<%= percentage %>%)
+                    </span>
+                  </div>
+                  <% }); %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 
+        <div id="analytics" class="tab-content">
+          <div class="card mb-4">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center">
+              <h5 class="text-sm font-semibold text-white">Sales Overview</h5>
+              <div class="flex text-xs">
+                <button type="button" class="bg-gray-700 text-gray-300 px-2 py-1 rounded-l border-r border-gray-600"
+                  data-graph-period="daily">Daily</button>
+                <button type="button" class="bg-gray-700 text-gray-300 px-2 py-1 border-r border-gray-600"
+                  data-graph-period="weekly">Weekly</button>
+                <button type="button" class="bg-gray-700 text-gray-300 px-2 py-1 rounded-r"
+                  data-graph-period="monthly">Monthly</button>
+              </div>
+            </div>
+            <div class="p-3">
+              <canvas id="salesChart" style="width: 100%; height: 280px;"></canvas>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="card">
+              <div class="p-3 border-b border-gray-700">
+                <h5 class="text-sm font-semibold text-white">Sales Distribution</h5>
+              </div>
+              <div class="p-3">
+                <canvas id="salesDistributionChart" style="width: 100%; height: 220px;"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="p-3 border-b border-gray-700">
+                <h5 class="text-sm font-semibold text-white">Order & Discount Trend</h5>
+              </div>
+              <div class="p-3">
+                <canvas id="orderTrendChart" style="width: 100%; height: 220px;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div> -->
+
+        <div id="orders" class="tab-content">
+          <div class="card">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center">
+              <h5 class="text-sm font-semibold text-white">Detailed Orders</h5>
+              <select class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" id="orderStatusFilter">
+                <option value="all">All Statuses</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Processing">Processing</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Returned">Returned</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto max-h-96">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Products</th>
+                    <th>Subtotal</th>
+                    <th>Discount</th>
+                    <th>Coupon</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (report.orders && report.orders.length> 0) { %>
+                    <% report.orders.forEach(order=> { %>
+                      <tr class="hover:bg-gray-700">
+                        <td>#ORD-<%= order.orderId || 'N/A' %>
+                        </td>
+                        <td>
+                          <%= new Date(order.date).toLocaleDateString('en-US', { month: 'short' , day: 'numeric' ,
+                            year: 'numeric' }) %>
+                        </td>
+                        <td>
+                          <%= order.user?.name || 'Unknown' %>
+                        </td>
+                        <td>
+                          <%= order.products?.length || 0 %> item<%= order.products?.length !==1 ? 's' : '' %>
+                        </td>
+                        <td>
+                          <%= order.originalAmount ? order.originalAmount.toFixed(2) : '0.00' %>
+                        </td>
+                        <td>
+                          <%= order.offerDiscount ? order.offerDiscount.toFixed(2) : '0.00' %>
+                        </td>
+                        <td>
+                          <%= order.couponCode ? `${order.couponCode} (-${order.couponDiscount.toFixed(2)})` : 'N/A' %>
+                        </td>
+                        <td>
+                          <%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %>
+                        </td>
+                        <td>
+                          <span class="badge <%= 
+                            order.status === 'Delivered' ? 'bg-success' : 
+                            order.status === 'Shipped' ? 'bg-info' : 
+                            order.status === 'Processing' ? 'bg-warning' : 
+                            order.status === 'Cancelled' ? 'bg-danger' : 
+                            order.status === 'Returned' ? 'bg-secondary' : 
+                            'bg-secondary' %>">
+                            <%= order.status %>
+                          </span>
+                        </td>
+                      </tr>
+                      <% }) %>
+                        <% } %>
+                          <!-- Placeholder row for no orders -->
+                          <tr class="no-orders <%= report.orders && report.orders.length > 0 ? 'hidden' : '' %>">
+                            <td colspan="9" class="text-center text-gray-500 py-4">No orders found for the selected
+                              period or filter.</td>
+                          </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-3 border-t border-gray-700">
+              <div class="flex justify-center">
+                <% const totalOrderPages = Math.ceil(totalOrders / limit); %>
+                <% let orderStartPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2)); %>
+                <% let orderEndPage = Math.min(totalOrderPages, orderStartPage + maxPagesToShow - 1); %>
+                <% if (orderEndPage - orderStartPage + 1 < maxPagesToShow) { %>
+                  <% orderStartPage = Math.max(1, orderEndPage - maxPagesToShow + 1); %>
+                <% } %>
+                <div class="flex justify-center items-center text-xs">
+                  <% if (currentPage > 1) { %>
+                    <a href="?page=1<%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %>&tab=orders"
+                      class="px-2 py-1 bg-gray-700 rounded-l hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page=<%= currentPage - 1 %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %>&tab=orders"
+                      class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-gray-800 rounded-l text-gray-500">
+                      <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    <span class="px-2 py-1 bg-gray-800 text-gray-500">
+                      <i class="fas fa-angle-left"></i>
+                    </span>
+                  <% } %>
+                  <% for (let i = orderStartPage; i <= orderEndPage; i++) { %>
+                    <a href="?page=<%= i %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %>&tab=orders"
+                      class="px-2 py-1 <%= currentPage === i ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' %>">
+                      <%= i %>
+                    </a>
+                  <% } %>
+                  <% if (currentPage < totalOrderPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %>&tab=orders"
+                      class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page=<%= totalOrderPages %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %>&tab=orders"
+                      class="px-2 py-1 bg-gray-700 rounded-r hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-double-right"></i>
+                    </a>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-gray-800 text-gray-500">
+                      <i class="fas fa-angle-right"></i>
+                    </span>
+                    <span class="px-2 py-1 bg-gray-800 rounded-r text-gray-500">
+                      <i class="fas fa-angle-double-right"></i>
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="products" class="tab-content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="card">
+              <div class="p-3 border-b border-gray-700">
+                <h5 class="text-sm font-semibold text-white">Top Selling Products</h5>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Units Sold</th>
+                      <th>Revenue</th>
+                      <th>Avg. Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (report.topProducts && report.topProducts.length> 0) { %>
+                      <% report.topProducts.forEach(product=> { %>
+                        <tr class="hover:bg-gray-700">
+                          <td class="flex items-center">
+                            <% if (product.image && product.image.trim() !=='' ) { %>
+                              <img src="/uploads/<%= product.image %>" alt="<%= product.name %>"
+                                class="w-6 h-6 rounded mr-2"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                              <% } else { %>
+                                <div class="w-6 h-6 rounded bg-gray-600 mr-2 flex items-center justify-center">
+                                  <i class="fas fa-box-open text-xs text-gray-400"></i>
+                                </div>
+                                <% } %>
+                                  <span class="text-xs">
+                                    <%= product.name %>
+                                  </span>
+                          </td>
+                          <td>
+                            <%= product.category || 'Uncategorized' %>
+                          </td>
+                          <td>
+                            <%= product.sales || 0 %>
+                          </td>
+                          <td>
+                            <%= product.revenue ? product.revenue.toFixed(2) : '0.00' %>
+                          </td>
+                          <td>
+                            <%= product.averagePrice ? product.averagePrice.toFixed(2) : '0.00' %>
+                          </td>
+                        </tr>
+                        <% }) %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="5" class="text-center text-gray-500 py-4">No products data found.</td>
+                            </tr>
+                            <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="p-3 border-b border-gray-700">
+                <h5 class="text-sm font-semibold text-white">Category Performance</h5>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Products</th>
+                      <th>Units Sold</th>
+                      <th>Revenue</th>
+                      <th>% of Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (report.topCategories && report.topCategories.length> 0) { %>
+                      <% const totalRevenue=report.topCategories.reduce((sum, cat)=> sum + (cat.revenue || 0), 0);
+                        report.topCategories.forEach(category => {
+                        const percentage = totalRevenue > 0 ? ((category.revenue || 0) / totalRevenue * 100).toFixed(1)
+                        : '0.0';
+                        %>
+                        <tr class="hover:bg-gray-700">
+                          <td>
+                            <%= category.name %>
+                          </td>
+                          <td>
+                            <%= category.productCount || 0 %>
+                          </td>
+                          <td>
+                            <%= category.sales || 0 %>
+                          </td>
+                          <td>
+                            <%= category.revenue ? category.revenue.toFixed(2) : '0.00' %>
+                          </td>
+                          <td>
+                            <div class="flex items-center">
+                              <span class="mr-2">
+                                <%= percentage %>%
+                              </span>
+                              <div class="w-20 bg-gray-700 rounded-full h-1.5">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: <%= percentage %>%"></div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <% }) %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="5" class="text-center text-gray-500 py-4">No category data found.</td>
+                            </tr>
+                            <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="p-3 border-b border-gray-700 flex justify-between items-center">
+              <h5 class="text-sm font-semibold text-white">Product Inventory Status</h5>
+              <select class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" id="inventoryStatusFilter">
+                <option value="all" <%= inventoryFilter === 'all' ? 'selected' : '' %>>All Products</option>
+                <option value="inStock" <%= inventoryFilter === 'inStock' ? 'selected' : '' %>>In Stock</option>
+                <option value="lowStock" <%= inventoryFilter === 'lowStock' ? 'selected' : '' %>>Low Stock</option>
+                <option value="outOfStock" <%= inventoryFilter === 'outOfStock' ? 'selected' : '' %>>Out of Stock</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="table" id="inventoryTable">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Sales</th>
+                    <th>Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (report.productInventory && report.productInventory.length > 0) { %>
+                    <% report.productInventory.forEach(product => {
+                      let stockStatus = 'Out of Stock';
+                      let statusClass = 'bg-danger';
+                      if (product.stock > 10) {
+                        stockStatus = 'In Stock';
+                        statusClass = 'bg-success';
+                      } else if (product.stock > 0) {
+                        stockStatus = 'Low Stock';
+                        statusClass = 'bg-warning';
+                      }
+                    %>
+                      <tr class="hover:bg-gray-700">
+                        <td class="flex items-center">
+                          <% if (product.image && product.image.trim() !== '') { %>
+                            <img src="/Uploads/<%= product.image %>" alt="<%= product.name %>"
+                              class="w-6 h-6 rounded mr-2"
+                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                          <% } else { %>
+                            <div class="w-6 h-6 rounded bg-gray-600 mr-2 flex items-center justify-center">
+                              <i class="fas fa-box-open text-xs text-gray-400"></i>
+                            </div>
+                          <% } %>
+                          <span class="text-xs">
+                            <%= product.name %>
+                          </span>
+                        </td>
+                        <td>
+                          <%= product.price ? product.price.toFixed(2) : '0.00' %>
+                        </td>
+                        <td>
+                          <%= product.stock || 0 %>
+                        </td>
+                        <td><span class="badge <%= statusClass %>">
+                            <%= stockStatus %>
+                          </span></td>
+                        <td>
+                          <%= product.salesCount || 0 %>
+                        </td>
+                        <td>
+                          <% if (product.updatedAt && !isNaN(new Date(product.updatedAt))) { %>
+                            <%= new Date(product.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                          <% } else { %>
+                            N/A
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr class="no-products">
+                      <td colspan="6" class="text-center text-gray-500 py-4">No inventory data found.</td>
+                    </tr>
+                  <% } %>
+                  <tr class="no-products hidden">
+                    <td colspan="6" class="text-center text-gray-500 py-4">No products match the selected filter.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="p-3 border-t border-gray-700">
+              <div class="flex justify-center">
+                <% const totalProductPages = Math.ceil(totalInventoryItems / limit); %>
+                <% let productStartPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2)); %>
+                <% let productEndPage = Math.min(totalProductPages, productStartPage + maxPagesToShow - 1); %>
+                <% if (productEndPage - productStartPage + 1 < maxPagesToShow) { %>
+                  <% productStartPage = Math.max(1, productEndPage - maxPagesToShow + 1); %>
+                <% } %>
+                <div class="flex justify-center items-center text-xs">
+                  <% if (currentPage > 1) { %>
+                    <a href="?page=1<%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %><%= inventoryFilter ? `&inventoryFilter=${inventoryFilter}` : '' %>&tab=products"
+                      class="px-2 py-1 bg-gray-700 rounded-l hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page=<%= currentPage - 1 %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %><%= inventoryFilter ? `&inventoryFilter=${inventoryFilter}` : '' %>&tab=products"
+                      class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-gray-800 rounded-l text-gray-500">
+                      <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    <span class="px-2 py-1 bg-gray-800 text-gray-500">
+                      <i class="fas fa-angle-left"></i>
+                    </span>
+                  <% } %>
+                  <% for (let i = productStartPage; i <= productEndPage; i++) { %>
+                    <a href="?page=<%= i %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %><%= inventoryFilter ? `&inventoryFilter=${inventoryFilter}` : '' %>&tab=products"
+                      class="px-2 py-1 <%= currentPage === i ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' %>">
+                      <%= i %>
+                    </a>
+                  <% } %>
+                  <% if (currentPage < totalProductPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %><%= inventoryFilter ? `&inventoryFilter=${inventoryFilter}` : '' %>&tab=products"
+                      class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page=<%= totalProductPages %><%= startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '' %><%= quickSelect ? `&quickSelect=${quickSelect}` : '' %><%= inventoryFilter ? `&inventoryFilter=${inventoryFilter}` : '' %>&tab=products"
+                      class="px-2 py-1 bg-gray-700 rounded-r hover:bg-gray-600 text-gray-300">
+                      <i class="fas fa-angle-double-right"></i>
+                    </a>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-gray-800 text-gray-500">
+                      <i class="fas fa-angle-right"></i>
+                    </span>
+                    <span class="px-2 py-1 bg-gray-800 rounded-r text-gray-500">
+                      <i class="fas fa-angle-double-right"></i>
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://momentjs.com/downloads/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  <script>
+    $(document).ready(function () {
+      try {
+        console.log("Document ready, initializing scripts");
+
+        // Date Range Picker
+        $('#dateRangePicker').daterangepicker({
+          startDate: '<%= startDate || moment().subtract(29, "days").format("YYYY-MM-DD") %>',
+          endDate: '<%= endDate || moment().format("YYYY-MM-DD") %>',
+          opens: 'left',
+          locale: { format: 'YYYY-MM-DD' },
+          ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          }
+        }, function (start, end) {
+          console.log("Date Range Selected:", { start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
+          const quickSelect = $('#quickDateSelect').val();
+          const compareWith = $('#compareWithSelect').val();
+          const url = `/admin/reports/sales?startDate=${start.format('YYYY-MM-DD')}&endDate=${end.format('YYYY-MM-DD')}&quickSelect=custom&compareWith=${compareWith}`;
+          console.log("Redirecting to:", url);
+          window.location.href = url;
+        });
+
+        // Sync Quick Select with Date Picker
+        $('#quickDateSelect').change(function () {
+          const value = $(this).val();
+          const compareWith = $('#compareWithSelect').val();
+          let startDate, endDate;
+          switch (value) {
+            case 'today': startDate = moment().format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+            case 'last7days': startDate = moment().subtract(6, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+            case 'last30days': startDate = moment().subtract(29, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+            case 'year': startDate = moment().startOf('year').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+            default: return;
+          }
+          $('#dateRangePicker').data('daterangepicker').setStartDate(startDate);
+          $('#dateRangePicker').data('daterangepicker').setEndDate(endDate);
+          const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${value}&compareWith=${compareWith}`;
+          console.log("Quick Select Redirecting to:", url);
+          window.location.href = url;
+        });
+
+        $('#compareWithSelect').change(function () {
+          const compareWith = $(this).val();
+          const startDate = '<%= startDate %>';
+          const endDate = '<%= endDate %>';
+          const quickSelect = $('#quickDateSelect').val();
+          const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&_=${new Date().getTime()}`;
+          console.log("Compare With Redirecting to:", url);
+          window.location.href = url;
+        });
+
+        // Tab Navigation with Manual Trigger
+        console.log("Binding tab click events");
+        $('.tab-button').click(function () {
+      const tabId = $(this).data('tab');
+      console.log("Click detected on tab:", tabId);
+      $('.tab-button').removeClass('active');
+      $(this).addClass('active');
+      const $targetTab = $('#' + tabId);
+      if ($targetTab.length) {
+        $('.tab-content').removeClass('active');
+        $targetTab.addClass('active');
+        console.log('Switched to tab:', tabId);
+      } else {
+        console.error('Tab content not found for ID:', tabId);
+      }
+    });
+    // Initialize active tab based on URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') || 'overview';
+    console.log("Initializing active tab:", activeTab);
+    $(`.tab-button[data-tab="${activeTab}"]`).click();
+
+    $('#orderStatusFilter').change(function () {
+  const status = $(this).val();
+  console.log('Filter orders by status:', status);
+  const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+  const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+  const quickSelect = $('#quickDateSelect').val();
+  const compareWith = $('#compareWithSelect').val();
+  // Reset to page 1 for consistency
+  const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${status}&tab=orders`;
+  console.log("Redirecting to:", url);
+  window.location.href = url;
+});
+
+
+        $('#inventoryStatusFilter').change(function () {
+  const status = $(this).val();
+  console.log('Filter inventory by status:', status);
+  const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+  const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+  const quickSelect = $('#quickDateSelect').val();
+  const compareWith = $('#compareWithSelect').val();
+  // Reset to page 1 to show all filtered products
+  const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&inventoryFilter=${status}&tab=products`;
+  console.log("Redirecting to:", url);
+  window.location.href = url;
+});
+
+        $('[data-graph-period]').click(function () {
+          const period = $(this).data('graph-period');
+          console.log('Change graph period to:', period);
+        });
+
+
+        $('#downloadReport').click(function (e) {
+          e.preventDefault();
+          $('.dropdown-menu').toggleClass('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        $(document).click(function (e) {
+          if (!$(e.target).closest('.dropdown').length) {
+            $('.dropdown-menu').addClass('hidden');
+          }
+        });
+
+        // Download PDF
+        $('#downloadPdf').click(function (e) {
+          e.preventDefault();
+          const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+          const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+          const quickSelect = $('#quickDateSelect').val();
+          const compareWith = $('#compareWithSelect').val();
+          const orderStatus = $('#orderStatusFilter').val();
+          const tab = $('.tab-button.active').data('tab') || 'overview';
+          const url = `/admin/reports/sales/download/pdf?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
+          console.log('Downloading PDF from:', url);
+          window.location.href = url;
+        });
+
+        $('#downloadExcel').click(function (e) {
+          e.preventDefault();
+          const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+          const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+          const quickSelect = $('#quickDateSelect').val();
+          const compareWith = $('#compareWithSelect').val();
+          const orderStatus = $('#orderStatusFilter').val();
+          const tab = $('.tab-button.active').data('tab') || 'overview';
+          const url = `/admin/reports/sales/download/excel?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
+          console.log('Downloading Excel from:', url);
+          window.location.href = url;
+        });
+
+
+      } catch (error) {
+        console.error("Critical error initializing scripts:", error.stack);
+      }
+      console.log("Script initialization completed");
+    });
+  </script>
+</body>
+
+</html>

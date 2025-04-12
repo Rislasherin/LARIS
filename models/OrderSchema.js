@@ -1,5 +1,5 @@
+// models/OrderSchema.js
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 const { v4: uuidv4 } = require('uuid');
 
 const orderSchema = new mongoose.Schema({
@@ -50,8 +50,8 @@ const orderSchema = new mongoose.Schema({
             'Return Requested',
             'Returned',
             'Partially Returned',
-            'Confirmed',          // Added for successful payment
-            'Payment Failed'     // Added for failed verification
+            'Confirmed',
+            'Payment Failed'
         ]
     },
     paymentMethod: { type: String, required: true, enum: ['cod', 'bank', 'credit', 'razorpay', 'paylater'] },
@@ -78,9 +78,9 @@ const orderSchema = new mongoose.Schema({
         notes: String,
         updatedBy: String
     }],
-    razorpayPaymentId: { type: String }, // Add for Razorpay
-    razorpayOrderId: { type: String }    // Add for Razorpay
+    razorpayPaymentId: { type: String },
+    razorpayOrderId: { type: String }
 });
 
-const Order = mongoose.model("Order", orderSchema);
-module.exports = Order;
+// Use existing model if compiled, otherwise create it
+module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);

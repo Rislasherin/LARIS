@@ -341,147 +341,166 @@ const logout = async (req, res) => {
 };
 const loadShopPage = async (req, res) => {
     try {
-        const user = req.session.user;
-        const userData = user ? await User.findOne({ _id: user._id }) : null;
-
-        const categories = await category.find({ isListed: true });
-        const categoryIds = categories.map(cat => cat._id.toString());
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = 9;
-        const skip = (page - 1) * limit;
-
-        const query = {
-            status: "Available",
-            quantity: { $gt: 0 }
-        };
-
-        const selectedCategoryName = req.query.category;
-        let selectedCategoryId = null;
-        if (selectedCategoryName) {
-            const selectedCategory = await category.findOne({ 
-                name: { $regex: new RegExp(`^${selectedCategoryName}$`, 'i') }, 
-                isListed: true 
-            });
-            if (selectedCategory) {
-                selectedCategoryId = selectedCategory._id;
-                query.category = selectedCategoryId;
-            } else {
-                query.category = null;
-            }
-        } else {
-            query.category = { $in: categoryIds };
-        }
-
-        const searchQuery = req.query.query?.trim();
-        if (searchQuery) {
-            query.$or = [
-                { productName: { $regex: searchQuery, $options: 'i' } },
-                { description: { $regex: searchQuery, $options: 'i' } }
-            ];
-        }
-
-        const selectedSkinType = req.query.skinType;
-        if (selectedSkinType && selectedSkinType !== '') {
-            query.skintype = selectedSkinType;
-        }
-
-        const selectedSkinConcern = req.query.skinConcern;
-        if (selectedSkinConcern && selectedSkinConcern !== '') {
-            query.skinConcern = selectedSkinConcern;
-        }
-
-        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
-        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
-        if (minPrice || maxPrice) {
-            query.salePrice = {};
-            if (minPrice) query.salePrice.$gte = minPrice;
-            if (maxPrice) query.salePrice.$lte = maxPrice;
-        }
-
-        let sortOption = {};
-        switch (req.query.sort) {
-            case 'price-low':
-                sortOption = { salePrice: 1 };
-                break;
-            case 'price-high':
-                sortOption = { salePrice: -1 };
-                break;
-            case 'popular':
-                sortOption = { salesCount: -1 };
-                break;
-            default:
-                sortOption = { createdAt: -1 };
-        }
-
-        const totalProducts = await product.countDocuments(query);
-        const products = await product
-            .find(query)
-            .populate('category')
-            .sort(sortOption)
-            .skip(skip)
-            .limit(limit);
-
-        // Add wishlist status to each product
-        if (userData && userData.wishlist) {
-            products.forEach(prod => {
-                prod.inWishlist = userData.wishlist.some(id => id.toString() === prod._id.toString());
-            });
-        } else {
-            products.forEach(prod => {
-                prod.inWishlist = false;
-            });
-        }
-
-        products.forEach(product => {
-            if (product.productOffer && product.productOffer > 0) {
-                product.salePrice = Math.floor(product.regularPrice * (1 - product.productOffer / 100));
-            } else if (product.category?.categoryOffer > 0) {
-                product.productOffer = product.category.categoryOffer;
-                product.salePrice = Math.floor(product.regularPrice * (1 - product.category.categoryOffer / 100));
-            }
+      const user = req.session.user;
+      const userData = user ? await User.findOne({ _id: user._id }) : null;
+  
+      const categories = await category.find({ isListed: true });
+      const categoryIds = categories.map(cat => cat._id.toString());
+  
+      const page = parseInt(req.query.page) || 1;
+      const limit = 9;
+      const skip = (page - 1) * limit;
+  
+      const query = {
+        status: "Available",
+        quantity: { $gt: 0 }
+      };
+  
+      const selectedCategoryName = req.query.category;
+      let selectedCategoryId = null;
+      if (selectedCategoryName) {
+        const selectedCategory = await category.findOne({ 
+          name: { $regex: new RegExp(`^${selectedCategoryName}$`, 'i') }, 
+          isListed: true 
         });
-
-        const totalPages = Math.ceil(totalProducts / limit);
-
-        const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
-            const count = await product.countDocuments({
-                category: cat._id,
-                status: 'Available',
-                quantity: { $gt: 0 }
-            });
-            return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
-        }));
-
-        const cart = user ? await Cart.findOne({ user: user._id }) : null;
-        const cartCount = cart ? cart.items.length : 0;
-
-        // Wishlist count
-        const wishlistCount = userData && userData.wishlist ? userData.wishlist.length : 0;
-
-        res.render("shop", {
-            user: userData,
-            products,
-            category: categoriesWithCounts,
-            totalProducts,
-            currentPage: page,
-            totalPages,
-            selectedCategoryId: selectedCategoryId ? selectedCategoryId.toString() : null,
-            selectedSkinType,
-            selectedSkinConcern,
-            minPrice,
-            maxPrice,
-            sortBy: req.query.sort || 'newest',
-            searchQuery: searchQuery || '',
-            cartCount,
-            wishlistCount // Pass wishlist count to update header
+        if (selectedCategory) {
+          selectedCategoryId = selectedCategory._id;
+          query.category = selectedCategoryId;
+        } else {
+          query.category = null;
+        }
+      } else {
+        query.category = { $in: categoryIds };
+      }
+  
+      const searchQuery = req.query.query?.trim();
+      if (searchQuery) {
+        query.$or = [
+          { productName: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } }
+        ];
+      }
+  
+      const selectedSkinType = req.query.skinType;
+      if (selectedSkinType && selectedSkinType !== '') {
+        query.skintype = selectedSkinType;
+      }
+  
+      const selectedSkinConcern = req.query.skinConcern;
+      if (selectedSkinConcern && selectedSkinConcern !== '') {
+        query.skinConcern = selectedSkinConcern;
+      }
+  
+      const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+      const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+      if (minPrice || maxPrice) {
+        query.salePrice = {};
+        if (minPrice) query.salePrice.$gte = minPrice;
+        if (maxPrice) query.salePrice.$lte = maxPrice;
+      }
+  
+      let sortOption = {};
+      switch (req.query.sort) {
+        case 'price-low':
+          sortOption = { salePrice: 1 };
+          break;
+        case 'price-high':
+          sortOption = { salePrice: -1 };
+          break;
+        case 'popular':
+          sortOption = { salesCount: -1 };
+          break;
+        default:
+          sortOption = { createdAt: -1 };
+      }
+  
+      const totalProducts = await product.countDocuments(query);
+      const products = await product
+        .find(query)
+        .populate('category')
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit);
+  
+      // Add wishlist status to each product
+      if (userData && userData.wishlist) {
+        products.forEach(prod => {
+          prod.inWishlist = userData.wishlist.some(id => id.toString() === prod._id.toString());
         });
-
+      } else {
+        products.forEach(prod => {
+          prod.inWishlist = false;
+        });
+      }
+  
+      // Updated offer logic: Only apply explicit offers
+      products.forEach(product => {
+        let effectivePrice = product.regularPrice; // Default to regularPrice
+        let discountPercent = null;
+  
+        if (product.productOffer && product.productOffer > 0) {
+          // Product-specific offer
+          discountPercent = product.productOffer;
+          effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
+        } else if (product.category?.categoryOffer > 0) {
+          // Category offer
+          discountPercent = product.category.categoryOffer;
+          effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
+        }
+        // Removed the else if condition for regularPrice > salePrice
+  
+        // Set properties only if there's an explicit offer
+        if (discountPercent !== null && discountPercent > 0) {
+          product.effectivePrice = effectivePrice;
+          product.discountPercent = discountPercent;
+        } else {
+          product.effectivePrice = product.regularPrice; // No offer, use regularPrice
+          product.discountPercent = null; // No discount to display
+        }
+  
+        // Debugging log
+        console.log(`Product: ${product.productName}, Regular: ${product.regularPrice}, Sale: ${product.salePrice}, Offer: ${product.productOffer}, Category Offer: ${product.category?.categoryOffer}, Discount: ${product.discountPercent}, Effective: ${product.effectivePrice}`);
+      });
+  
+      const totalPages = Math.ceil(totalProducts / limit);
+  
+      const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
+        const count = await product.countDocuments({
+          category: cat._id,
+          status: 'Available',
+          quantity: { $gt: 0 }
+        });
+        return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
+      }));
+  
+      const cart = user ? await Cart.findOne({ user: user._id }) : null;
+      const cartCount = cart ? cart.items.length : 0;
+  
+      const wishlistCount = userData && userData.wishlist ? userData.wishlist.length : 0;
+  
+      res.render("shop", {
+        user: userData,
+        products,
+        category: categoriesWithCounts,
+        totalProducts,
+        currentPage: page,
+        totalPages,
+        selectedCategoryId: selectedCategoryId ? selectedCategoryId.toString() : null,
+        selectedSkinType,
+        selectedSkinConcern,
+        minPrice,
+        maxPrice,
+        sortBy: req.query.sort || 'newest',
+        searchQuery: searchQuery || '',
+        cartCount,
+        wishlistCount
+      });
+  
     } catch (error) {
-        console.error("Error loading shop page:", error);
-        res.status(500).send("Server Error");
+      console.error("Error loading shop page:", error);
+      res.status(500).send("Server Error");
     }
-};
+  };
 const filterProduct = async (req, res) => {
     try {
         const user = req.session.user;
