@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { find } = require('../../models/userSchema');
+const Cart = require('../../models/CartSchema')
 
 
 // adding new product
@@ -312,69 +313,78 @@ const getEditProduct = async (req, res) => {
  
 
 const EditProduct = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const product = await Product.findOne({ _id: id });
-    if (!product) {
-      return res.status(404).send('Product not found');
-    }
-
-    const data = req.body;
-    const existingProduct = await Product.findOne({
-      _id: { $ne: id },
-      productName: data.productName,
-    });
-    if (existingProduct) {
-      return res.status(400).send('Product with this name already exists');
-    }
-
-    let updatedImages = [...(product.productImage || [])];
-    if (data.removedImages) {
-      const removedList = data.removedImages.split(',');
-      updatedImages = updatedImages.filter(img => !removedList.includes(img));
-      const uploadDir = path.join(__dirname, '../../public/uploads/product-images');
-      for (const img of removedList) {
-        const imagePath = path.join(uploadDir, img);
-        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+    try {
+      const id = req.params.id;
+      const product = await Product.findOne({ _id: id });
+      if (!product) {
+        return res.status(404).send('Product not found');
       }
-    }
-
-    if (req.files && req.files.length > 0) {
-      const uploadDir = path.join(__dirname, '../../public/uploads/product-images');
-      for (const file of req.files) {
-        const resizedFilename = `resized-${Date.now()}-${file.originalname}.jpeg`;
-        const savePath = path.join(uploadDir, resizedFilename);
-        await sharp(file.path)
-          .resize(440, 440)
-          .toFormat('jpeg')
-          .jpeg({ quality: 90 })
-          .toFile(savePath);
-        updatedImages.push(resizedFilename);
-        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-      }
-    }
-
-    const updateFields = {
-      productName: data.productName,
-      description: data.description,
-      category: data.category || product.category,
-      regularPrice: data.regularPrice,
-      salePrice: data.salePrice || 0,
-      quantity: data.quantity || 0,
-      skintype: data.skintype || '',
-      skinConcern: data.skinConcern || '',
-      howToUse: data.howToUse,
-      productImage: updatedImages.filter(Boolean),
-    };
-
-    await Product.findByIdAndUpdate(id, updateFields, { new: true });
-    res.redirect('/admin/products');
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).send('Server error');
-  }
-};
   
+      const data = req.body;
+      const existingProduct = await Product.findOne({
+        _id: { $ne: id },
+        productName: data.productName,
+      });
+      if (existingProduct) {
+        return res.status(400).send('Product with this name already exists');
+      }
+  
+      let updatedImages = [...(product.productImage || [])];
+      if (data.removedImages) {
+        const removedList = data.removedImages.split(',');
+        updatedImages = updatedImages.filter(img => !removedList.includes(img));
+        const uploadDir = path.join(__dirname, '../../public/uploads/product-images');
+        for (const img of removedList) {
+          const imagePath = path.join(uploadDir, img);
+          if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+        }
+      }
+  
+      if (req.files && req.files.length > 0) {
+        const uploadDir = path.join(__dirname, '../../public/uploads/product-images');
+        for (const file of req.files) {
+          const resizedFilename = `resized-${Date.now()}-${file.originalname}.jpeg`;
+          const savePath = path.join(uploadDir, resizedFilename);
+          await sharp(file.path)
+            .resize(440, 440)
+            .toFormat('jpeg')
+            .jpeg({ quality: 90 })
+            .toFile(savePath);
+          updatedImages.push(resizedFilename);
+          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        }
+      }
+  
+      const updateFields = {
+        productName: data.productName,
+        description: data.description,
+        category: data.category || product.category,
+        regularPrice: data.regularPrice,
+        salePrice: data.salePrice || 0,
+        quantity: data.quantity || 0,
+        skintype: data.skintype || '',
+        skinConcern: data.skinConcern || '',
+        howToUse: data.howToUse,
+        productImage: updatedImages.filter(Boolean),
+      };
+  
+      // Check if quantity is set to 0
+      if (parseInt(data.quantity) === 0) {
+        // Remove the product from all carts
+        await Cart.updateMany(
+          { 'items.product': id },
+          { $pull: { items: { product: id } } }
+        );
+        console.log(`Removed product ${id} from all carts due to zero quantity`);
+      }
+  
+      await Product.findByIdAndUpdate(id, updateFields, { new: true });
+      res.redirect('/admin/products');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).send('Server error');
+    }
+  };
   
   const deleteSingleImage = async (req, res) => {
     try {

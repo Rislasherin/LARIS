@@ -14,7 +14,14 @@ const addressSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        match: [/^\d{10}$/, 'Phone number must be exactly 10 digits'],
+        validate: {
+            validator: function (value) {
+                return value !== '0000000000';
+            },
+            message: 'Phone number cannot be all zeros'
+        }
     },
     address: {
         type: String,
@@ -39,7 +46,14 @@ const addressSchema = new mongoose.Schema({
     pincode: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        match: [/^\d{6}$/, 'Pincode must be exactly 6 digits'],
+        validate: {
+            validator: function (value) {
+                return value !== '000000';
+            },
+            message: 'Pincode cannot be all zeros'
+        }
     },
     addressType: {
         type: String,

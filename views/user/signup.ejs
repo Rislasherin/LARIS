@@ -1,84 +1,81 @@
 <html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Sign Up - Laris
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-  <style>
-.error-message{
-  color: red;
-  font-size: 0.7rem;
-  display:none ;
-}
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sign Up - Laris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.7rem;
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-roboto">
+    <main class="flex justify-center items-center min-h-screen px-4 bg-cover bg-center" style="background-image: url(./images/logimage.jpg);">
+        <div class="bg-white rounded-lg shadow-md p-4 w-full max-w-xs backdrop-blur-md border border-white/20">
+            <div class="flex justify-between border-b pb-2 mb-3 text-sm border-white/30">
+                <a style="position: relative; left: 53px;" class="text-black font-medium" href="/signup">Sign Up</a>
+                <hr>
+                <a style="position: relative; left: -73px;" class="text-black-200" href="/login">LOGIN</a>
+            </div>
+            <% if(locals.message && message.length > 0){ %>
+                <div class="alert alert-danger text-center">
+                    <%= message %>
+                </div>
+            <% } %>
+            <form id="signForm" onsubmit="signup(event)">
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Full Name</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="name" name="name" type="text" placeholder="Enter your name"/>
+                    <div id="error1" class="error-message"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Your Email *</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="email" name="email" type="email" placeholder="Enter your email"/>
+                    <div id="error2" class="error-message"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Phone Number *</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="phone" name="phone" type="phone" placeholder="Enter your phone"/>
+                    <div id="error3" class="error-message"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Referral Code (Optional)</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="referralCode" name="referralCode" type="text" placeholder="Enter referral code"/>
+                    <div id="error6" class="error-message"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Password *</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="password" name="password" type="password" placeholder="Enter your password"/>
+                    <div id="error4" class="error-message"></div>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-black text-xs">Confirm Password *</label>
+                    <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="ConfirmPassword" name="ConfirmPassword" type="password" placeholder="Confirm password"/>
+                    <div id="error5" class="error-message"></div>
+                </div>
+                <div class="mb-2 flex items-center text-xs text-black">
+                    <input id="privacyCheckbox" class="mr-1" type="checkbox"/>
+                    <label for="privacyCheckbox">I agree to the privacy policy</label>
+                </div>
+                <button id="submitButton" class="w-full bg-black/80 text-white py-1 rounded text-xs font-medium hover:bg-black/90" type="submit">SIGN UP</button>
+            </form>
+            <div class="text-center my-2 text-black-200 text-xs">or sign in with</div>
+            <div class="flex justify-between">
+                <a href="/auth/google" class="w-full bg-white/10 text-black-200 py-1 rounded mr-1 text-xs border border-white/30" style="position: relative; left: 138px; width: 10px;">
+                    <i class="fab fa-google"></i>
+                </a>
+            </div>
+        </div>
+    </main>
 
-
-  </style>
- </head>
- <body class="font-roboto">
-  
-<main class="flex justify-center items-center min-h-screen px-4 bg-cover bg-center" style="background-image: url(./images/logimage.jpg);">
-    <div class="bg-white rounded-lg shadow-md p-4 w-full max-w-xs backdrop-blur-md border border-white/20">
-      <div  class="flex justify-between border-b pb-2 mb-3 text-sm border-white/30">
-        <a style="position: relative; left: 53px;" class="text-black font-medium" href="/signup">Sign Up</a>
-        <hr>
-        <a style="position: relative; left: -73px;" class="text-black-200" href="/login">LOGIN</a>
-      </div>
-      <% if(locals.message && message.length > 0){ %>
-        <div class="alert alert-danger text-center">
-            <%= message %>
-        </div>
-    <% } %>
-      <form id="signForm" onsubmit="signup(event)">
-        <div class="mb-2">
-          <label class="block text-black text-xs">Full Name</label >
-          <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="name" name="name" type="text" placeholder="Enter your name"/ >
-          <div id="error1" class="error-message"></div>
-        <div class="mb-2">
-          <label class="block text-black text-xs">Your Email *</label>
-          <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="email" name="email" type="email" placeholder="Enter your email"/>
-          <div id="error2" class="error-message"></div>
-        </div>
-        <div class="mb-2">
-          <label class="block text-black text-xs">Phone Number *</label>
-          <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="phone" name="phone" type="phone" placeholder="Enter your phone"/>
-          <div id="error3" class="error-message"></div>
-        </div>
-        <div class="mb-2">
-          <label class="block text-black text-xs">Password *</label>
-          <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="password" name="password" type="password" placeholder="Enter your password"/ >
-          <i class="fab-eye"></i>
-          <div id="error4" class="error-message"></div>
-        </div>
-        <div class="mb-2">
-          <label class="block text-black text-xs">Confirm Password *</label>
-          <input class="w-full border rounded px-2 py-1 text-xs bg-transparent border-black/30 text-black placeholder-gray-400 focus:ring-1 focus:ring-pink-500" id="ConfirmPassword" name="ConfirmPassword" type="password" placeholder="Confirm password"/ >
-          <i class="fab-eye"></i>
-          <div id="error5" class="error-message"></div>
-        </div>
-        <div class="mb-2 flex items-center text-xs text-black">
-          <input id="privacyCheckbox" class="mr-1" type="checkbox"/>
-          <label for="privacyCheckbox" >I agree to the privacy policy</label>
-        </div>
-        <button id="submitButton" class="w-full bg-black/80 text-white py-1 rounded text-xs font-medium hover:bg-black/90" type="submit">SIGN UP</button>
-      </form>
-      <div class="text-center my-2 text-black-200 text-xs">or sign in with</div>
-      <div tyle="position: relative; left: 138px; "  class="flex justify-between">
-        <a href="/auth/google" class="w-full bg-white/10 text-black-200 py-1 rounded mr-1 text-xs border border-white/30" style="position: relative; left: 138px; width: 10px;">
-          <i class="fab fa-google"></i>
-        </a>
-      </div>
-    </div>
-  </main>
-  
-
-
-
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="/js/user/signup.js"></script>
-  <script src="/js/utils/inputFormValidator.js"></script>
-  <script src="/js/utils/regex.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/user/signup.js"></script>
+    <script src="/js/utils/inputFormValidator.js"></script>
+    <script src="/js/utils/regex.js"></script>
+</body>
+</html>

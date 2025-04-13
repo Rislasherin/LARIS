@@ -313,12 +313,79 @@ const getCartQuantity = async (req, res) => {
   }
 };
 
+const cleanupCartsForZeroQuantity = async (productId) => {
+  try {
+    const product = await Product.findById(productId);
+    if (product && product.quantity === 0) {
+      await Cart.updateMany(
+        { 'items.product': productId },
+        { $pull: { items: { product: productId } } }
+      );
+      console.log(`Cleaned up carts for product ${productId} with zero quantity`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up carts:', error);
+  }
+};
 
+const getCartSummary = async (req, res) => {
+  try {
+    const userId = req.session.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Please login' });
+    }
+
+    const cart = await Cart.findOne({ user: userId }).populate({
+      path: 'items.product',
+      populate: { path: 'category' }
+    });
+
+    let subtotal = 0;
+    let shippingCost = 50;
+    let discount = 0;
+
+    if (cart && cart.items && cart.items.length > 0) {
+      subtotal = cart.items.reduce((sum, item) => {
+        if (item.product && item.product.regularPrice) {
+          const regularPrice = item.product.regularPrice;
+          const productOffer = item.product.productOffer || 0;
+          const categoryOffer = item.product.category?.categoryOffer || 0;
+          const effectiveOffer = Math.max(productOffer, categoryOffer);
+          const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
+          discount += (regularPrice - effectivePrice) * item.quantity;
+          return sum + (effectivePrice * item.quantity);
+        }
+        return sum;
+      }, 0);
+
+      shippingCost = subtotal > 1000 ? 0 : 50;
+    } else {
+      shippingCost = 0;
+    }
+
+    const tax = subtotal * 0.1;
+    const total = subtotal + shippingCost + tax;
+
+    res.json({
+      success: true,
+      subtotal,
+      shippingCost,
+      tax,
+      total,
+      discount,
+      cartCount: cart?.items.length || 0
+    });
+  } catch (error) {
+    console.error('Error fetching cart summary:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 module.exports = {
     getCartPage,
     addToCart,
     updateCartQuantity,
     removeFromCart,
     getCartContents,
-    getCartQuantity
+    getCartQuantity,
+    getCartSummary
 };

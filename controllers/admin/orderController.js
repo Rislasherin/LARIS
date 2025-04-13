@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const Order = require('../../models/orderSchema');
 const Offer = require('../../models/offerSchema');
 const Wallet = require('../../models/walletSchema');
-
+const  Product = require('../../models/productSchema')
 const renderOrderManage = async (req, res) => {
     try {
         let page = parseInt(req.query.page) || 1;
@@ -279,61 +279,54 @@ function getBadgeClass(status) {
     }
 }
 const updateAllOrderItems = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
+  try {
       const { orderId } = req.params;
       const { status, productIds } = req.body;
-  
+
       if (!mongoose.Types.ObjectId.isValid(orderId)) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'Invalid order ID' });
+          return res.status(400).json({ success: false, message: 'Invalid order ID' });
       }
-  
-      const order = await Order.findById(orderId).session(session);
+
+      const order = await Order.findById(orderId);
       if (!order) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Order not found' });
+          return res.status(404).json({ success: false, message: 'Order not found' });
       }
-  
-      if (!order.history) order.history = [];
-  
+
       let updatedCount = 0;
       let skippedCount = 0;
-  
+
       for (const item of order.orderItems) {
-        if (productIds.includes(item._id.toString())) {
-          if (
-            item.status === 'Returned' ||
-            (item.status === 'Delivered' && status !== 'Delivered') ||
-            (item.status === 'Cancelled' && status !== 'Cancelled')
-          ) {
-            skippedCount++;
-            continue;
+          if (productIds.includes(item._id.toString())) {
+              if (
+                  item.status === 'Returned' ||
+                  (item.status === 'Delivered' && status !== 'Delivered') ||
+                  (item.status === 'Cancelled' && status !== 'Cancelled')
+              ) {
+                  skippedCount++;
+                  continue;
+              }
+
+              // Restore stock if setting to Cancelled
+              if (status === 'Cancelled' && item.status !== 'Cancelled') {
+                  const product = await Product.findById(item.productId);
+                  if (product) {
+                      product.quantity += item.quantity;
+                      await product.save();
+                  }
+              }
+
+              item.status = status;
+              updatedCount++;
           }
-  
-          // Restore stock if setting to Cancelled
-          if (status === 'Cancelled' && item.status !== 'Cancelled') {
-            const product = await Product.findById(item.productId).session(session);
-            if (product) {
-              product.quantity += item.quantity;
-              await product.save({ session });
-            }
-          }
-  
-          item.status = status;
-          updatedCount++;
-        }
       }
-  
+
+      // Determine new order status
       const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
       const allShipped = order.orderItems.every(item => item.status === 'Shipped');
       const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
       const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
       const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-  
+
       let newOrderStatus = order.status;
       if (allDelivered) newOrderStatus = 'Delivered';
       else if (allShipped) newOrderStatus = 'Shipped';
@@ -342,40 +335,38 @@ const updateAllOrderItems = async (req, res) => {
       else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
       else if (anyDelivered) newOrderStatus = 'Partially Delivered';
       else newOrderStatus = status === 'Pending' ? 'Pending' : status === 'Processing' ? 'Processing' : 'Shipped';
-  
+
       if (order.status !== newOrderStatus) {
-        order.status = newOrderStatus;
-        order.timeline.push({
-          title: newOrderStatus,
-          text: `Order status updated to ${newOrderStatus}`,
-          date: new Date(),
-          completed: true
-        });
+          order.status = newOrderStatus;
+          order.timeline = order.timeline || [];
+          order.timeline.push({
+              title: newOrderStatus,
+              text: `Order status updated to ${newOrderStatus}`,
+              date: new Date(),
+              completed: true
+          });
       }
-  
+
+      order.history = order.history || [];
       order.history.push({
-        status: 'Bulk Update',
-        timestamp: new Date(),
-        notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} item(s) skipped` : ''}`,
-        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+          status: 'Bulk Update',
+          timestamp: new Date(),
+          notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} item(s) skipped` : ''}`,
+          updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
       });
-  
-      await order.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-  
+
+      await order.save();
+
       res.json({
-        success: true,
-        message: `${updatedCount} item(s) updated${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
-        orderStatus: newOrderStatus
+          success: true,
+          message: `${updatedCount} item(s) updated${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
+          orderStatus: newOrderStatus
       });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
+  } catch (error) {
       console.error('Error updating all order items:', error);
       res.status(500).json({ success: false, message: 'Server error occurred' });
-    }
-  };
+  }
+};
 const rejectReturnRequest = async (req, res) => {
     try {
         const { orderId, productId } = req.body;
@@ -438,93 +429,80 @@ const refundToWallet = async (userId, amount, description, orderId) => {
 };
 
 const acceptReturnRequest = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
+  try {
       const { orderId, productId } = req.body;
-  
+
       if (!orderId || !productId) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
+          return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
       }
-  
+
       const order = await Order.findById(orderId)
-        .populate('user', 'name email')
-        .populate({ path: 'orderItems.productId', select: 'productName' })
-        .session(session);
+          .populate('user', 'name email')
+          .populate({ path: 'orderItems.productId', select: 'productName' });
       if (!order) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Order not found' });
+          return res.status(404).json({ success: false, message: 'Order not found' });
       }
-  
+
       const item = order.orderItems.find(item => item._id.toString() === productId);
       if (!item || item.status !== 'Return Requested') {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'No return request found for this item' });
+          return res.status(400).json({ success: false, message: 'No return request found for this item' });
       }
-  
+
       // Restore stock
-      const product = await Product.findById(item.productId).session(session);
+      const product = await Product.findById(item.productId);
       if (product) {
-        product.quantity += item.quantity;
-        await product.save({ session });
+          product.quantity += item.quantity;
+          await product.save();
       }
-  
+
       item.status = 'Returned';
-  
+
       const allReturned = order.orderItems.every(item => item.status === 'Returned');
       const anyReturned = order.orderItems.some(item => item.status === 'Returned');
       const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-  
+
       if (allReturned) {
-        order.status = 'Returned';
-        order.refundStatus = 'Processed';
+          order.status = 'Returned';
+          order.refundStatus = 'Processed';
       } else if (anyReturned && anyDelivered) {
-        order.status = 'Partially Returned';
-        order.refundStatus = 'Partially Processed';
+          order.status = 'Partially Returned';
+          order.refundStatus = 'Partially Processed';
       } else if (anyReturned) {
-        order.status = 'Partially Returned';
-        order.refundStatus = 'Partially Processed';
+          order.status = 'Partially Returned';
+          order.refundStatus = 'Partially Processed';
       }
-  
-      if (!order.history) order.history = [];
+
+      order.history = order.history || [];
       order.history.push({
-        status: 'Return Accepted',
-        timestamp: new Date(),
-        notes: `Return accepted for product ${productId}`,
-        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+          status: 'Return Accepted',
+          timestamp: new Date(),
+          notes: `Return accepted for product ${productId}`,
+          updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
       });
-  
+
       const refundAmount = item.price * item.quantity;
       if (order.paymentMethod !== 'cod' && refundAmount > 0) {
-        const productName = item.productId?.productName || 'Unknown Product';
-        await refundToWallet(
-          order.user._id,
-          refundAmount,
-          `Refund for returned product ${productName} in order ${order.orderID}`,
-          order._id
-        );
+          const productName = item.productId?.productName || 'Unknown Product';
+          await refundToWallet(
+              order.user._id,
+              refundAmount,
+              `Refund for returned product ${productName} in order ${order.orderID}`,
+              order._id
+          );
       }
-  
-      await order.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-  
+
+      await order.save();
+
       res.json({
-        success: true,
-        message: 'Return accepted successfully',
-        orderStatus: order.status
+          success: true,
+          message: 'Return accepted successfully',
+          orderStatus: order.status
       });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
+  } catch (error) {
       console.error('Error accepting return:', error);
       res.status(500).json({ success: false, message: 'Server error: ' + error.message });
-    }
-  };
+  }
+};
   const cancelOrderItem = async (req, res) => {
     try {
       const { orderId, productId } = req.body;

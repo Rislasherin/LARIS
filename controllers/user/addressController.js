@@ -1,11 +1,10 @@
 const Address = require('../../models/addressSchema');
 const User = require('../../models/userSchema');
+const mongoose = require('mongoose');
 
 const addressAdd = async (req, res) => {
     try {
         const user = req.session.user;
-        
-      
         const addresses = await Address.find({ userId: user._id });
         
         res.render('Address', {
@@ -25,6 +24,9 @@ const addNewAddress = async (req, res) => {
 
     try {
         const user = req.session.user;
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
 
         const {
             fullName,
@@ -34,19 +36,28 @@ const addNewAddress = async (req, res) => {
             state,
             country,
             pincode,
-            addressType
+            addressType,
+            isDefault
         } = req.body;
 
-       
-        if (!fullName || !phone || !address || !city || !state || !country || !pincode) {
+        const missingFields = [];
+        if (!fullName) missingFields.push('Full Name');
+        if (!phone) missingFields.push('Phone');
+        if (!address) missingFields.push('Address');
+        if (!city) missingFields.push('City');
+        if (!state) missingFields.push('State');
+        if (!country) missingFields.push('Country');
+        if (!pincode) missingFields.push('Pincode');
+        if (!addressType) missingFields.push('Address Type');
+
+        if (missingFields.length > 0) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'All fields are required' 
+                message: `Missing required fields: ${missingFields.join(', ')}` 
             });
         }
 
-        
-        const phoneRegex = /^\d{10}$/; 
+        const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(phone)) {
             return res.status(400).json({
                 success: false,
@@ -60,7 +71,27 @@ const addNewAddress = async (req, res) => {
             });
         }
 
-      
+        const pincodeRegex = /^\d{6}$/;
+        if (!pincodeRegex.test(pincode)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pincode must be exactly 6 digits'
+            });
+        }
+        if (pincode === '000000') {
+            return res.status(400).json({
+                success: false,
+                message: 'Pincode cannot be all zeros'
+            });
+        }
+
+        if (isDefault === 'true' || isDefault === true) {
+            await Address.updateMany(
+                { userId: user._id, isDefault: true },
+                { isDefault: false }
+            );
+        }
+
         const newAddress = new Address({
             userId: user._id,
             fullName,
@@ -70,7 +101,8 @@ const addNewAddress = async (req, res) => {
             state,
             country,
             pincode,
-            addressType
+            addressType,
+            isDefault: isDefault === 'true' || isDefault === true
         });
 
         await newAddress.save();
@@ -102,7 +134,6 @@ const getAllAddresses = async (req, res) => {
             });
         }
 
-      
         const addresses = await Address.find({ userId: user._id });
 
         res.status(200).json({
@@ -127,7 +158,6 @@ const getAddressById = async (req, res) => {
     try {
         const addressId = req.params.id;
 
-       
         if (!addressId) {
             console.error('No address ID provided');
             return res.status(400).json({ 
@@ -161,6 +191,7 @@ const getAddressById = async (req, res) => {
         });
     }
 };
+
 const updateAddress = async (req, res) => {
     try {
         console.log('Update address request received');
@@ -169,6 +200,10 @@ const updateAddress = async (req, res) => {
         console.log('Address ID:', req.params.id);
 
         const user = req.session.user;
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+
         const addressId = req.params.id;
 
         const {
@@ -179,7 +214,8 @@ const updateAddress = async (req, res) => {
             state,
             country,
             pincode,
-            addressType
+            addressType,
+            isDefault
         } = req.body;
 
         const missingFields = [];
@@ -190,6 +226,7 @@ const updateAddress = async (req, res) => {
         if (!state) missingFields.push('State');
         if (!country) missingFields.push('Country');
         if (!pincode) missingFields.push('Pincode');
+        if (!addressType) missingFields.push('Address Type');
 
         if (missingFields.length > 0) {
             return res.status(400).json({ 
@@ -198,8 +235,7 @@ const updateAddress = async (req, res) => {
             });
         }
 
-       
-        const phoneRegex = /^\d{10}$/; 
+        const phoneRegex = /^\d{10}$/;
         if (!phoneRegex.test(phone)) {
             return res.status(400).json({
                 success: false,
@@ -213,7 +249,27 @@ const updateAddress = async (req, res) => {
             });
         }
 
-       
+        const pincodeRegex = /^\d{6}$/;
+        if (!pincodeRegex.test(pincode)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Pincode must be exactly 6 digits'
+            });
+        }
+        if (pincode === '000000') {
+            return res.status(400).json({
+                success: false,
+                message: 'Pincode cannot be all zeros'
+            });
+        }
+
+        if (isDefault === 'true' || isDefault === true) {
+            await Address.updateMany(
+                { userId: user._id, isDefault: true },
+                { isDefault: false }
+            );
+        }
+
         const updatedAddress = await Address.findOneAndUpdate(
             { _id: addressId, userId: user._id }, 
             {
@@ -224,7 +280,8 @@ const updateAddress = async (req, res) => {
                 state,
                 country,
                 pincode,
-                addressType
+                addressType,
+                isDefault: isDefault === 'true' || isDefault === true
             },
             { 
                 new: true,
@@ -255,10 +312,26 @@ const updateAddress = async (req, res) => {
         });
     }
 };
+
 const deleteAddress = async (req, res) => {
     try {
         const user = req.session.user;
+        if (!user) {
+            console.error('Delete address: User not authenticated');
+            return res.status(401).json({ 
+                success: false, 
+                message: 'User not authenticated' 
+            });
+        }
+
         const addressId = req.params.id;
+        if (!addressId || !mongoose.isValidObjectId(addressId)) {
+            console.error('Delete address: Invalid address ID:', addressId);
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid address ID' 
+            });
+        }
 
         const deletedAddress = await Address.findOneAndDelete({ 
             _id: addressId, 
@@ -266,27 +339,36 @@ const deleteAddress = async (req, res) => {
         });
 
         if (!deletedAddress) {
+            console.error('Delete address: Address not found for ID:', addressId, 'User:', user._id);
             return res.status(404).json({ 
                 success: false, 
-                message: 'Address not found' 
+                message: 'Address not found or you are not authorized to delete it' 
             });
         }
 
+        if (deletedAddress.isDefault) {
+            const nextAddress = await Address.findOne({ userId: user._id });
+            if (nextAddress) {
+                nextAddress.isDefault = true;
+                await nextAddress.save();
+                console.log('Delete address: Set new default address:', nextAddress._id);
+            }
+        }
+
+        console.log('Delete address: Successfully deleted address:', addressId);
         res.status(200).json({
             success: true,
             message: 'Address deleted successfully'
         });
 
     } catch (error) {
-        console.error('Error deleting address:', error);
+        console.error('Delete address: Error:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Internal server error',
-            error: error.message 
+            message: 'Internal server error: ' + error.message
         });
     }
 };
-
 
 module.exports = {
     addressAdd,

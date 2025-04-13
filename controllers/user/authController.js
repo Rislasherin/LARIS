@@ -6,8 +6,42 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const { query } = require('express');
 const Cart = require('../../models/CartSchema')
+const Wallet = require('../../models/walletSchema');
 
 
+
+
+function generateReferralCode() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+}
+
+async function assignUniqueReferralCode(userId) {
+    let referralCode;
+    let isUnique = false;
+    const maxAttempts = 10;
+    let attempts = 0;
+
+    while (!isUnique && attempts < maxAttempts) {
+        referralCode = generateReferralCode();
+        const existingUser = await User.findOne({ referralCode });
+        if (!existingUser) {
+            isUnique = true;
+        }
+        attempts++;
+    }
+
+    if (!isUnique) {
+        throw new Error('Unable to generate a unique referral code');
+    }
+
+    await User.findByIdAndUpdate(userId, { referralCode });
+    return referralCode;
+}
 
 const pageNotFound = async (req, res) => {
     try {
@@ -116,44 +150,46 @@ async function sendVerificationEmail(email, otp) {
 }
 
 const signUp = async (req, res) => {
-
     try {
-        const { name, email, phone, password, confirmPassword } = req.body
+        const { name, email, phone, password, confirmPassword, referralCode } = req.body;
 
         if (password !== confirmPassword) {
-
-            return res.status(401).json({ msg: "Password do no match", type: 'confirmPassword' })
+            return res.status(401).json({ msg: "Passwords do not match", type: 'confirmPassword' });
         }
 
-        const findUser = await User.findOne({ email: email })
-
+        const findUser = await User.findOne({ email: email });
         if (findUser) {
-
-            return res.status(409).json({ msg: "Email already exist", type: "email" })
+            return res.status(409).json({ msg: "Email already exists", type: "email" });
         }
 
-        const otp = generateOTP()
+        // Validate referral code if provided
+        let referredBy = null;
+        if (referralCode) {
+            const referrer = await User.findOne({ referralCode });
+            if (referrer) {
+                referredBy = referralCode;
+            } else {
+                return res.status(400).json({ msg: "Invalid referral code", type: "referralCode" });
+            }
+        }
 
+        const otp = generateOTP();
         const emailSent = await sendVerificationEmail(email, otp);
-
         if (!emailSent) {
-
-            return res.status(401).json({ msg: "Signup failed", type: 'toast' })
+            return res.status(401).json({ msg: "Signup failed due to email error", type: 'toast' });
         }
 
+        // Store referral code in session for use after OTP verification
         req.session.userOtp = otp;
-        req.session.userData = { name, phone, email, password };
+        req.session.userData = { name, phone, email, password, referredBy };
 
-        console.log("OTP Send", otp);
-
-
-        res.status(200).json({ msg: 'Otp has been sent to you email' })
-
+        console.log("OTP Sent:", otp);
+        res.status(200).json({ msg: 'OTP has been sent to your email' });
     } catch (error) {
         console.error("Signup Error:", error);
         return res.status(500).json({ msg: "Server error. Please try again later." });
     }
-}
+};
 
 const securePassword = async (password) => {
     try {
@@ -181,40 +217,96 @@ const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
 
-        console.log('OTP', otp);
-
         if (otp === req.session.userOtp) {
-            const user = req.session.userData;
-            const passwordHash = await securePassword(user.password);
+            const userData = req.session.userData;
+            const passwordHash = await securePassword(userData.password);
 
-            const existingUser = await User.findOne({ email: user.email });
-
+            const existingUser = await User.findOne({ email: userData.email });
             if (existingUser) {
                 return res.status(400).json({ success: false, message: 'User already exists. Please login.' });
             }
 
-            const saveUserData = new User({
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                googleId: user.googleId || null,
-                password: passwordHash
+            const newUser = new User({
+                name: userData.name,
+                email: userData.email,
+                phone: userData.phone,
+                password: passwordHash,
+                referredBy: userData.referredBy || null
             });
 
-            await saveUserData.save();
+            await newUser.save();
+
+            // Assign unique referral code
+            await assignUniqueReferralCode(newUser._id);
+
+            // Create wallet for the new user
+            let wallet = await Wallet.findOne({ user: newUser._id });
+            if (!wallet) {
+                wallet = new Wallet({
+                    user: newUser._id,
+                    currency: 'INR',
+                    balance: userData.referredBy ? 50 : 0 // ₹50 for referred user
+                });
+                await wallet.save();
+
+                if (userData.referredBy) {
+                    // Credit ₹50 to referred user's wallet
+                    wallet.transactions.push({
+                        type: 'credit',
+                        amount: 50,
+                        description: 'Referral bonus for signing up',
+                        date: new Date()
+                    });
+                    await wallet.save();
+
+                    // Credit ₹200 to referrer's wallet
+                    const referrer = await User.findOne({ referralCode: userData.referredBy });
+                    if (referrer) {
+                        const referrerWallet = await Wallet.findOne({ user: referrer._id });
+                        if (referrerWallet) {
+                            referrerWallet.balance += 200;
+                            referrerWallet.transactions.push({
+                                type: 'credit',
+                                amount: 200,
+                                description: `Referral bonus for referring ${newUser.name}`,
+                                date: new Date()
+                            });
+                            await referrerWallet.save();
+                        } else {
+                            // Create wallet for referrer if it doesn't exist
+                            const newReferrerWallet = new Wallet({
+                                user: referrer._id,
+                                currency: 'INR',
+                                balance: 200
+                            });
+                            newReferrerWallet.transactions.push({
+                                type: 'credit',
+                                amount: 200,
+                                description: `Referral bonus for referring ${newUser.name}`,
+                                date: new Date()
+                            });
+                            await newReferrerWallet.save();
+                        }
+                    }
+                }
+            }
 
             req.session.user = {
-                _id: saveUserData._id,
-                email: saveUserData.email,
-                name: saveUserData.name
+                _id: newUser._id,
+                email: newUser.email,
+                name: newUser.name
             };
+
+            // Clear session data
+            req.session.userOtp = null;
+            req.session.userData = null;
 
             res.json({ success: true, redirectUrl: '/' });
         } else {
-            res.status(400).json({ success: false, message: 'Invalid OTP Please try again' });
+            res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
         }
     } catch (error) {
-        console.error('Error verifying OTP', error);
+        console.error('Error verifying OTP:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -364,10 +456,10 @@ const loadShopPage = async (req, res) => {
           isListed: true 
         });
         if (selectedCategory) {
-          selectedCategoryId = selectedCategory._id;
+          selectedCategoryId = selectedCategory._id.toString();
           query.category = selectedCategoryId;
         } else {
-          query.category = null;
+          query.category = null; // No matches for invalid category
         }
       } else {
         query.category = { $in: categoryIds };
@@ -375,9 +467,10 @@ const loadShopPage = async (req, res) => {
   
       const searchQuery = req.query.query?.trim();
       if (searchQuery) {
+        const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
         query.$or = [
-          { productName: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } }
+          { productName: { $regex: escapedQuery, $options: 'i' } },
+          { description: { $regex: escapedQuery, $options: 'i' } }
         ];
       }
   
@@ -422,7 +515,7 @@ const loadShopPage = async (req, res) => {
         .skip(skip)
         .limit(limit);
   
-      // Add wishlist status to each product
+      // Add wishlist status
       if (userData && userData.wishlist) {
         products.forEach(prod => {
           prod.inWishlist = userData.wishlist.some(id => id.toString() === prod._id.toString());
@@ -433,33 +526,21 @@ const loadShopPage = async (req, res) => {
         });
       }
   
-      // Updated offer logic: Only apply explicit offers
+      // Offer logic
       products.forEach(product => {
-        let effectivePrice = product.regularPrice; // Default to regularPrice
+        let effectivePrice = product.regularPrice;
         let discountPercent = null;
   
         if (product.productOffer && product.productOffer > 0) {
-          // Product-specific offer
           discountPercent = product.productOffer;
           effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
         } else if (product.category?.categoryOffer > 0) {
-          // Category offer
           discountPercent = product.category.categoryOffer;
           effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
         }
-        // Removed the else if condition for regularPrice > salePrice
   
-        // Set properties only if there's an explicit offer
-        if (discountPercent !== null && discountPercent > 0) {
-          product.effectivePrice = effectivePrice;
-          product.discountPercent = discountPercent;
-        } else {
-          product.effectivePrice = product.regularPrice; // No offer, use regularPrice
-          product.discountPercent = null; // No discount to display
-        }
-  
-        // Debugging log
-        console.log(`Product: ${product.productName}, Regular: ${product.regularPrice}, Sale: ${product.salePrice}, Offer: ${product.productOffer}, Category Offer: ${product.category?.categoryOffer}, Discount: ${product.discountPercent}, Effective: ${product.effectivePrice}`);
+        product.effectivePrice = effectivePrice;
+        product.discountPercent = discountPercent;
       });
   
       const totalPages = Math.ceil(totalProducts / limit);
@@ -475,8 +556,20 @@ const loadShopPage = async (req, res) => {
   
       const cart = user ? await Cart.findOne({ user: user._id }) : null;
       const cartCount = cart ? cart.items.length : 0;
-  
       const wishlistCount = userData && userData.wishlist ? userData.wishlist.length : 0;
+  
+      // Save search history
+      if (userData && searchQuery) {
+        userData.searchHistory = userData.searchHistory || [];
+        userData.searchHistory.push({
+          query: searchQuery,
+          category: selectedCategoryId || null,
+          skinType: selectedSkinType || null,
+          skinConcern: selectedSkinConcern || null,
+          searchedOn: new Date()
+        });
+        await userData.save();
+      }
   
       res.render("shop", {
         user: userData,
@@ -485,7 +578,7 @@ const loadShopPage = async (req, res) => {
         totalProducts,
         currentPage: page,
         totalPages,
-        selectedCategoryId: selectedCategoryId ? selectedCategoryId.toString() : null,
+        selectedCategoryId,
         selectedSkinType,
         selectedSkinConcern,
         minPrice,
@@ -495,10 +588,9 @@ const loadShopPage = async (req, res) => {
         cartCount,
         wishlistCount
       });
-  
     } catch (error) {
       console.error("Error loading shop page:", error);
-      res.status(500).send("Server Error");
+      res.status(500).render("error", { message: "Server Error" });
     }
   };
 const filterProduct = async (req, res) => {
@@ -617,6 +709,101 @@ const filterProduct = async (req, res) => {
 };
 
 
+// Get recent searches
+const getSearchHistory = async (req, res) => {
+    try {
+      const userId = req.session.user?._id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Please login' });
+      }
+  
+      const user = await User.findById(userId, 'searchHistory');
+      const searches = user.searchHistory
+        .filter(s => s.query) // Only include non-empty queries
+        .sort((a, b) => b.searchedOn - a.searchedOn) // Newest first
+        .slice(0, 5); // Limit to 5
+  
+      res.json({ success: true, searches });
+    } catch (error) {
+      console.error('Error fetching search history:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };
+  
+  // Save search
+  const saveSearch = async (req, res) => {
+    try {
+      const userId = req.session.user?._id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Please login' });
+      }
+  
+      const { query } = req.body;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid query' });
+      }
+  
+      const user = await User.findById(userId);
+      user.searchHistory = user.searchHistory || [];
+      // Remove duplicate query
+      user.searchHistory = user.searchHistory.filter(s => s.query !== query);
+      // Add new search
+      user.searchHistory.unshift({ query, searchedOn: new Date() });
+      // Limit to 10 (keep extra for server, frontend limits to 5)
+      user.searchHistory = user.searchHistory.slice(0, 10);
+      await user.save();
+  
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving search:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };
+  
+  // Delete search
+  const deleteSearch = async (req, res) => {
+    try {
+      const userId = req.session.user?._id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Please login' });
+      }
+  
+      const { query } = req.body;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid query' });
+      }
+  
+      await User.updateOne(
+        { _id: userId },
+        { $pull: { searchHistory: { query } } }
+      );
+  
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting search:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };
+  
+  // Clear all searches
+  const clearSearchHistory = async (req, res) => {
+    try {
+      const userId = req.session.user?._id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Please login' });
+      }
+  
+      await User.updateOne(
+        { _id: userId },
+        { $set: { searchHistory: [] } }
+      );
+  
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error clearing search history:', error);
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };
 
 module.exports = {
     loadHomePage,
@@ -631,6 +818,10 @@ module.exports = {
     loadverifyPage,
     loadShopPage,
     filterProduct,
+    getSearchHistory,
+    saveSearch,
+    clearSearchHistory,
+    deleteSearch
 
 
 

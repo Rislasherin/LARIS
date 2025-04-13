@@ -12,7 +12,7 @@ const  checkoutController = require('../controllers/user/checkoutController')
 const OrderController = require('../controllers/user/orderController')
 const wishlistController = require('../controllers/user/wishlistController')
 const walletController = require('../controllers/user/walletController')
-
+const referralController = require('../controllers/user/refferralController')
 
 // Middleware to add cartCount
 const addCartCount = async (req, res, next) => {
@@ -60,6 +60,13 @@ router.get('/', userController.loadHomePage);
 router.get('/shop',userController.loadShopPage) 
 router.get('/filter',userController.filterProduct)
 
+
+//search
+
+router.get('/search/history', userController.getSearchHistory);
+router.post('/search/save', userController.saveSearch);
+router.delete('/search/delete', userController.deleteSearch);
+router.delete('/search/clear', userController.clearSearchHistory);
 
 
 
@@ -112,7 +119,7 @@ router.post("/cart/update",userAuth, cartController.updateCartQuantity);
 router.post("/cart/remove", userAuth, cartController.removeFromCart);
 router.get('/cart/contents', userAuth, cartController.getCartContents);
 router.post('/cart/get-quantity',userAuth,cartController.getCartQuantity);
-
+router.get('/cart/summary', cartController.getCartSummary);
 
 //checkout
 router.get('/checkout/address', checkoutController.getCheckoutAddressPage);
@@ -153,6 +160,11 @@ router.get('/wallet', walletController.renderWalletPage);
 router.get('/wallet/transactions',  walletController.getMoreTransactions);
 router.post('/wallet/add-cash', walletController.addCashToWallet);
 router.post('/wallet/verify-payment', userAuth, walletController.verifyPayment);
+
+
+
+//referral
+router.get('/referral', referralController.renderReferral);
 
 
 module.exports = router;

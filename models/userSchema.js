@@ -17,7 +17,7 @@ const userSchema = new Schema({
         type: String,
         required: false,
         unique: true,
-        sparse: true, // Allows multiple null values for unique field
+        sparse: true,
         default: null
     },
     googleId: {
@@ -27,7 +27,7 @@ const userSchema = new Schema({
     password: { 
         type: String, 
         required: function() {
-            return !this.googleId; // Password required only if googleId is not set
+            return !this.googleId;
         }
     },
     isBlocked: {
@@ -39,9 +39,14 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    referelCode: {
-        type: String
-        // required: true // Uncomment if you want this to be mandatory
+    referralCode: { // Corrected from 'referelCode'
+        type: String,
+        unique: true,
+        sparse: true // Allows multiple null values
+    },
+    referredBy: { // New field to track who referred this user
+        type: String, // Stores the referral code of the referrer
+        default: null
     },
     addresses: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -62,7 +67,14 @@ const userSchema = new Schema({
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product'
-    }]
+    }],
+    searchHistory: [{
+        query: { type: String },
+        category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
+        skinType: { type: String, default: null },
+        skinConcern: { type: String, default: null },
+        searchedOn: { type: Date, default: Date.now }
+      }]
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

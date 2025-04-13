@@ -638,12 +638,12 @@
             <div class="p-3 border-b border-gray-700 flex justify-between items-center">
               <h5 class="text-sm font-semibold text-white">Detailed Orders</h5>
               <select class="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs" id="orderStatusFilter">
-                <option value="all">All Statuses</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Processing">Processing</option>
-                <option value="Cancelled">Cancelled</option>
-                <option value="Returned">Returned</option>
+                <option value="all" <%= orderStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
+                <option value="Delivered" <%= orderStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Shipped" <%= orderStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <option value="Processing" <%= orderStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
+                <option value="Cancelled" <%= orderStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="Returned" <%= orderStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
               </select>
             </div>
             <div class="overflow-x-auto max-h-96">
@@ -662,33 +662,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% if (report.orders && report.orders.length> 0) { %>
-                    <% report.orders.forEach(order=> { %>
+                  <% if (report.orders && report.orders.length > 0) { %>
+                    <% report.orders.forEach(order => { %>
                       <tr class="hover:bg-gray-700">
-                        <td>#ORD-<%= order.orderId || 'N/A' %>
-                        </td>
-                        <td>
-                          <%= new Date(order.date).toLocaleDateString('en-US', { month: 'short' , day: 'numeric' ,
-                            year: 'numeric' }) %>
-                        </td>
-                        <td>
-                          <%= order.user?.name || 'Unknown' %>
-                        </td>
-                        <td>
-                          <%= order.products?.length || 0 %> item<%= order.products?.length !==1 ? 's' : '' %>
-                        </td>
-                        <td>
-                          <%= order.originalAmount ? order.originalAmount.toFixed(2) : '0.00' %>
-                        </td>
-                        <td>
-                          <%= order.offerDiscount ? order.offerDiscount.toFixed(2) : '0.00' %>
-                        </td>
-                        <td>
-                          <%= order.couponCode ? `${order.couponCode} (-${order.couponDiscount.toFixed(2)})` : 'N/A' %>
-                        </td>
-                        <td>
-                          <%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %>
-                        </td>
+                        <td>#ORD-<%= order.orderId || 'N/A' %></td>
+                        <td><%= new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></td>
+                        <td><%= order.user?.name || 'Unknown' %></td>
+                        <td><%= order.products?.length || 0 %> item<%= order.products?.length !== 1 ? 's' : '' %></td>
+                        <td><%= order.originalAmount ? order.originalAmount.toFixed(2) : '0.00' %></td>
+                        <td><%= order.offerDiscount ? order.offerDiscount.toFixed(2) : '0.00' %></td>
+                        <td><%= order.couponCode ? `${order.couponCode} (-${order.couponDiscount.toFixed(2)})` : 'N/A' %></td>
+                        <td><%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></td>
                         <td>
                           <span class="badge <%= 
                             order.status === 'Delivered' ? 'bg-success' : 
@@ -697,17 +681,16 @@
                             order.status === 'Cancelled' ? 'bg-danger' : 
                             order.status === 'Returned' ? 'bg-secondary' : 
                             'bg-secondary' %>">
-                            <%= order.status %>
+                            <%= order.status || 'Unknown' %>
                           </span>
                         </td>
                       </tr>
-                      <% }) %>
-                        <% } %>
-                          <!-- Placeholder row for no orders -->
-                          <tr class="no-orders <%= report.orders && report.orders.length > 0 ? 'hidden' : '' %>">
-                            <td colspan="9" class="text-center text-gray-500 py-4">No orders found for the selected
-                              period or filter.</td>
-                          </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr class="no-orders">
+                      <td colspan="9" class="text-center text-gray-500 py-4">No orders found for the selected period or filter.</td>
+                    </tr>
+                  <% } %>
                 </tbody>
               </table>
             </div>
@@ -1027,65 +1010,67 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
   <script>
-    $(document).ready(function () {
-      try {
-        console.log("Document ready, initializing scripts");
+ $(document).ready(function () {
+  console.log("Orders Data:", <%- JSON.stringify(report.orders) %>);
 
-        // Date Range Picker
-        $('#dateRangePicker').daterangepicker({
-          startDate: '<%= startDate || moment().subtract(29, "days").format("YYYY-MM-DD") %>',
-          endDate: '<%= endDate || moment().format("YYYY-MM-DD") %>',
-          opens: 'left',
-          locale: { format: 'YYYY-MM-DD' },
-          ranges: {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-          }
-        }, function (start, end) {
-          console.log("Date Range Selected:", { start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
-          const quickSelect = $('#quickDateSelect').val();
-          const compareWith = $('#compareWithSelect').val();
-          const url = `/admin/reports/sales?startDate=${start.format('YYYY-MM-DD')}&endDate=${end.format('YYYY-MM-DD')}&quickSelect=custom&compareWith=${compareWith}`;
-          console.log("Redirecting to:", url);
-          window.location.href = url;
-        });
+  try {
+    console.log("Document ready, initializing scripts");
 
-        // Sync Quick Select with Date Picker
-        $('#quickDateSelect').change(function () {
-          const value = $(this).val();
-          const compareWith = $('#compareWithSelect').val();
-          let startDate, endDate;
-          switch (value) {
-            case 'today': startDate = moment().format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
-            case 'last7days': startDate = moment().subtract(6, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
-            case 'last30days': startDate = moment().subtract(29, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
-            case 'year': startDate = moment().startOf('year').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
-            default: return;
-          }
-          $('#dateRangePicker').data('daterangepicker').setStartDate(startDate);
-          $('#dateRangePicker').data('daterangepicker').setEndDate(endDate);
-          const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${value}&compareWith=${compareWith}`;
-          console.log("Quick Select Redirecting to:", url);
-          window.location.href = url;
-        });
+    // Date Range Picker
+    $('#dateRangePicker').daterangepicker({
+      startDate: '<%= startDate || moment().subtract(29, "days").format("YYYY-MM-DD") %>',
+      endDate: '<%= endDate || moment().format("YYYY-MM-DD") %>',
+      opens: 'left',
+      locale: { format: 'YYYY-MM-DD' },
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      }
+    }, function (start, end) {
+      console.log("Date Range Selected:", { start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
+      const quickSelect = $('#quickDateSelect').val();
+      const compareWith = $('#compareWithSelect').val();
+      const url = `/admin/reports/sales?startDate=${start.format('YYYY-MM-DD')}&endDate=${end.format('YYYY-MM-DD')}&quickSelect=custom&compareWith=${compareWith}`;
+      console.log("Redirecting to:", url);
+      window.location.href = url;
+    });
 
-        $('#compareWithSelect').change(function () {
-          const compareWith = $(this).val();
-          const startDate = '<%= startDate %>';
-          const endDate = '<%= endDate %>';
-          const quickSelect = $('#quickDateSelect').val();
-          const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&_=${new Date().getTime()}`;
-          console.log("Compare With Redirecting to:", url);
-          window.location.href = url;
-        });
+    // Sync Quick Select with Date Picker
+    $('#quickDateSelect').change(function () {
+      const value = $(this).val();
+      const compareWith = $('#compareWithSelect').val();
+      let startDate, endDate;
+      switch (value) {
+        case 'today': startDate = moment().format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+        case 'last7days': startDate = moment().subtract(6, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+        case 'last30days': startDate = moment().subtract(29, 'days').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+        case 'year': startDate = moment().startOf('year').format('YYYY-MM-DD'); endDate = moment().format('YYYY-MM-DD'); break;
+        default: return;
+      }
+      $('#dateRangePicker').data('daterangepicker').setStartDate(startDate);
+      $('#dateRangePicker').data('daterangepicker').setEndDate(endDate);
+      const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${value}&compareWith=${compareWith}`;
+      console.log("Quick Select Redirecting to:", url);
+      window.location.href = url;
+    });
 
-        // Tab Navigation with Manual Trigger
-        console.log("Binding tab click events");
-        $('.tab-button').click(function () {
+    $('#compareWithSelect').change(function () {
+      const compareWith = $(this).val();
+      const startDate = '<%= startDate %>';
+      const endDate = '<%= endDate %>';
+      const quickSelect = $('#quickDateSelect').val();
+      const url = `/admin/reports/sales?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&_=${new Date().getTime()}`;
+      console.log("Compare With Redirecting to:", url);
+      window.location.href = url;
+    });
+
+    // Tab Navigation
+    console.log("Binding tab click events");
+    $('.tab-button').click(function () {
       const tabId = $(this).data('tab');
       console.log("Click detected on tab:", tabId);
       $('.tab-button').removeClass('active');
@@ -1099,90 +1084,86 @@
         console.error('Tab content not found for ID:', tabId);
       }
     });
-    // Initialize active tab based on URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const activeTab = urlParams.get('tab') || 'overview';
     console.log("Initializing active tab:", activeTab);
     $(`.tab-button[data-tab="${activeTab}"]`).click();
 
-    $('#orderStatusFilter').change(function () {
-  const status = $(this).val();
-  console.log('Filter orders by status:', status);
-  const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
-  const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
-  const quickSelect = $('#quickDateSelect').val();
-  const compareWith = $('#compareWithSelect').val();
-  // Reset to page 1 for consistency
-  const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${status}&tab=orders`;
-  console.log("Redirecting to:", url);
-  window.location.href = url;
-});
-
-
-        $('#inventoryStatusFilter').change(function () {
-  const status = $(this).val();
-  console.log('Filter inventory by status:', status);
-  const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
-  const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
-  const quickSelect = $('#quickDateSelect').val();
-  const compareWith = $('#compareWithSelect').val();
-  // Reset to page 1 to show all filtered products
-  const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&inventoryFilter=${status}&tab=products`;
-  console.log("Redirecting to:", url);
-  window.location.href = url;
-});
-
-        $('[data-graph-period]').click(function () {
-          const period = $(this).data('graph-period');
-          console.log('Change graph period to:', period);
-        });
-
-
-        $('#downloadReport').click(function (e) {
-          e.preventDefault();
-          $('.dropdown-menu').toggleClass('hidden');
-        });
-
-        // Close dropdown when clicking outside
-        $(document).click(function (e) {
-          if (!$(e.target).closest('.dropdown').length) {
-            $('.dropdown-menu').addClass('hidden');
-          }
-        });
-
-        // Download PDF
-        $('#downloadPdf').click(function (e) {
-          e.preventDefault();
-          const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
-          const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
-          const quickSelect = $('#quickDateSelect').val();
-          const compareWith = $('#compareWithSelect').val();
-          const orderStatus = $('#orderStatusFilter').val();
-          const tab = $('.tab-button.active').data('tab') || 'overview';
-          const url = `/admin/reports/sales/download/pdf?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
-          console.log('Downloading PDF from:', url);
-          window.location.href = url;
-        });
-
-        $('#downloadExcel').click(function (e) {
-          e.preventDefault();
-          const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
-          const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
-          const quickSelect = $('#quickDateSelect').val();
-          const compareWith = $('#compareWithSelect').val();
-          const orderStatus = $('#orderStatusFilter').val();
-          const tab = $('.tab-button.active').data('tab') || 'overview';
-          const url = `/admin/reports/sales/download/excel?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
-          console.log('Downloading Excel from:', url);
-          window.location.href = url;
-        });
-
-
+    $('#orderStatusFilter').on('change', function () {
+      try {
+        const status = $(this).val();
+        console.log('Filter orders by status:', status);
+        const datePicker = $('#dateRangePicker').data('daterangepicker');
+        if (!datePicker) {
+          console.error('DateRangePicker not initialized');
+          return;
+        }
+        const startDate = datePicker.startDate.format('YYYY-MM-DD');
+        const endDate = datePicker.endDate.format('YYYY-MM-DD');
+        const quickSelect = $('#quickDateSelect').val();
+        const compareWith = $('#compareWithSelect').val();
+        const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${status}&tab=orders`;
+        console.log("Redirecting to:", url);
+        window.location.href = url;
       } catch (error) {
-        console.error("Critical error initializing scripts:", error.stack);
+        console.error('Error in orderStatusFilter change:', error);
       }
-      console.log("Script initialization completed");
     });
+
+    $('#inventoryStatusFilter').change(function () {
+      const status = $(this).val();
+      console.log('Filter inventory by status:', status);
+      const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+      const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+      const quickSelect = $('#quickDateSelect').val();
+      const compareWith = $('#compareWithSelect').val();
+      const url = `/admin/reports/sales?page=1&startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&inventoryFilter=${status}&tab=products`;
+      console.log("Redirecting to:", url);
+      window.location.href = url;
+    });
+
+    $('#downloadReport').click(function (e) {
+      e.preventDefault();
+      $('.dropdown-menu').toggleClass('hidden');
+    });
+
+    $(document).click(function (e) {
+      if (!$(e.target).closest('.dropdown').length) {
+        $('.dropdown-menu').addClass('hidden');
+      }
+    });
+
+    $('#downloadPdf').click(function (e) {
+      e.preventDefault();
+      const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+      const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+      const quickSelect = $('#quickDateSelect').val();
+      const compareWith = $('#compareWithSelect').val();
+      const orderStatus = $('#orderStatusFilter').val();
+      const tab = $('.tab-button.active').data('tab') || 'overview';
+      const url = `/admin/reports/sales/download/pdf?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
+      console.log('Downloading PDF from:', url);
+      window.location.href = url;
+    });
+
+    $('#downloadExcel').click(function (e) {
+      e.preventDefault();
+      const startDate = $('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+      const endDate = $('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');
+      const quickSelect = $('#quickDateSelect').val();
+      const compareWith = $('#compareWithSelect').val();
+      const orderStatus = $('#orderStatusFilter').val();
+      const tab = $('.tab-button.active').data('tab') || 'overview';
+      const url = `/admin/reports/sales/download/excel?startDate=${startDate}&endDate=${endDate}&quickSelect=${quickSelect}&compareWith=${compareWith}&orderStatus=${orderStatus}&tab=${tab}`;
+      console.log('Downloading Excel from:', url);
+      window.location.href = url;
+    });
+
+  } catch (error) {
+    console.error("Critical error initializing scripts:", error.stack);
+  }
+  console.log("Script initialization completed");
+});
   </script>
 </body>
 

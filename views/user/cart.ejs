@@ -48,128 +48,124 @@
       <div class="lg:col-span-2">
         <% if (cart && cart.items && cart.items.length > 0) { %>
           <div class="bg-white rounded-lg shadow overflow-hidden" id="cart-items">
-            <!-- Cart Header -->
-            <div class="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b">
-              <div class="md:col-span-6">
-                <span class="font-semibold text-gray-700">Product</span>
-              </div>
-              <div class="md:col-span-2 text-center">
-                <span class="font-semibold text-gray-700">Price</span>
-              </div>
-              <div class="md:col-span-2 text-center">
-                <span class="font-semibold text-gray-700">Quantity</span>
-              </div>
-              <div class="md:col-span-2 text-right">
-                <span class="font-semibold text-gray-700">Total</span>
-              </div>
-            </div>
-            
-            <!-- Cart Items -->
-            <% cart.items.forEach((item, index) => { %>
-              <div class="border-b last:border-b-0 cart-item" data-product-id="<%= item.product._id %>">
-                <div class="md:grid md:grid-cols-12 gap-4 p-4 flex flex-wrap">
-                  <!-- Product Information -->
-                  <div class="md:col-span-6 flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto">
-                    <div class="w-20 h-20 flex-shrink-0">
-                      <% if (item.product.productImage && item.product.productImage.length > 0) { %>
-                        <img 
-                          src="/uploads/product-images/<%= item.product.productImage[0] %>" 
-                          alt="<%= item.product.productName %>" 
-                          class="w-full h-full object-cover rounded"
-                          onerror="this.src='/images/placeholder.jpg'"
-                        >
-                      <% } else { %>
-                        <img 
-                          src="/images/placeholder.jpg" 
-                          alt="No Image" 
-                          class="w-full h-full object-contain rounded"
-                        >
-                      <% } %>
-                    </div>
-                    <div>
-                      <h3 class="font-medium text-gray-800">
-                        <%= item.product.productName %> 
-                        <% if (item.variantIndex !== undefined && item.product.variants && item.product.variants[item.variantIndex]) { %>
-                          (<%= item.product.variants[item.variantIndex].size %>)
-                        <% } %>
-                      </h3>
-                      <p class="text-sm text-gray-500 mt-1 hidden md:block">
-                        <%= item.product.description ? item.product.description.substring(0, 40) + '...' : '' %>
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <!-- Price -->
-                  <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
-                    <% 
-  const regularPrice = item.product?.regularPrice || 0;
-  const variant = item.variantIndex !== undefined ? item.product.variants[item.variantIndex] : null;
-  const productOffer = item.product?.productOffer || 0;
-  const categoryOffer = item.product?.category?.categoryOffer || 0;
-  const effectiveOffer = Math.max(productOffer, categoryOffer); 
-  const effectivePrice = variant && variant.salePrice 
-    ? variant.salePrice 
-    : regularPrice * (1 - effectiveOffer / 100);
-%>
-                    <div class="md:text-center">
-                      <% if (regularPrice > effectivePrice) { %>
-                        <div class="flex md:flex-col md:items-center">
-                          <span class="text-gray-500 line-through text-sm mr-2 md:mr-0">₹<%= regularPrice.toFixed(2) %></span>
-                          <span class="text-gray-900 font-medium">₹<%= effectivePrice.toFixed(2) %></span>
-                        </div>
-                        <% if (effectiveOffer > 0) { %>
-                          <span class="discount-badge md:mt-1 md:inline-block hidden"><%= effectiveOffer %>% off</span>
-                        <% } %>
-                      <% } else { %>
-                        <span class="text-gray-900 font-medium">₹<%= regularPrice.toFixed(2) %></span>
-                      <% } %>
-                    </div>
-                  </div>
-                  
-                  <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
-                    <div class="flex items-center border rounded">
-                      <button 
-                        data-action="decrease" 
-                        data-product-id="<%= item.product._id %>"
-                        class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
-                      >
-                        -
-                      </button>
-                      <input 
-                      type="number" 
-                      name="quantity" 
-                      value="<%= item.quantity %>" 
-                      min="1" 
-                      max="<%= Math.min(item.product.quantity + item.quantity, 5) %>" 
-                      class="quantity-input text-center w-10"
-                      readonly
-                    >
-                      <button 
-                        data-action="increase" 
-                        data-product-id="<%= item.product._id %>"
-                        class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <!-- Total -->
-                  <div class="md:col-span-2 flex md:justify-end items-center w-full md:w-auto justify-between">
-                    <span class="text-gray-900 font-medium total-price md:text-right" data-total="<%= (effectivePrice * item.quantity).toFixed(2) %>">
-                      ₹<%= (effectivePrice * item.quantity).toFixed(2) %>
-                    </span>
-                    <form action="/cart/remove" method="POST" class="remove-form ml-4">
-                      <input type="hidden" name="productId" value="<%= item.product._id %>">
-                      <button type="submit" class="text-gray-400 hover:text-red-500">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </form>
-                  </div>
+
+              <!-- Cart Header -->
+              <div class="hidden md:grid md:grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b">
+                <div class="md:col-span-6">
+                  <span class="font-semibold text-gray-700">Product</span>
+                </div>
+                <div class="md:col-span-2 text-center">
+                  <span class="font-semibold text-gray-700">Price</span>
+                </div>
+                <div class="md:col-span-2 text-center">
+                  <span class="font-semibold text-gray-700">Quantity</span>
+                </div>
+                <div class="md:col-span-2 text-right">
+                  <span class="font-semibold text-gray-700">Total</span>
                 </div>
               </div>
-            <% }); %>
-          </div>
+              
+              <!-- Cart Items -->
+              <% cart.items.forEach((item, index) => { %>
+                <div class="border-b last:border-b-0 cart-item" data-product-id="<%= item.product._id %>">
+                  <div class="md:grid md:grid-cols-12 gap-4 p-4 flex flex-wrap">
+                    <!-- Product Information -->
+                    <div class="md:col-span-6 flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto">
+                      <div class="w-20 h-20 flex-shrink-0">
+                        <% if (item.product.productImage && item.product.productImage.length > 0) { %>
+                          <img 
+                            src="/Uploads/product-images/<%= item.product.productImage[0] %>" 
+                            alt="<%= item.product.productName %>" 
+                            class="w-full h-full object-cover rounded"
+                            onerror="this.src='/images/placeholder.jpg'"
+                          >
+                        <% } else { %>
+                          <img 
+                            src="/images/placeholder.jpg" 
+                            alt="No Image" 
+                            class="w-full h-full object-contain rounded"
+                          >
+                        <% } %>
+                      </div>
+                      <div>
+                        <h3 class="font-medium text-gray-800">
+                          <%= item.product.productName %>
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1 hidden md:block">
+                          <%= item.product.description ? item.product.description.substring(0, 40) + '...' : '' %>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
+                      <% 
+                        const regularPrice = item.product?.regularPrice || 0;
+                        const productOffer = item.product?.productOffer || 0;
+                        const categoryOffer = item.product?.category?.categoryOffer || 0;
+                        const effectiveOffer = Math.max(productOffer, categoryOffer); 
+                        const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
+                      %>
+                      <div class="md:text-center">
+                        <% if (regularPrice > effectivePrice) { %>
+                          <div class="flex md:flex-col md:items-center">
+                            <span class="text-gray-500 line-through text-sm mr-2 md:mr-0">₹<%= regularPrice.toFixed(2) %></span>
+                            <span class="text-gray-900 font-medium">₹<%= effectivePrice.toFixed(2) %></span>
+                          </div>
+                          <% if (effectiveOffer > 0) { %>
+                            <span class="discount-badge md:mt-1 md:inline-block hidden"><%= effectiveOffer %>% off</span>
+                          <% } %>
+                        <% } else { %>
+                          <span class="text-gray-900 font-medium">₹<%= regularPrice.toFixed(2) %></span>
+                        <% } %>
+                      </div>
+                    </div>
+                    
+                    <!-- Quantity -->
+                    <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
+                      <div class="flex items-center border rounded">
+                        <button 
+                          data-action="decrease" 
+                          data-product-id="<%= item.product._id %>"
+                          class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="number" 
+                          name="quantity" 
+                          value="<%= item.quantity %>" 
+                          min="1" 
+                          max="<%= Math.min(item.product.quantity + item.quantity, 5) %>" 
+                          class="quantity-input text-center w-10"
+                          readonly
+                        >
+                        <button 
+                          data-action="increase" 
+                          data-product-id="<%= item.product._id %>"
+                          class="px-2 py-1 text-gray-600 hover:bg-gray-100 update-quantity-btn"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Total -->
+                    <div class="md:col-span-2 flex md:justify-end items-center w-full md:w-auto justify-between">
+                      <span class="text-gray-900 font-medium total-price md:text-right" data-total="<%= (effectivePrice * item.quantity).toFixed(2) %>">
+                        ₹<%= (effectivePrice * item.quantity).toFixed(2) %>
+                      </span>
+                      <form action="/cart/remove" method="POST" class="remove-form ml-4">
+                        <input type="hidden" name="productId" value="<%= item.product._id %>">
+                        <button type="submit" class="text-gray-400 hover:text-red-500">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
           
           <div class="mt-4 flex justify-between items-center">
             <a href="/shop" class="text-blue-600 hover:text-blue-800 flex items-center">
@@ -279,6 +275,111 @@
         if (cartCountEl) cartCountEl.textContent = data.cartCount;
       }
   
+      function updateCartContents() {
+      fetch('/cart/contents', { method: 'GET' })
+        .then(response => response.text())
+        .then(html => {
+          const cartItems = document.getElementById('cart-items');
+          if (!html.includes('cart-item') && cartItems.children.length > 0) {
+            showNotification('Some products were removed as they are out of stock', false);
+            location.reload();
+          } else {
+            cartItems.innerHTML = html;
+            attachEventListeners();
+          }
+        })
+        .catch(error => console.error('Error updating cart:', error));
+
+      fetch('/cart/summary', { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateOrderSummary(data);
+          }
+        })
+        .catch(error => console.error('Error updating summary:', error));
+    }
+
+    function attachEventListeners() {
+      document.querySelectorAll('.update-quantity-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const productId = this.getAttribute('data-product-id');
+          const action = this.getAttribute('data-action');
+          const quantityInput = this.parentElement.querySelector('.quantity-input');
+          const currentQuantity = parseInt(quantityInput.value);
+          const maxQuantity = parseInt(quantityInput.getAttribute('max'));
+
+          fetch('/cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId, action })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                const newQuantity = action === 'increase' ? currentQuantity + 1 : currentQuantity - 1;
+                if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+                  quantityInput.value = newQuantity;
+                  const totalPriceEl = quantityInput.closest('.cart-item').querySelector('.total-price');
+                  const effectivePrice = parseFloat(totalPriceEl.getAttribute('data-total')) / currentQuantity;
+                  totalPriceEl.textContent = `₹${(effectivePrice * newQuantity).toFixed(2)}`;
+                  totalPriceEl.setAttribute('data-total', (effectivePrice * newQuantity).toFixed(2));
+                  updateOrderSummary(data);
+                  showNotification(`Quantity ${action === 'increase' ? 'increased' : 'decreased'} successfully!`);
+                } else {
+                  showNotification(`Cannot ${action} quantity beyond ${maxQuantity}`, false);
+                }
+              } else {
+                showNotification(data.message || 'Failed to update quantity', false);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              showNotification('An error occurred', false);
+            });
+        });
+      });
+
+      document.querySelectorAll('.remove-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const productId = this.querySelector('input[name="productId"]').value;
+
+          fetch('/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                showNotification('Product removed from cart');
+                updateOrderSummary(data);
+                const item = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+                if (item) item.remove();
+                if (!document.querySelectorAll('.cart-item').length) {
+                  location.reload();
+                }
+              } else {
+                showNotification(data.message || 'Failed to remove product', false);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              showNotification('An error occurred. Please try again.', false);
+            });
+        });
+      });
+    }
+
+    // Run update every 5 seconds
+    setInterval(updateCartContents, 5000);
+
+    // Initial attachment of event listeners
+    attachEventListeners();
+  });
+
       document.querySelectorAll('.update-quantity-btn').forEach(button => {
   button.addEventListener('click', function(e) {
     e.preventDefault();
@@ -318,38 +419,7 @@
       });
   });
 });
-  
-      document.querySelectorAll('.remove-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const productId = this.querySelector('input[name="productId"]').value;
-  
-          fetch('/cart/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              showNotification('Product removed from cart');
-              updateOrderSummary(data);
-              const item = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
-              if (item) item.remove();
-              if (!document.querySelectorAll('.cart-item').length) {
-                location.reload();
-              }
-            } else {
-              showNotification(data.message || 'Failed to remove product', false);
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showNotification('An error occurred. Please try again.', false);
-          });
-        });
-      });
-    });
+
   </script>
 </body>
 </html>
