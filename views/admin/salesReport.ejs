@@ -252,7 +252,7 @@
             <h4 class="text-lg font-bold mb-1 text-white">Sales Report</h4>
             <nav class="text-xs">
               <ol class="flex">
-                <li class="text-gray-500">Dashboard</li>
+                <a href="/admin/dashboard"><li class="text-gray-500">Dashboard</li></a>
                 <li class="mx-2 text-gray-500">/</li>
                 <li class="text-gray-300">Sales Report</li>
               </ol>
@@ -484,7 +484,7 @@
 
             <div class="card">
               <div class="stat-card categories">
-                <p class="stat-title">Best Selling Categories (Top 10)</p>
+                <p class="stat-title">Best Selling Categories</p>
                 <h3 class="stat-value text-sm mb-2">
                   <%= report.topCategories ? report.topCategories.length : 0 %> Categories
                 </h3>

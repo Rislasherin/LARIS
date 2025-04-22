@@ -18,7 +18,7 @@ exports.renderReferral = async (req, res) => {
         const user = await User.findById(userId);
         if (!user) {
             console.error("User not found in database for ID:", userId);
-            return res.status(404).render("user/error", {
+            return res.status(404).render("PageNotFound", {
                 message: "User not found",
                 title: "Error"
             });
@@ -47,7 +47,7 @@ exports.renderReferral = async (req, res) => {
             name: user.name,
             email: user.email,
             referralCode: user.referralCode,
-            wallet: wallet.balance // Use main wallet balance
+            wallet: wallet.balance 
         };
 
         res.render('referral', {
@@ -66,7 +66,7 @@ exports.renderReferral = async (req, res) => {
         });
     } catch (error) {
         console.error('Error rendering referral page:', error.message, error.stack);
-        res.status(500).render("user/error", {
+        res.status(500).render("pageNotFound", {
             message: "Internal Server Error",
             title: "Error"
         });

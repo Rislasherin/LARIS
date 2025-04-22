@@ -24,8 +24,8 @@ const productDetails = async (req, res) => {
 
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     const cartCount = cart ? cart.items.length : 0;
-    let cartCountForProduct = 0; // Define it here with a default value
-    if (cart && cart.items) { // Add check for cart.items to avoid errors
+    let cartCountForProduct = 0; 
+    if (cart && cart.items) { 
       const cartItem = cart.items.find(item => item.product && item.product._id.toString() === productId);
       if (cartItem) {
         cartCountForProduct = cartItem.quantity;
@@ -141,7 +141,7 @@ const productDetails = async (req, res) => {
       relatedProducts: relatedProductsData,
       recentlyViewedProducts: recentlyViewedData,
       cartCount,
-      cartCountForProduct, // Now always defined
+      cartCountForProduct, 
       isInWishlist
     });
   } catch (error) {

@@ -49,124 +49,132 @@ const getOrdersPage = async (req, res) => {
 };
 const getOrderDetailsPage = async (req, res) => {
   try {
-    const userId = req.session.user?._id;
-    if (!userId) {
-      console.log("User not logged in, redirecting to login page.");
-      return res.redirect("/user/login");
-    }
-
-    const orderId = req.params.orderId;
-
-    const query = mongoose.Types.ObjectId.isValid(orderId)
-      ? { _id: orderId, user: userId }
-      : { orderID: orderId, user: userId };
-
-    const order = await Order.findOne(query)
-      .populate({
-        path: 'orderItems.productId',
-        select: 'productName regularPrice productOffer productImage',
-      })
-      .populate('address')
-      .populate('user', 'name email');
-
-    if (!order) {
-      console.log("Order not found for user:", userId, "and Order ID:", orderId);
-      return res.status(404).send("Order not found");
-    }
-
-    // Define the timeline steps
-    const timelineSteps = [
-      { title: 'Order Placed', completed: false, current: false },
-      { title: 'Processing', completed: false, current: false },
-      { title: 'Shipped', completed: false, current: false },
-      { title: 'Delivered', completed: false, current: false }
-    ];
-
-    // Determine the current status and update the timeline
-    const currentStatus = order.status;
-    let activeIndex = -1;
-
-    switch (currentStatus) {
-      case 'Pending':
-      case 'Payment Pending':
-      case 'Confirmed':
-        activeIndex = 0; // Order Placed
-        break;
-      case 'Processing':
-        activeIndex = 1; // Processing
-        break;
-      case 'Shipped':
-        activeIndex = 2; // Shipped
-        break;
-      case 'Delivered':
-        activeIndex = 3; // Delivered
-        break;
-      case 'Cancelled':
-      case 'Partially Cancelled':
-        activeIndex = -1; // No active step for cancelled orders
-        break;
-      default:
-        console.warn("Unhandled order status:", currentStatus);
-        activeIndex = -1; // Default fallback
-    }
-    // Mark steps as completed or current
-    if (activeIndex >= 0) {
-      for (let i = 0; i < timelineSteps.length; i++) {
-        if (i < activeIndex) {
-          timelineSteps[i].completed = true;
-        } else if (i === activeIndex) {
-          timelineSteps[i].current = true;
-          timelineSteps[i].completed = true; // Current step is also completed
-        }
+      const userId = req.session.user?._id;
+      if (!userId) {
+          console.log("User not logged in, redirecting to login page.");
+          return res.redirect("/user/login");
       }
-    }
 
-    const orderData = {
-      _id: order._id,
-      orderID: order.orderID,
-      orderStatus: order.status,
-      orderDate: order.createdAt,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: order.status === 'Payment Pending' ? 'Pending' : 'Completed',
-      transactionId: order.transactionId,
-      shippingAddress: order.address,
-      user: order.user,
-      products: order.orderItems.map(item => {
-        const productImage = item.productId?.productImage?.length > 0 
-          ? `/uploads/product-images/${item.productId.productImage[0].trim()}` 
-          : '/default-image.jpg';
+      const orderId = req.params.orderId;
 
-        return {
-          _id: item.productId?._id || item.productId,
-          name: item.productId?.productName || item.productName || 'Unknown Product',
-          price: item.price,
-          quantity: item.quantity,
-          image: productImage,
-          offerDiscount: item.productId 
-            ? (item.productId.regularPrice - item.price) * item.quantity 
-            : 0,
-          offerName: item.productId?.productOffer > 0 ? 'Product Offer' : 'Category Offer',
-          productStatus: item.status,
-          deliveryDate: order.status === 'Delivered' 
-            ? order.timeline.find(t => t.title === 'Delivered')?.date 
-            : null
-        };
-      }),
-      timeline: timelineSteps, // Use the updated timeline
-      originalAmount: order.totalPrice,
-      offerDiscount: order.discount,
-      couponCode: order.couponCode || 'N/A',
-      couponDiscount: order.couponDiscount,
-      subtotal: order.totalPrice - order.discount - order.couponDiscount,
-      shipping: order.shipping,
-      tax: order.tax,
-      totalAmount: order.finalAmount
-    };
+      const query = mongoose.Types.ObjectId.isValid(orderId)
+          ? { _id: orderId, user: userId }
+          : { orderID: orderId, user: userId };
 
-    res.render('order-details', { order: orderData, user: req.session.user });
+      const order = await Order.findOne(query)
+          .populate({
+              path: 'orderItems.productId',
+              select: 'productName regularPrice productOffer productImage',
+          })
+          .populate('address')
+          .populate('user', 'name email');
+
+      if (!order) {
+          console.log("Order not found for user:", userId, "and Order ID:", orderId);
+          return res.status(404).send("Order not found");
+      }
+
+      const timelineSteps = [
+          { title: 'Order Placed', completed: false, current: false },
+          { title: 'Processing', completed: false, current: false },
+          { title: 'Shipped', completed: false, current: false },
+          { title: 'Delivered', completed: false, current: false }
+      ];
+
+      const currentStatus = order.status;
+      let activeIndex = -1;
+
+      switch (currentStatus) {
+          case 'Pending':
+          case 'Payment Pending':
+          case 'Confirmed':
+              activeIndex = 0;
+              break;
+          case 'Processing':
+              activeIndex = 1;
+              break;
+          case 'Shipped':
+              activeIndex = 2;
+              break;
+          case 'Delivered':
+              activeIndex = 3;
+              break;
+          case 'Cancelled':
+          case 'Partially Cancelled':
+              activeIndex = -1;
+              break;
+          default:
+              console.warn("Unhandled order status:", currentStatus);
+              activeIndex = -1;
+      }
+
+      if (activeIndex >= 0) {
+          for (let i = 0; i < timelineSteps.length; i++) {
+              if (i < activeIndex) {
+                  timelineSteps[i].completed = true;
+              } else if (i === activeIndex) {
+                  timelineSteps[i].current = true;
+                  timelineSteps[i].completed = true;
+              }
+          }
+      }
+
+      const RETURN_EXPIRY_DAYS = 7; // Define return expiry period (e.g., 30 days)
+
+      const orderData = {
+          _id: order._id,
+          orderID: order.orderID,
+          orderStatus: order.status,
+          orderDate: order.createdAt,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.status === 'Payment Pending' ? 'Pending' : 'Completed',
+          transactionId: order.transactionId,
+          shippingAddress: order.address,
+          user: order.user,
+          products: order.orderItems.map(item => {
+              const productImage = item.productId?.productImage?.length > 0
+                  ? `/uploads/product-images/${item.productId.productImage[0].trim()}`
+                  : '/default-image.jpg';
+
+              // Calculate if return is expired
+              let canReturn = false;
+              if (item.status === 'Delivered' && item.deliveryDate) {
+                  const deliveryDate = new Date(item.deliveryDate);
+                  const expiryDate = new Date(deliveryDate);
+                  expiryDate.setDate(deliveryDate.getDate() + RETURN_EXPIRY_DAYS);
+                  canReturn = new Date() <= expiryDate;
+              }
+
+              return {
+                  _id: item.productId?._id || item.productId,
+                  name: item.productId?.productName || item.productName || 'Unknown Product',
+                  price: item.price,
+                  quantity: item.quantity,
+                  image: productImage,
+                  offerDiscount: item.productId
+                      ? (item.productId.regularPrice - item.price) * item.quantity
+                      : 0,
+                  offerName: item.productId?.productOffer > 0 ? 'Product Offer' : 'Category Offer',
+                  productStatus: item.status,
+                  deliveryDate: item.deliveryDate,
+                  canReturn: canReturn // New field to indicate if return is possible
+              };
+          }),
+          timeline: timelineSteps,
+          originalAmount: order.totalPrice,
+          offerDiscount: order.discount,
+          couponCode: order.couponCode || 'N/A',
+          couponDiscount: order.couponDiscount,
+          subtotal: order.totalPrice - order.discount - order.couponDiscount,
+          shipping: order.shipping,
+          tax: order.tax,
+          totalAmount: order.finalAmount
+      };
+
+      res.render('order-details', { order: orderData, user: req.session.user });
   } catch (error) {
-    console.error("Error fetching order details:", error);
-    res.status(500).send("Internal Server Error");
+      console.error("Error fetching order details:", error);
+      res.status(500).send("Internal Server Error");
   }
 };
 
@@ -236,7 +244,7 @@ const cancelProduct = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Product not found in inventory' });
     }
 
-    // Use 'quantity' instead of 'stock' for restocking
+   
     productDoc.quantity += product.quantity;
     console.log(`Restocking product ${product.productId._id}: Increased quantity by ${product.quantity} to ${productDoc.quantity}`);
     await productDoc.save();
@@ -287,7 +295,6 @@ const cancelProduct = async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal Server Error: ' + error.message });
   }
 };
-  // Cancel Entire Order
   const cancelOrder = async (req, res) => {
     try {
       const { orderId } = req.params;
@@ -319,7 +326,7 @@ const cancelProduct = async (req, res) => {
           item.status = 'Cancelled';
           const productDoc = await Product.findById(item.productId);
           if (productDoc) {
-            productDoc.quantity += item.quantity; // Changed from stock to quantity
+            productDoc.quantity += item.quantity; 
             console.log(`Restocking product ${item.productId._id}: Increased quantity by ${item.quantity} to ${productDoc.quantity}`);
             await productDoc.save();
           }
@@ -356,7 +363,7 @@ const cancelProduct = async (req, res) => {
       res.status(500).json({ success: false, message: 'Internal Server Error: ' + error.message });
     }
   };
-const requestReturn = async (req, res) => {
+  const requestReturn = async (req, res) => {
     try {
         console.log('Request Return Controller Called:', req.body);
         const { orderId, productId, returnReason } = req.body;
@@ -371,6 +378,20 @@ const requestReturn = async (req, res) => {
         if (!product || product.status !== 'Delivered') {
             return res.status(400).json({ message: 'Product cannot be returned' });
         }
+
+        const RETURN_EXPIRY_DAYS = 7; // Define return expiry period
+        if (!product.deliveryDate) {
+            return res.status(400).json({ message: 'Delivery date not set for this product' });
+        }
+
+        const deliveryDate = new Date(product.deliveryDate);
+        const expiryDate = new Date(deliveryDate);
+        expiryDate.setDate(deliveryDate.getDate() + RETURN_EXPIRY_DAYS);
+
+        if (new Date() > expiryDate) {
+            return res.status(400).json({ message: 'Return period has expired' });
+        }
+
         product.status = 'Return Requested';
         order.timeline.push({
             title: 'Return Requested',
@@ -384,7 +405,9 @@ const requestReturn = async (req, res) => {
         console.error("Error requesting return:", error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
-};
+
+  
+  }
 
 module.exports = {
     getOrdersPage, 

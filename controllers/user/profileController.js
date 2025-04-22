@@ -261,7 +261,7 @@ const changePassword = async (req, res) => {
         console.log('Current Password Input:', currentPassword);
         console.log('Stored Password Hash:', user.password);
 
-        // Validate inputs before comparison
+        
         if (!currentPassword) {
             return res.status(400).json({ 
                 success: false, 
@@ -308,7 +308,7 @@ const changePassword = async (req, res) => {
             });
         }
 
-        // Validate new password
+     
         if (newPassword !== confirmPassword) {
             return res.status(400).json({ success: false, message: "New passwords do not match!" });
         }

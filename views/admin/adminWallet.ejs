@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 1.5rem;
+        }
+        table { 
+            font-size: 0.85rem; 
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed;
+        }
+        th, td { 
+            padding: 0.5rem 0.75rem; 
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #1e293b;
+            color: #a0aec0;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #2d3748;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .btn {
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: #3182ce;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2c5282;
+        }
+        .transaction-type {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            display: inline-block;
+            text-align: center;
+        }
+        .type-credit {
+            background-color: #9ae6b4;
+            color: #276749;
+        }
+        .type-debit {
+            background-color: #fc8181;
+            color: #9b2c2c;
+        }
+        .type-refund {
+            background-color: #90cdf4;
+            color: #2c5282;
+        }
+        .type-other {
+            background-color: #fbd38d;
+            color: #975a16;
+        }
+        .card {
+            background-color: #1e293b;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-body {
+            padding: 1rem 0;
+        }
+        .search-input {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+            color: #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            width: 15rem;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #805ad5;
+            box-shadow: 0 0 0 1px #805ad5;
+        }
+        .search-input::placeholder {
+            color: #a0aec0;
+        }
+        .pagination {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        .pagination-item {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+        .pagination-active {
+            background-color: #805ad5;
+            color: white;
+        }
+        .pagination-item:not(.pagination-active) {
+            background-color: #2d3748;
+            color: #a0aec0;
+        }
+        .pagination-item:hover:not(.pagination-active) {
+            background-color: #4a5568;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            overflow: auto;
+        }
+        .modal-content {
+            background-color: #1e293b;
+            margin: 10% auto;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: #e2e8f0;
+        }
+        .close-btn {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #a0aec0;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #e2e8f0;
+        }
+        .modal-body p {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+        .modal-body strong {
+            color: #a0aec0;
+            margin-right: 0.25rem;
+        }
+        /* Table column widths */
+        .col-id { width: 16%; }
+        .col-date { width: 14%; }
+        .col-user { width: 20%; }
+        .col-type { width: 12%; }
+        .col-amount { width: 12%; }
+        .col-actions { width: 10%; }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen"> 
+        <%- include('../partials/admin/header') %>
+    </div>
+
+    <div class="w-5/6 p-4 ml-auto main-content">
+        <div class="card mb-6">
+            <div class="card-header">
+                <h1 class="text-xl font-bold text-white">Wallet Management</h1>
+                <div class="search-section">
+                    <input type="text" placeholder="Search transactions..." class="search-input">
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="px-4">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-id">TRANSACTION ID</th>
+                                <th class="col-date">DATE</th>
+                                <th class="col-user">USER</th>
+                                <th class="col-type">TYPE</th>
+                                <th class="col-amount">AMOUNT</th>
+                                <th class="col-actions">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (transactions && transactions.length > 0) { %>
+                                <% transactions.forEach(txn => { %>
+                                    <tr data-txn-id="<%= txn.transactionId %>">
+                                        <td class="col-id text-sm font-medium"><%= txn.transactionId %></td>
+                                        <td class="col-date text-sm text-gray-400"><%= new Date(txn.date).toLocaleDateString() %></td>
+                                        <td class="col-user text-sm"><%= txn.user.name %> (<%= txn.user.email %>)</td>
+                                        <td class="col-type">
+                                            <span class="transaction-type <%= txn.type === 'credit' ? 'type-credit' : 
+                                                txn.type === 'debit' ? 'type-debit' : 
+                                                txn.type === 'refund' ? 'type-refund' : 'type-other' %>">
+                                                <%= txn.type.charAt(0).toUpperCase() + txn.type.slice(1) %>
+                                            </span>
+                                        </td>
+                                        <td class="col-amount font-medium">₹<%= txn.amount.toFixed(2) %></td>
+                                        <td class="col-actions">
+                                            <button class="btn btn-primary" onclick='showDetails(<%- JSON.stringify(txn) %>)'>
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="6" class="py-8 text-center text-gray-400">No transactions found</td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center mt-6 px-4">
+                    <span class="text-gray-400 text-xs">SHOWING PAGE <%= currentPage %> OF <%= totalPages %></span>
+                    <div class="pagination">
+                        <% if(totalPages > 0) { %>
+                            <% if(currentPage > 1) { %>
+                                <a href="?page=<%= currentPage - 1 %>" class="pagination-item">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </a>
+                            <% } %>
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                                <% if(i === currentPage) { %>
+                                    <a href="?page=<%= i %>" class="pagination-item pagination-active"><%= i %></a>
+                                <% } else if(i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) { %>
+                                    <a href="?page=<%= i %>" class="pagination-item"><%= i %></a>
+                                <% } else if(i === currentPage - 2 || i === currentPage + 2) { %>
+                                    <span class="pagination-item">...</span>
+                                <% } %>
+                            <% } %>
+                            <% if(currentPage < totalPages) { %>
+                                <a href="?page=<%= currentPage + 1 %>" class="pagination-item">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            <% } %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="text-lg font-bold mb-4">Transaction Details</h2>
+            <div class="modal-body" id="transactionDetails">
+                <p><strong>User:</strong> <span id="userDetails"></span></p>
+                <p><strong>Transaction ID:</strong> <span id="txnId"></span></p>
+                <p><strong>Date:</strong> <span id="txnDate"></span></p>
+                <p><strong>Type:</strong> <span id="txnType"></span></p>
+                <p><strong>Amount:</strong> <span id="txnAmount"></span></p>
+                <p><strong>Source:</strong> <span id="txnSource"></span></p>
+                <div id="orderLink" class="mt-4" style="display: none;">
+                    <button class="btn btn-primary" onclick="fetchOrderDetails()">View Order Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderDetailsModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close-btn" onclick="closeOrderModal()">&times;</span>
+            <h2 class="text-lg font-bold mb-4">Order Details</h2>
+            <div class="modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p><strong>Order ID:</strong> <span id="modalOrderId"></span></p>
+                        <p><strong>Order Date:</strong> <span id="modalOrderDate"></span></p>
+                        <p><strong>Created At:</strong> <span id="modalCreatedAt"></span></p>
+                        <p><strong>Last Updated:</strong> <span id="modalUpdatedAt"></span></p>
+                    </div>
+                    <div>
+                        <p><strong>Original Amount:</strong> ₹<span id="modalOriginalAmount"></span></p>
+                        <p><strong>Total Offer Discount:</strong> ₹<span id="modalOfferDiscount"></span></p>
+                        <p><strong>Coupon Discount:</strong> ₹<span id="modalCouponDiscount"></span> (<span id="modalCouponCode"></span>)</p>
+                        <p><strong>Total Amount:</strong> ₹<span id="modalTotalAmount"></span></p>
+                        <p><strong>Payment Method:</strong> <span id="modalPaymentMethod"></span></p>
+                        <p><strong>Payment Status:</strong> <span id="modalPaymentStatus"></span></p>
+                        <p><strong>Transaction ID:</strong> <span id="modalTransactionId"></span></p>
+                    </div>
+                </div>
+                
+                <h3 class="text-md font-semibold mt-4 mb-2">Products:</h3>
+                <ul id="modalProducts" class="space-y-2 mb-4">
+                    <!-- Products will be dynamically inserted here -->
+                </ul>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-md font-semibold mb-2">Shipping Details:</h3>
+                        <div id="modalShipping">
+                            <p><strong>Name:</strong> <span id="modalShippingName"></span></p>
+                            <p><strong>Phone:</strong> <span id="modalShippingPhone"></span></p>
+                            <p><strong>Address:</strong> <span id="modalShippingAddress"></span></p>
+                            <p><strong>City:</strong> <span id="modalShippingCity"></span></p>
+                            <p><strong>State:</strong> <span id="modalShippingState"></span></p>
+                            <p><strong>Country:</strong> <span id="modalShippingCountry"></span></p>
+                            <p><strong>Pincode:</strong> <span id="modalShippingPincode"></span></p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-md font-semibold mb-2">Return Status:</h3>
+                        <p><strong>Requested:</strong> <span id="modalReturnRequested"></span></p>
+                        <p><strong>Approved:</strong> <span id="modalReturnApproved"></span></p>
+                        <p><strong>Refund Status:</strong> <span id="modalRefundStatus"></span></p>
+                        
+                        <h3 class="text-md font-semibold mt-3 mb-2">Order Status:</h3>
+                        <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
+                        <p><strong>Delivery Status:</strong> <span id="modalIsDelivered"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let currentOrderId = null;
+
+        function showDetails(txn) {
+            document.getElementById('userDetails').textContent = `${txn.user.name} (${txn.user.email})`;
+            document.getElementById('txnId').textContent = txn.transactionId;
+            document.getElementById('txnDate').textContent = new Date(txn.date).toLocaleString();
+            document.getElementById('txnType').textContent = txn.type.charAt(0).toUpperCase() + txn.type.slice(1);
+            document.getElementById('txnAmount').textContent = `₹${txn.amount.toFixed(2)}`;
+            document.getElementById('txnSource').textContent = txn.description || 'Not specified';
+
+            const orderLink = document.getElementById('orderLink');
+            const isReturnOrCancel = txn.description && 
+                                    (txn.description.toLowerCase().includes('return') || 
+                                     txn.description.toLowerCase().includes('cancel'));
+            if (txn.orderId && isReturnOrCancel) {
+                currentOrderId = txn.orderId;
+                orderLink.style.display = 'block';
+            } else {
+                currentOrderId = null;
+                orderLink.style.display = 'none';
+            }
+
+            document.getElementById('transactionModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderDetailsModal').style.display = 'none';
+        }
+
+        function fetchOrderDetails() {
+    if (!currentOrderId) return;
+    window.location.href = `/admin/order/details/${currentOrderId}`;
+}
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const transactionModal = document.getElementById('transactionModal');
+            const orderDetailsModal = document.getElementById('orderDetailsModal');
+            
+            if (event.target == transactionModal) {
+                closeModal();
+            }
+            
+            if (event.target == orderDetailsModal) {
+                closeOrderModal();
+            }
+        }
+
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const transactionRows = document.querySelectorAll('tbody tr');
+                    
+                    transactionRows.forEach(row => {
+                        const txnText = row.textContent.toLowerCase();
+                        if (txnText.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

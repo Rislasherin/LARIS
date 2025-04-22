@@ -1,5 +1,6 @@
 const Wallet = require('../../models/walletSchema');
 const User = require('../../models/userSchema');
+const Order = require('../../models/orderSchema');
 const bcrypt = require('bcrypt'); 
 require('dotenv').config();
 const Razorpay = require('razorpay');
@@ -54,7 +55,7 @@ const renderWalletPage = async (req, res) => {
 
 const getMoreTransactions = async (req, res) => {
     try {
-        const userId = req.session.user._id; // Assuming session-based auth
+        const userId = req.session.user._id; 
         const skip = parseInt(req.query.skip) || 0;
         const limit = parseInt(req.query.limit) || 5;
 
@@ -64,7 +65,7 @@ const getMoreTransactions = async (req, res) => {
             return res.json({ transactions: [] });
         }
 
-        // Fetch transactions with pagination
+      
         const transactions = wallet.transactions
             .slice(skip, skip + limit)
             .map(tx => ({
@@ -146,6 +147,65 @@ const verifyPayment = async (req, res) => {
         console.error('Error verifying payment:', error);
         res.status(500).json({ success: false, error: 'Payment verification failed' });
     }
+};const processReturnAndCreditWallet = async (req, res) => {
+    try {
+        const orderId = req.params.orderId; // Assuming orderId is passed via URL
+        const userId = req.session.user._id; // Admin user ID (or customer ID if self-initiated)
+
+        // Find the order
+        const order = await Order.findById(orderId)
+            .populate('user', 'name email')
+            .populate('address');
+
+        if (!order) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+
+        // Check if the order meets the criteria
+        if (order.paymentMethod !== 'cod' || order.status !== 'Returned' || !order.history.some(h => h.status === 'Delivered')) {
+            return res.status(400).json({ success: false, error: 'Invalid return request: Must be COD, Delivered, and Returned' });
+        }
+
+        // Find or create the user's wallet
+        let wallet = await Wallet.findOne({ user: order.user });
+        if (!wallet) {
+            wallet = new Wallet({
+                user: order.user,
+                currency: 'INR'
+            });
+        }
+
+        // Credit the wallet with the final amount
+        const refundAmount = order.finalAmount;
+        wallet.balance += refundAmount;
+        wallet.transactions.push({
+            type: 'credit',
+            amount: refundAmount,
+            description: 'Refund from returned COD order',
+            date: new Date(),
+            orderId: order._id
+        });
+
+        // Update order history to reflect return acceptance
+        order.history.push({
+            status: 'Returned',
+            timestamp: new Date(),
+            notes: 'Return accepted by admin, amount credited to wallet',
+            updatedBy: userId
+        });
+        order.refundStatus = 'Processed';
+
+        // Save changes
+        await wallet.save();
+        await order.save();
+
+        // Optional: Send notification to user
+        req.flash('success', 'Return accepted and amount credited to wallet');
+        res.json({ success: true, message: 'Return processed and wallet updated' });
+    } catch (error) {
+        console.error('Error processing return and crediting wallet:', error);
+        res.status(500).json({ success: false, error: 'Failed to process return' });
+    }
 };
 
 module.exports = {
@@ -153,6 +213,7 @@ module.exports = {
     getMoreTransactions,
     addCashToWallet,
     verifyPayment,
+    processReturnAndCreditWallet
 }
 
 

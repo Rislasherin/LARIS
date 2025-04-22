@@ -162,7 +162,6 @@ const signUp = async (req, res) => {
             return res.status(409).json({ msg: "Email already exists", type: "email" });
         }
 
-        // Validate referral code if provided
         let referredBy = null;
         if (referralCode) {
             const referrer = await User.findOne({ referralCode });
@@ -179,7 +178,6 @@ const signUp = async (req, res) => {
             return res.status(401).json({ msg: "Signup failed due to email error", type: 'toast' });
         }
 
-        // Store referral code in session for use after OTP verification
         req.session.userOtp = otp;
         req.session.userData = { name, phone, email, password, referredBy };
 
@@ -236,21 +234,21 @@ const verifyOtp = async (req, res) => {
 
             await newUser.save();
 
-            // Assign unique referral code
+          
             await assignUniqueReferralCode(newUser._id);
 
-            // Create wallet for the new user
+         
             let wallet = await Wallet.findOne({ user: newUser._id });
             if (!wallet) {
                 wallet = new Wallet({
                     user: newUser._id,
                     currency: 'INR',
-                    balance: userData.referredBy ? 50 : 0 // ₹50 for referred user
+                    balance: userData.referredBy ? 50 : 0 
                 });
                 await wallet.save();
 
                 if (userData.referredBy) {
-                    // Credit ₹50 to referred user's wallet
+                    
                     wallet.transactions.push({
                         type: 'credit',
                         amount: 50,
@@ -259,7 +257,6 @@ const verifyOtp = async (req, res) => {
                     });
                     await wallet.save();
 
-                    // Credit ₹200 to referrer's wallet
                     const referrer = await User.findOne({ referralCode: userData.referredBy });
                     if (referrer) {
                         const referrerWallet = await Wallet.findOne({ user: referrer._id });
@@ -273,7 +270,7 @@ const verifyOtp = async (req, res) => {
                             });
                             await referrerWallet.save();
                         } else {
-                            // Create wallet for referrer if it doesn't exist
+                        
                             const newReferrerWallet = new Wallet({
                                 user: referrer._id,
                                 currency: 'INR',
@@ -297,7 +294,6 @@ const verifyOtp = async (req, res) => {
                 name: newUser.name
             };
 
-            // Clear session data
             req.session.userOtp = null;
             req.session.userData = null;
 
@@ -433,172 +429,206 @@ const logout = async (req, res) => {
 };
 const loadShopPage = async (req, res) => {
     try {
-      const user = req.session.user;
-      const userData = user ? await User.findOne({ _id: user._id }) : null;
-  
-      const categories = await category.find({ isListed: true });
-      const categoryIds = categories.map(cat => cat._id.toString());
-  
-      const page = parseInt(req.query.page) || 1;
-      const limit = 9;
-      const skip = (page - 1) * limit;
-  
-      const query = {
-        status: "Available",
-        quantity: { $gt: 0 }
-      };
-  
-      const selectedCategoryName = req.query.category;
-      let selectedCategoryId = null;
-      if (selectedCategoryName) {
-        const selectedCategory = await category.findOne({ 
-          name: { $regex: new RegExp(`^${selectedCategoryName}$`, 'i') }, 
-          isListed: true 
-        });
-        if (selectedCategory) {
-          selectedCategoryId = selectedCategory._id.toString();
-          query.category = selectedCategoryId;
-        } else {
-          query.category = null; // No matches for invalid category
-        }
-      } else {
-        query.category = { $in: categoryIds };
-      }
-  
-      const searchQuery = req.query.query?.trim();
-      if (searchQuery) {
-        const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        query.$or = [
-          { productName: { $regex: escapedQuery, $options: 'i' } },
-          { description: { $regex: escapedQuery, $options: 'i' } }
-        ];
-      }
-  
-      const selectedSkinType = req.query.skinType;
-      if (selectedSkinType && selectedSkinType !== '') {
-        query.skintype = selectedSkinType;
-      }
-  
-      const selectedSkinConcern = req.query.skinConcern;
-      if (selectedSkinConcern && selectedSkinConcern !== '') {
-        query.skinConcern = selectedSkinConcern;
-      }
-  
-      const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
-      const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
-      if (minPrice || maxPrice) {
-        query.salePrice = {};
-        if (minPrice) query.salePrice.$gte = minPrice;
-        if (maxPrice) query.salePrice.$lte = maxPrice;
-      }
-  
-      let sortOption = {};
-      switch (req.query.sort) {
-        case 'price-low':
-          sortOption = { salePrice: 1 };
-          break;
-        case 'price-high':
-          sortOption = { salePrice: -1 };
-          break;
-        case 'popular':
-          sortOption = { salesCount: -1 };
-          break;
-        default:
-          sortOption = { createdAt: -1 };
-      }
-  
-      const totalProducts = await product.countDocuments(query);
-      const products = await product
-        .find(query)
-        .populate('category')
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limit);
-  
-      // Add wishlist status
-      if (userData && userData.wishlist) {
-        products.forEach(prod => {
-          prod.inWishlist = userData.wishlist.some(id => id.toString() === prod._id.toString());
-        });
-      } else {
-        products.forEach(prod => {
-          prod.inWishlist = false;
-        });
-      }
-  
-      // Offer logic
-      products.forEach(product => {
-        let effectivePrice = product.regularPrice;
-        let discountPercent = null;
-  
-        if (product.productOffer && product.productOffer > 0) {
-          discountPercent = product.productOffer;
-          effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
-        } else if (product.category?.categoryOffer > 0) {
-          discountPercent = product.category.categoryOffer;
-          effectivePrice = Math.floor(product.regularPrice * (1 - discountPercent / 100));
-        }
-  
-        product.effectivePrice = effectivePrice;
-        product.discountPercent = discountPercent;
-      });
-  
-      const totalPages = Math.ceil(totalProducts / limit);
-  
-      const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
-        const count = await product.countDocuments({
-          category: cat._id,
-          status: 'Available',
-          quantity: { $gt: 0 }
-        });
-        return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
-      }));
-  
-      const cart = user ? await Cart.findOne({ user: user._id }) : null;
-      const cartCount = cart ? cart.items.length : 0;
-      const wishlistCount = userData && userData.wishlist ? userData.wishlist.length : 0;
-  
-      // Save search history
-      if (userData && searchQuery) {
-        userData.searchHistory = userData.searchHistory || [];
-        userData.searchHistory.push({
-          query: searchQuery,
-          category: selectedCategoryId || null,
-          skinType: selectedSkinType || null,
-          skinConcern: selectedSkinConcern || null,
-          searchedOn: new Date()
-        });
-        await userData.save();
-      }
-  
-      res.render("shop", {
-        user: userData,
-        products,
-        category: categoriesWithCounts,
-        totalProducts,
-        currentPage: page,
-        totalPages,
-        selectedCategoryId,
-        selectedSkinType,
-        selectedSkinConcern,
-        minPrice,
-        maxPrice,
-        sortBy: req.query.sort || 'newest',
-        searchQuery: searchQuery || '',
-        cartCount,
-        wishlistCount
-      });
-    } catch (error) {
-      console.error("Error loading shop page:", error);
-      res.status(500).render("error", { message: "Server Error" });
-    }
-  };
-const filterProduct = async (req, res) => {
-    try {
         const user = req.session.user;
-        const userData = user ? await User.findOne({ _id: user }) : null;
+        const userData = user ? await User.findOne({ _id: user._id }) : null;
 
         const categories = await category.find({ isListed: true });
+        const categoryIds = categories.map(cat => cat._id.toString());
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9;
+        const skip = (page - 1) * limit;
+
+        const query = {
+            status: "Available",
+            quantity: { $gt: 0 }
+        };
+
+        const selectedCategoryName = req.query.category;
+        let selectedCategoryId = null;
+        if (selectedCategoryName) {
+            const selectedCategory = await category.findOne({
+                name: { $regex: new RegExp(`^${selectedCategoryName}$`, 'i') },
+                isListed: true
+            });
+            if (selectedCategory) {
+                selectedCategoryId = selectedCategory._id.toString();
+                query.category = selectedCategory._id;
+            }
+        }
+
+        const searchQuery = req.query.query?.trim();
+        if (searchQuery) {
+            const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+            query.$or = [
+                { productName: { $regex: escapedQuery, $options: 'i' } },
+                { description: { $regex: escapedQuery, $options: 'i' } }
+            ];
+        }
+
+        const selectedSkinType = req.query.skinType;
+        if (selectedSkinType && selectedSkinType !== '') {
+            query.skintype = { $in: [selectedSkinType, 'All Types', null, ''] };
+        }
+
+        const selectedSkinConcern = req.query.skinConcern;
+        if (selectedSkinConcern && selectedSkinConcern !== '') {
+            query.skinConcern = { $in: [selectedSkinConcern, 'All Concerns', null, []] };
+        }
+
+        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+
+      
+        const pipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'categoryData'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$categoryData',
+                    preserveNullAndEmptyArrays: true 
+                }
+            },
+            {
+                $addFields: {
+                    effectivePrice: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: {
+                                $multiply: [
+                                    '$regularPrice',
+                                    { $subtract: [1, { $divide: ['$productOffer', 100] }] }
+                                ]
+                            },
+                            else: {
+                                $cond: {
+                                    if: { $gt: [{ $ifNull: ['$categoryData.categoryOffer', 0] }, 0] },
+                                    then: {
+                                        $multiply: [
+                                            '$regularPrice',
+                                            { $subtract: [1, { $divide: ['$categoryData.categoryOffer', 100] }] }
+                                        ]
+                                    },
+                                    else: '$regularPrice'
+                                }
+                            }
+                        }
+                    },
+                    discountPercent: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: '$productOffer',
+                            else: { $ifNull: ['$categoryData.categoryOffer', null] }
+                        }
+                    }
+                }
+            }
+        ];
+
+        if (minPrice || maxPrice) {
+            const priceMatch = {};
+            if (minPrice) priceMatch.$gte = minPrice;
+            if (maxPrice) priceMatch.$lte = maxPrice;
+            pipeline.push({
+                $match: { effectivePrice: priceMatch }
+            });
+        }
+
+    
+        let sortOption = {};
+        switch (req.query.sort) {
+            case 'price-low':
+                sortOption = { effectivePrice: 1 };
+                break;
+            case 'price-high':
+                sortOption = { effectivePrice: -1 };
+                break;
+            case 'popular':
+                sortOption = { salesCount: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+        pipeline.push({ $sort: sortOption });
+
+      
+        pipeline.push({ $skip: skip }, { $limit: limit });
+
+     
+        let products = await product.aggregate(pipeline);
+
+      
+        products = products.map(product => {
+            product.effectivePrice = Math.floor(product.effectivePrice);
+            product.category = product.categoryData || null;
+            product.inWishlist = userData?.wishlist?.some(id => id.toString() === product._id.toString()) || false;
+            return product;
+        });
+
+       
+        const countPipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'categoryData'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$categoryData',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    effectivePrice: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: {
+                                $multiply: [
+                                    '$regularPrice',
+                                    { $subtract: [1, { $divide: ['$productOffer', 100] }] }
+                                ]
+                            },
+                            else: {
+                                $cond: {
+                                    if: { $gt: [{ $ifNull: ['$categoryData.categoryOffer', 0] }, 0] },
+                                    then: {
+                                        $multiply: [
+                                            '$regularPrice',
+                                            { $subtract: [1, { $divide: ['$categoryData.categoryOffer', 100] }] }
+                                        ]
+                                    },
+                                    else: '$regularPrice'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ];
+        if (minPrice || maxPrice) {
+            const priceMatch = {};
+            if (minPrice) priceMatch.$gte = minPrice;
+            if (maxPrice) priceMatch.$lte = maxPrice;
+            countPipeline.push({
+                $match: { effectivePrice: priceMatch }
+            });
+        }
+        const totalProductsResult = await product.aggregate([...countPipeline, { $count: 'total' }]);
+        const totalProducts = totalProductsResult[0]?.total || 0;
+        const totalPages = Math.ceil(totalProducts / limit);
+
         const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
             const count = await product.countDocuments({
                 category: cat._id,
@@ -608,88 +638,27 @@ const filterProduct = async (req, res) => {
             return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
         }));
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = 9;
-        const skip = (page - 1) * limit;
+        const cart = user ? await Cart.findOne({ user: user._id }) : null;
+        const cartCount = cart ? cart.items.length : 0;
+        const wishlistCount = userData?.wishlist?.length || 0;
 
-        const query = {
-            status: 'Available',
-            quantity: { $gt: 0 },
-            $and: []
-        };
-
-        const selectedCategoryId = req.query.category || null;
-        if (selectedCategoryId) {
-            query.category = selectedCategoryId;
-        }
-
-
-        if (req.query.query) {
-            const searchQuery = req.query.query.trim();
-            if (searchQuery) {
-                query.$text = { $search: searchQuery };
-            }
-        }
-
-
-        const selectedSkinType = req.query.skinType || null;
-        if (selectedSkinType && selectedSkinType !== '') {
-            query.$and.push({
-                $or: [
-                    { skintype: selectedSkinType },
-                    { skintype: "All Types" },
-                    { skintype: { $exists: false } },
-                    { skintype: null },
-                    { skintype: "" }
-                ]
-            });
-        }
-        const selectedSkinConcern = req.query.skinConcern || null;
-        if (selectedSkinConcern && selectedSkinConcern !== '') {
-            query.$and.push({
-                $or: [
-                    { skinConcern: { $in: [selectedSkinConcern] } },
-                    { skinConcern: { $in: ["All Concerns"] } },
-                    { skinConcern: { $exists: false } },
-                    { skinConcern: null },
-                    { skinConcern: [] }
-                ]
-            });
-        }
-        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
-        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
-        if (minPrice || maxPrice) {
-            query.salePrice = {};
-            if (minPrice) query.salePrice.$gte = minPrice;
-            if (maxPrice) query.salePrice.$lte = maxPrice;
-        }
-
-        console.log("Filter query:", JSON.stringify(query, null, 2));
-
-
-        const products = await product.find(query)
-            .skip(skip)
-            .limit(limit);
-
-        const totalProducts = await product.countDocuments(query);
-        const totalPages = Math.ceil(totalProducts / limit);
-
-        if (userData && (selectedCategoryId || req.query.query || selectedSkinType || selectedSkinConcern)) {
-            const searchEntry = {
-                category: selectedCategoryId || null,
-                searchedOn: new Date(),
-                query: req.query.query || null,
-                skinType: selectedSkinType || null,
-                skinConcern: selectedSkinConcern || null
-            };
+        // Save search history
+        if (userData && (searchQuery || selectedCategoryId || selectedSkinType || selectedSkinConcern)) {
             userData.searchHistory = userData.searchHistory || [];
-            userData.searchHistory.push(searchEntry);
+            userData.searchHistory.push({
+                query: searchQuery || null,
+                category: selectedCategoryId || null,
+                skinType: selectedSkinType || null,
+                skinConcern: selectedSkinConcern || null,
+                searchedOn: new Date()
+            });
+            userData.searchHistory = userData.searchHistory.slice(0, 10);
             await userData.save();
         }
 
         res.render("shop", {
             user: userData,
-            products: products,
+            products,
             category: categoriesWithCounts,
             totalProducts,
             currentPage: page,
@@ -699,15 +668,264 @@ const filterProduct = async (req, res) => {
             selectedSkinConcern,
             minPrice,
             maxPrice,
-            searchQuery: req.query.query || ''
+            sortBy: req.query.sort || 'newest',
+            searchQuery: searchQuery || '',
+            cartCount,
+            wishlistCount
+        });
+    } catch (error) {
+        console.error("Error loading shop page:", error);
+        res.status(500).render("error", { message: "Server Error" });
+    }
+};
+const filterProduct = async (req, res) => {
+    try {
+        const user = req.session.user;
+        const userData = user ? await User.findOne({ _id: user._id }) : null;
+
+        const categories = await category.find({ isListed: true });
+        const categoryIds = categories.map(cat => cat._id.toString());
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = 9;
+        const skip = (page - 1) * limit;
+
+        const query = {
+            status: 'Available',
+            quantity: { $gt: 0 }
+        };
+
+        const selectedCategoryName = req.query.category;
+        let selectedCategoryId = null;
+        if (selectedCategoryName) {
+            const selectedCategory = await category.findOne({
+                name: { $regex: new RegExp(`^${selectedCategoryName}$`, 'i') },
+                isListed: true
+            });
+            if (selectedCategory) {
+                selectedCategoryId = selectedCategory._id.toString();
+                query.category = selectedCategory._id;
+            }
+        }
+
+        const searchQuery = req.query.query?.trim();
+        if (searchQuery) {
+            const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+            query.$or = [
+                { productName: { $regex: escapedQuery, $options: 'i' } },
+                { description: { $regex: escapedQuery, $options: 'i' } }
+            ];
+        }
+
+        const selectedSkinType = req.query.skinType;
+        if (selectedSkinType && selectedSkinType !== '') {
+            query.skintype = { $in: [selectedSkinType, 'All Types', null, ''] };
+        }
+
+        const selectedSkinConcern = req.query.skinConcern;
+        if (selectedSkinConcern && selectedSkinConcern !== '') {
+            query.skinConcern = { $in: [selectedSkinConcern, 'All Concerns', null, []] };
+        }
+
+        const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+
+        const pipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'categoryData'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$categoryData',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    effectivePrice: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: {
+                                $multiply: [
+                                    '$regularPrice',
+                                    { $subtract: [1, { $divide: ['$productOffer', 100] }] }
+                                ]
+                            },
+                            else: {
+                                $cond: {
+                                    if: { $gt: [{ $ifNull: ['$categoryData.categoryOffer', 0] }, 0] },
+                                    then: {
+                                        $multiply: [
+                                            '$regularPrice',
+                                            { $subtract: [1, { $divide: ['$categoryData.categoryOffer', 100] }] }
+                                        ]
+                                    },
+                                    else: '$regularPrice'
+                                }
+                            }
+                        }
+                    },
+                    discountPercent: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: '$productOffer',
+                            else: { $ifNull: ['$categoryData.categoryOffer', null] }
+                        }
+                    }
+                }
+            }
+        ];
+
+      
+        if (minPrice || maxPrice) {
+            const priceMatch = {};
+            if (minPrice) priceMatch.$gte = minPrice;
+            if (maxPrice) priceMatch.$lte = maxPrice;
+            pipeline.push({
+                $match: { effectivePrice: priceMatch }
+            });
+        }
+
+        let sortOption = {};
+        switch (req.query.sort) {
+            case 'price-low':
+                sortOption = { effectivePrice: 1 };
+                break;
+            case 'price-high':
+                sortOption = { effectivePrice: -1 };
+                break;
+            case 'popular':
+                sortOption = { salesCount: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 };
+        }
+        pipeline.push({ $sort: sortOption });
+
+  
+        pipeline.push({ $skip: skip }, { $limit: limit });
+
+        let products = await product.aggregate(pipeline);
+
+        products = products.map(product => {
+            product.effectivePrice = Math.floor(product.effectivePrice);
+            product.category = product.categoryData || null;
+            product.inWishlist = userData?.wishlist?.some(id => id.toString() === product._id.toString()) || false;
+            return product;
         });
 
+  
+        const countPipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'categoryData'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$categoryData',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    effectivePrice: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
+                            then: {
+                                $multiply: [
+                                    '$regularPrice',
+                                    { $subtract: [1, { $divide: ['$productOffer', 100] }] }
+                                ]
+                            },
+                            else: {
+                                $cond: {
+                                    if: { $gt: [{ $ifNull: ['$categoryData.categoryOffer', 0] }, 0] },
+                                    then: {
+                                        $multiply: [
+                                            '$regularPrice',
+                                            { $subtract: [1, { $divide: ['$categoryData.categoryOffer', 100] }] }
+                                        ]
+                                    },
+                                    else: '$regularPrice'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ];
+        if (minPrice || maxPrice) {
+            const priceMatch = {};
+            if (minPrice) priceMatch.$gte = minPrice;
+            if (maxPrice) priceMatch.$lte = maxPrice;
+            countPipeline.push({
+                $match: { effectivePrice: priceMatch }
+            });
+        }
+        const totalProductsResult = await product.aggregate([...countPipeline, { $count: 'total' }]);
+        const totalProducts = totalProductsResult[0]?.total || 0;
+        const totalPages = Math.ceil(totalProducts / limit);
+
+        const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
+            const count = await product.countDocuments({
+                category: cat._id,
+                status: 'Available',
+                quantity: { $gt: 0 }
+            });
+            return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
+        }));
+
+        const cart = user ? await Cart.findOne({ user: user._id }) : null;
+        const cartCount = cart ? cart.items.length : 0;
+        const wishlistCount = userData?.wishlist?.length || 0;
+
+      
+        if (userData && (searchQuery || selectedCategoryId || selectedSkinType || selectedSkinConcern)) {
+            userData.searchHistory = userData.searchHistory || [];
+            userData.searchHistory.push({
+                query: searchQuery || null,
+                category: selectedCategoryId || null,
+                skinType: selectedSkinType || null,
+                skinConcern: selectedSkinConcern || null,
+                searchedOn: new Date()
+            });
+            userData.searchHistory = userData.searchHistory.slice(0, 10);
+            await userData.save();
+        }
+
+        res.render("shop", {
+            user: userData,
+            products,
+            category: categoriesWithCounts,
+            totalProducts,
+            currentPage: page,
+            totalPages,
+            selectedCategoryId,
+            selectedSkinType,
+            selectedSkinConcern,
+            minPrice,
+            maxPrice,
+            sortBy: req.query.sort || 'newest',
+            searchQuery: searchQuery || '',
+            cartCount,
+            wishlistCount
+        });
     } catch (error) {
         console.error("Error while filtering products:", error);
         res.redirect("/pageNotFound");
     }
 };
-
 
 // Get recent searches
 const getSearchHistory = async (req, res) => {
@@ -719,9 +937,9 @@ const getSearchHistory = async (req, res) => {
   
       const user = await User.findById(userId, 'searchHistory');
       const searches = user.searchHistory
-        .filter(s => s.query) // Only include non-empty queries
-        .sort((a, b) => b.searchedOn - a.searchedOn) // Newest first
-        .slice(0, 5); // Limit to 5
+        .filter(s => s.query) 
+        .sort((a, b) => b.searchedOn - a.searchedOn) 
+        .slice(0, 5); 
   
       res.json({ success: true, searches });
     } catch (error) {
@@ -745,11 +963,11 @@ const getSearchHistory = async (req, res) => {
   
       const user = await User.findById(userId);
       user.searchHistory = user.searchHistory || [];
-      // Remove duplicate query
+    
       user.searchHistory = user.searchHistory.filter(s => s.query !== query);
-      // Add new search
+    
       user.searchHistory.unshift({ query, searchedOn: new Date() });
-      // Limit to 10 (keep extra for server, frontend limits to 5)
+    
       user.searchHistory = user.searchHistory.slice(0, 10);
       await user.save();
   
@@ -760,7 +978,7 @@ const getSearchHistory = async (req, res) => {
     }
   };
   
-  // Delete search
+
   const deleteSearch = async (req, res) => {
     try {
       const userId = req.session.user?._id;
@@ -785,7 +1003,6 @@ const getSearchHistory = async (req, res) => {
     }
   };
   
-  // Clear all searches
   const clearSearchHistory = async (req, res) => {
     try {
       const userId = req.session.user?._id;

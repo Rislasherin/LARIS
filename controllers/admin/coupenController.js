@@ -8,7 +8,7 @@ exports.getCouponManagePage = async (req, res) => {
         const limit = 3; 
         const skip = (page - 1) * limit;
 
-        // Add search functionality
+    
         let query = {};
         if (req.query.search) {
             query.code = { $regex: new RegExp(req.query.search, 'i') };

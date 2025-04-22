@@ -20,7 +20,7 @@ const getSalesReport = async (req, res) => {
       inventoryFilter = "all",
     } = req.query;
 
-    // Date Filter Logic
+
     let dateFilter = {};
     let compareFilter = {};
     const today = new Date();
@@ -99,7 +99,6 @@ const getSalesReport = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    // Fetch Delivered Orders for Summary Stats
     const deliveredOrders = await Order.find({
       ...dateFilter,
       status: "Delivered",
@@ -111,7 +110,7 @@ const getSalesReport = async (req, res) => {
 
     const totalDeliveredOrders = deliveredOrders.length;
 
-    // Fetch Orders for Detailed Table with Status Filter
+
     let orderQuery = { ...dateFilter };
     if (orderStatus !== "all") {
       orderQuery.status = orderStatus;
@@ -126,13 +125,13 @@ const getSalesReport = async (req, res) => {
       .lean();
     console.log("Filtered Orders Count:", filteredOrders.length);
 
-    // Total orders for pagination (filtered by status)
+  
     const totalOrders = await Order.countDocuments(orderQuery).catch((err) => {
       console.error("Error counting orders:", err);
       return 0;
     });
 
-    // Aggregation for Top Products (Delivered Orders Only)
+ 
     const topProductsAggregation = await Order.aggregate([
       { $match: { ...dateFilter, status: "Delivered" } },
       { $unwind: "$orderItems" },
@@ -185,7 +184,7 @@ const getSalesReport = async (req, res) => {
       return [];
     });
 
-    // Aggregation for Top Categories (Delivered Orders Only)
+  
     const topCategoriesAggregation = await Order.aggregate([
       { $match: { ...dateFilter, status: "Delivered" } },
       { $unwind: "$orderItems" },
@@ -232,7 +231,7 @@ const getSalesReport = async (req, res) => {
       return [];
     });
 
-    // Aggregation for Product Inventory Status
+
     let inventoryMatch = {};
     if (inventoryFilter === "outOfStock") {
       inventoryMatch = { quantity: 0 };
@@ -289,7 +288,6 @@ const getSalesReport = async (req, res) => {
       salesCount: product.salesCount || 0,
     }));
 
-    // Total inventory items for pagination (filtered)
     const totalInventoryItems = await Product.countDocuments(
       inventoryMatch
     ).catch((err) => {
@@ -297,7 +295,7 @@ const getSalesReport = async (req, res) => {
       return 0;
     });
 
-    // Fetch Comparison Data for Delivered Orders Only
+ 
     let compareData = null;
     if (compareWith !== "none") {
       const compareOrders = await Order.find({
@@ -323,7 +321,7 @@ const getSalesReport = async (req, res) => {
       };
     }
 
-    // Prepare Report Data
+
     const reportData = {
       totalOrders: totalDeliveredOrders,
       totalAmount: deliveredOrders.reduce(
@@ -375,7 +373,7 @@ const getSalesReport = async (req, res) => {
       compareData,
     };
 
-    // Analytics Chart Data Aggregations for Delivered Orders
+  
     let salesChartData = { labels: [], sales: [], orders: [] };
     try {
       const salesChartAggregation = await Order.aggregate([
@@ -489,7 +487,7 @@ const getSalesReport = async (req, res) => {
       console.error("Outer Error in trendChartAggregation:", aggError);
     }
 
-    // Add analytics data to report
+
     reportData.salesChartData = salesChartData;
     reportData.categoriesChartData = categoriesChartData;
     reportData.trendChartData = trendChartData;
@@ -523,7 +521,7 @@ const downloadSalesReportPDF = async (req, res) => {
       orderStatus = "all",
     } = req.query;
 
-    // Add this helper function
+
     const truncateText = (text, maxLength) => {
       if (!text) return "";
       return text.length > maxLength
@@ -531,7 +529,7 @@ const downloadSalesReportPDF = async (req, res) => {
         : text;
     };
 
-    // Date Filter Logic
+
     let dateFilter = {};
     let compareFilter = {};
     const today = new Date();
@@ -547,7 +545,7 @@ const downloadSalesReportPDF = async (req, res) => {
       };
     };
 
-    // Your existing date filter code...
+ 
     if (quickSelect === "custom" && startDate && endDate) {
       dateFilter = setDateRange(startDate, endDate);
     } else {
@@ -578,7 +576,6 @@ const downloadSalesReportPDF = async (req, res) => {
       }
     }
 
-    // Comparison Filter - same as your existing code
     if (compareWith !== "none") {
       const start = new Date(dateFilter.createdAt.$gte);
       const end = new Date(dateFilter.createdAt.$lte);
@@ -596,7 +593,7 @@ const downloadSalesReportPDF = async (req, res) => {
       }
     }
 
-    // Fetch orders - same as your existing code
+
     const deliveredOrders = await Order.find({
       ...dateFilter,
       status: "Delivered",
@@ -617,7 +614,7 @@ const downloadSalesReportPDF = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Your existing code for top products and inventory data...
+
     const topProductsAggregation = await Order.aggregate([
       { $match: { ...dateFilter, status: "Delivered" } },
       { $unwind: "$orderItems" },
@@ -670,7 +667,7 @@ const downloadSalesReportPDF = async (req, res) => {
       return [];
     });
 
-    // Comparison Data - same as your existing code
+
     let compareData = null;
     if (compareWith !== "none") {
       const compareOrders = await Order.find({
@@ -702,9 +699,7 @@ const downloadSalesReportPDF = async (req, res) => {
       };
     }
 
-    // In the downloadSalesReportPDF function, replace the table generation code:
 
-    // Create PDF - better settings for layout
     const doc = new PDFDocument({
       margin: 50,
       size: "A4",
@@ -721,18 +716,18 @@ const downloadSalesReportPDF = async (req, res) => {
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Helper function to format currency
+
     const formatCurrency = (value) => {
       return parseFloat(value || 0).toFixed(2);
     };
 
-    // Add page numbering
+
     let pageNumber = 1;
     doc.on("pageAdded", () => {
       pageNumber++;
     });
 
-    // PDF Header
+   
     doc
       .fontSize(20)
       .font("Helvetica-Bold")
@@ -760,7 +755,7 @@ const downloadSalesReportPDF = async (req, res) => {
     }
     doc.moveDown(2);
 
-    // Summary Stats - Same as your existing code
+ 
     const totalSales = deliveredOrders
       .reduce((sum, order) => sum + (order.finalAmount || 0), 0)
       .toFixed(2);
@@ -781,7 +776,7 @@ const downloadSalesReportPDF = async (req, res) => {
       .reduce((sum, o) => sum + (o.couponDiscount || 0), 0)
       .toFixed(2);
 
-    // Draw summary section - similar to your existing code
+  
     doc
       .fontSize(14)
       .font("Helvetica-Bold")
@@ -812,7 +807,7 @@ const downloadSalesReportPDF = async (req, res) => {
       doc.text(row[3]);
     });
 
-    // Comparison Stats - same as your existing code
+  
     if (compareData) {
       doc.moveDown(1.5);
       doc
@@ -915,7 +910,7 @@ const downloadSalesReportPDF = async (req, res) => {
 
     doc.moveDown(1.5);
 
-// IMPROVED ORDERS TABLE SECTION
+
 doc
   .fontSize(14)
   .font("Helvetica-Bold")
@@ -927,12 +922,12 @@ doc
   );
 doc.moveDown(0.5);
 
-// Define table layout
+
 const tableTop = doc.y;
 const tableLeft = 50;
-const pageWidth = doc.page.width - 100; // 50pt margins on both sides
+const pageWidth = doc.page.width - 100;
 
-// Define columns with proper widths and alignment
+
 const columns = [
   { header: "Order ID", width: pageWidth * 0.1, align: "left" },
   { header: "Date", width: pageWidth * 0.12, align: "left" },
@@ -945,25 +940,25 @@ const columns = [
   { header: "Status", width: pageWidth * 0.09, align: "center" },
 ];
 
-// Function to draw table headers
+
 const drawTableHeaders = () => {
   const headerY = doc.y;
   const rowHeight = 25;
 
-  // Draw header row background
+
   doc
     .fillColor("#e0e0e0")
     .rect(tableLeft, headerY, pageWidth, rowHeight)
     .fill();
 
-  // Add borders for header
+
   doc
     .lineWidth(0.5)
     .strokeColor("#aaaaaa")
     .rect(tableLeft, headerY, pageWidth, rowHeight)
     .stroke();
 
-  // Draw header text
+
   let currentX = tableLeft;
   doc.fillColor("#000000").fontSize(10).font("Helvetica-Bold");
 
@@ -980,23 +975,22 @@ const drawTableHeaders = () => {
   doc.y = headerY + rowHeight;
 };
 
-// Draw initial headers
+
 drawTableHeaders();
 
 let currentY = doc.y;
 let isGray = false;
 const rowHeight = 25;
 
-// Draw data rows
+
 for (let i = 0; i < Math.min(orders.length, 100); i++) {
   const order = orders[i];
 
-  // Check if we need a new page (leave room for header and at least one row)
   if (currentY + rowHeight * 2 > doc.page.height - 80) {
     doc.addPage();
     currentY = 50;
 
-    // Add title to new page
+
     doc
       .fontSize(12)
       .font("Helvetica-Bold")
@@ -1004,13 +998,12 @@ for (let i = 0; i < Math.min(orders.length, 100); i++) {
     doc.moveDown(0.5);
     currentY = doc.y;
 
-    // Redraw headers on new page
     drawTableHeaders();
     currentY = doc.y;
     isGray = false;
   }
 
-  // Draw row background with alternating colors
+ 
   if (isGray) {
     doc
       .fillColor("#f5f5f5")
@@ -1019,7 +1012,7 @@ for (let i = 0; i < Math.min(orders.length, 100); i++) {
   }
   isGray = !isGray;
 
-  // Add light borders for each row
+
   doc
     .lineWidth(0.3)
     .strokeColor("#dddddd")
@@ -1028,7 +1021,7 @@ for (let i = 0; i < Math.min(orders.length, 100); i++) {
 
   doc.fillColor("#000000").font("Helvetica").fontSize(9);
 
-  // Format order data
+  
   const orderData = [
     truncateText(`#${order.orderID || "N/A"}`, 12),
     new Date(order.createdAt).toLocaleDateString("en-US", {
@@ -1057,7 +1050,7 @@ for (let i = 0; i < Math.min(orders.length, 100); i++) {
     truncateText(order.status || "Unknown", 10),
   ];
 
-  // Draw row data with proper alignment
+
   let currentX = tableLeft;
   columns.forEach((column, index) => {
     doc.text(
@@ -1080,7 +1073,6 @@ if (orders.length === 0) {
   );
 }
 
-// Add page numbers and footers after all content is drawn
 const totalPages = doc.bufferedPageRange().count;
 for (let i = 0; i < totalPages; i++) {
   doc.switchToPage(i);
@@ -1125,7 +1117,7 @@ const downloadSalesReportExcel = async (req, res) => {
       orderStatus = "all",
     } = req.query;
 
-    // Reuse date filter logic
+  
     let dateFilter = {};
     const today = new Date();
     today.setHours(23, 59, 59, 999);
@@ -1170,7 +1162,7 @@ const downloadSalesReportExcel = async (req, res) => {
       }
     }
 
-    // Fetch orders with applied filters
+ 
     let query = { ...dateFilter };
     if (orderStatus !== "all") {
       query.status = orderStatus;
@@ -1181,7 +1173,6 @@ const downloadSalesReportExcel = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Fetch delivered orders for summary stats
     const deliveredOrders = await Order.find({
       ...dateFilter,
       status: "Delivered",
@@ -1191,7 +1182,6 @@ const downloadSalesReportExcel = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Calculate summary statistics
     const totalSales = deliveredOrders
       .reduce((sum, order) => sum + (order.finalAmount || 0), 0)
       .toFixed(2);
@@ -1208,11 +1198,11 @@ const downloadSalesReportExcel = async (req, res) => {
         ? (totalSales / deliveredOrdersCount).toFixed(2)
         : "0.00";
 
-    // Create Excel Workbook
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sales Report");
 
-    // Add Summary Section
+
     worksheet.addRow([]);
     worksheet.addRow(["Summary (Delivered Orders)"]);
     worksheet.addRow(["Metric", "Value"]);
@@ -1221,7 +1211,7 @@ const downloadSalesReportExcel = async (req, res) => {
     worksheet.addRow(["Total Discounts", totalDiscount]);
     worksheet.addRow(["Average Order Value", avgOrderValue]);
 
-    // Style the summary section
+ 
     worksheet.getRow(2).font = { bold: true, size: 14 };
     worksheet.getRow(2).fill = {
       type: "pattern",
@@ -1247,7 +1237,6 @@ const downloadSalesReportExcel = async (req, res) => {
       fgColor: { argb: "FFD3D3D3" },
     };
 
-    // Headers for Detailed Orders
     worksheet.columns = [
       { header: "Order ID", key: "orderId", width: 15 },
       { header: "Date", key: "date", width: 15 },
@@ -1260,7 +1249,7 @@ const downloadSalesReportExcel = async (req, res) => {
       { header: "Status", key: "status", width: 15 },
     ];
 
-    // Add Rows for Detailed Orders
+
     orders.forEach((order) => {
       worksheet.addRow({
         orderId: `#ORD-${order.orderID || "N/A"}`,
@@ -1285,7 +1274,7 @@ const downloadSalesReportExcel = async (req, res) => {
       });
     });
 
-    // Style the header row
+
     worksheet.getRow(9).font = { bold: true };
     worksheet.getRow(9).alignment = {
       vertical: "middle",
@@ -1297,13 +1286,12 @@ const downloadSalesReportExcel = async (req, res) => {
       fgColor: { argb: "FFC6E0B4" },
     };
 
-    // Auto-fit columns for detailed orders
     worksheet.columns.forEach((column) => {
       column.width = column.width || 15;
       column.alignment = { vertical: "middle", horizontal: "left" };
     });
 
-    // Generate file
+ 
     const fileName = `sales_report_${Date.now()}.xlsx`;
     const filePath = path.join(__dirname, "../../public/downloads", fileName);
 

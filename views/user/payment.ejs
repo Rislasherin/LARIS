@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
+    /* Existing styles remain unchanged */
     body { 
       font-family: 'Lato', sans-serif; 
       background-color: #f9fafb; 
@@ -70,9 +71,9 @@
       box-shadow: 0 0 0 1px pink;
     }
     input[type="radio"]:disabled + label {
-  color: #a0aec0; /* Gray text */
-  cursor: not-allowed;
-}
+      color: #a0aec0; /* Gray text */
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -129,14 +130,16 @@
             <!-- COD Payment Option -->
             <div class="payment-option bg-white rounded-lg p-5">
               <div class="flex items-center">
-                <input type="radio" id="cod" name="paymentMethod" value="cod" class="mr-3">
+                <input type="radio" id="cod" name="paymentMethod" value="cod" class="mr-3" <%= total > 1000 ? 'disabled' : '' %>>
                 <label for="cod" class="flex items-center cursor-pointer w-full">
                   <div class="bg-gray-100 p-3 rounded-full mr-3">
                     <i class="fas fa-money-bill-wave text-gray-700"></i>
                   </div>
                   <div>
                     <span class="font-medium text-gray-800 block">Cash on Delivery</span>
-                    <span class="text-sm text-gray-500">Pay when you receive your order</span>
+                    <span class="text-sm text-gray-500">
+                      <%= total > 1000 ? 'Not available for orders above ₹1000' : 'Pay when you receive your order' %>
+                    </span>
                   </div>
                 </label>
               </div>
@@ -158,28 +161,28 @@
               </div>
             </div>
             
-            <!-- Wallet Option (Replaces Credit Card) -->
+            <!-- Wallet Option -->
             <div class="payment-option bg-white rounded-lg p-5">
               <div class="flex items-center">
-                <input type="radio" id="wallet" name="paymentMethod" value="wallet" class="mr-3" disabled>
-                <label for="wallet" class="flex items-center w-full">
+                <input type="radio" id="wallet" name="paymentMethod" value="wallet" class="mr-3" <%= walletBalance < total ? 'disabled' : '' %>>
+                <label for="wallet" class="flex items-center cursor-pointer w-full">
                   <div class="bg-gray-100 p-3 rounded-full mr-3">
                     <i class="fas fa-wallet text-gray-700"></i>
                   </div>
                   <div>
                     <span class="font-medium text-gray-800 block">Wallet</span>
-                    <span class="text-sm text-gray-500">Coming Soon</span>
+                    <span class="text-sm text-gray-500">
+                      <%= walletBalance < total ? `Insufficient balance (₹${walletBalance.toFixed(2)} < ₹${total.toFixed(2)})` : `Pay with wallet (Balance: ₹${walletBalance.toFixed(2)})` %>
+                    </span>
                   </div>
                 </label>
               </div>
             </div>
           </div>
           
-          <!-- Inside the form, above the button -->
-<div id="payment-error" class="text-red-500 text-sm text-center mt-2 hidden">
-  Please select a payment method before proceeding.
-</div>
-
+          <div id="payment-error" class="text-red-500 text-sm text-center mt-2 hidden">
+            Please select a payment method before proceeding.
+          </div>
 
           <button type="submit" class="w-full bg-black text-white py-3 rounded hover:bg-gray-800 transition mt-6 font-medium">
             Complete Order
@@ -235,6 +238,7 @@
               <span>Total</span>
               <span>₹<%= total.toFixed(2) %></span>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -260,93 +264,111 @@
       paymentOptions.forEach(option => {
         option.addEventListener('click', function() {
           const radio = this.querySelector('input[type="radio"]');
-          radio.checked = true;
-          const event = new Event('change');
-          radio.dispatchEvent(event);
+          if (!radio.disabled) {
+            radio.checked = true;
+            const event = new Event('change');
+            radio.dispatchEvent(event);
+          }
         });
       });
-    
+      
       form.addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const formData = new FormData(form);
-  const paymentMethod = formData.get('paymentMethod');
-  const paymentError = document.getElementById('payment-error');
+        e.preventDefault();
+        const formData = new FormData(form);
+        const paymentMethod = formData.get('paymentMethod');
+        const paymentError = document.getElementById('payment-error');
 
-  paymentError.classList.add('hidden');
+        paymentError.classList.add('hidden');
 
-  if (!paymentMethod) {
-    paymentError.classList.remove('hidden');
-    return;
-  }
+        if (!paymentMethod) {
+          paymentError.classList.remove('hidden');
+          return;
+        }
 
-  const jsonData = Object.fromEntries(formData);
+        const jsonData = Object.fromEntries(formData);
 
-  try {
-    const response = await fetch('/place-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(jsonData)
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      window.location.href = `/order-error?message=Payment%20Initiation%20Failed&details=${encodeURIComponent(data.message || 'Something went wrong')}&orderId=${data.orderId || ''}&finalAmount=${data.finalAmount || ''}`;
-      return;
-    }
-
-    if (paymentMethod === 'razorpay' && data.razorpayOrder) {
-      const options = {
-        key: data.key_id,
-        amount: data.razorpayOrder.amount,
-        currency: 'INR',
-        name: 'LARIS',
-        description: 'Order Payment',
-        order_id: data.razorpayOrder.id,
-        handler: async function(response) {
-          const verifyResponse = await fetch('/verify-payment', {
+        try {
+          const response = await fetch('/place-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: data.orderId,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature
-            })
+            body: JSON.stringify(jsonData)
           });
-          const verifyData = await verifyResponse.json();
-          if (verifyData.success) {
-            window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            window.location.href = `/order-error?message=Payment%20Initiation%20Failed&details=${encodeURIComponent(data.message || 'Something went wrong')}&orderId=${data.orderId || ''}&finalAmount=${data.finalAmount || ''}`;
+            return;
+          }
+
+          if (paymentMethod === 'razorpay' && data.razorpayOrder) {
+            const options = {
+              key: data.key_id,
+              amount: data.razorpayOrder.amount,
+              currency: 'INR',
+              name: 'LARIS',
+              description: 'Order Payment',
+              order_id: data.razorpayOrder.id,
+              handler: async function(response) {
+                const verifyResponse = await fetch('/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    orderId: data.orderId,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature
+                  })
+                });
+                const verifyData = await verifyResponse.json();
+                if (verifyData.success) {
+                  window.location.href = `/order-success?orderId=${verifyData.orderId}`;
+                } else {
+                  window.location.href = `/order-error?message=Payment%20Verification%20Failed&details=Payment%20verification%20failed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
+                }
+              },
+              prefill: {
+                name: 'Customer Name',
+                email: 'customer@example.com',
+                contact: '9999999999'
+              },
+              theme: {
+                color: '#F472B6'
+              },
+              modal: {
+                ondismiss: function() {
+                  window.location.href = `/order-error?message=Payment%20Cancelled&details=Payment%20was%20not%20completed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
+                }
+              }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.open();
+          } else if (paymentMethod === 'wallet') {
+            // Handle wallet payment
+            const walletResponse = await fetch('/wallet/process-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: data.orderId,
+                amount: <%= total %>
+              })
+            });
+            const walletData = await walletResponse.json();
+            if (walletData.success) {
+              window.location.href = `/order-success?orderId=${walletData.orderId}`;
+            } else {
+              window.location.href = `/order-error?message=Wallet%20Payment%20Failed&details=${encodeURIComponent(walletData.message || 'Insufficient balance')}&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
+            }
           } else {
-            window.location.href = `/order-error?message=Payment%20Verification%20Failed&details=Payment%20verification%20failed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
+            window.location.href = `/order-success?orderId=${data.orderId}`;
           }
-        },
-        prefill: {
-          name: 'Customer Name',
-          email: 'customer@example.com',
-          contact: '9999999999'
-        },
-        theme: {
-          color: '#F472B6'
-        },
-        modal: {
-          ondismiss: function() {
-            window.location.href = `/order-error?message=Payment%20Cancelled&details=Payment%20was%20not%20completed&orderId=${data.orderId}&finalAmount=${data.finalAmount || ''}`;
-          }
+        } catch (error) {
+          console.error('Error:', error);
+          window.location.href = `/order-error?message=Payment%20Error&details=An%20error%20occurred%20while%20processing%20your%20order&orderId=&finalAmount=`;
         }
-      };
-      
-      const rzp = new Razorpay(options);
-      rzp.open();
-    } else {
-      window.location.href = `/order-success?orderId=${data.orderId}`;
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    window.location.href = `/order-error?message=Payment%20Error&details=An%20error%20occurred%20while%20processing%20your%20order&orderId=&finalAmount=`;
-  }
-});
-    })
-    </script>
+      });
+    });
+  </script>
 </body>
 </html>

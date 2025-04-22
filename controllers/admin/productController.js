@@ -9,7 +9,7 @@ const { find } = require('../../models/userSchema');
 const Cart = require('../../models/CartSchema')
 
 
-// adding new product
+
 const getproductAddPage = async (req, res) => {
     try {
         const category = await Category.find({ isListed: true });
@@ -32,7 +32,7 @@ const addProducts = async (req, res) => {
 
       const products = req.body;
 
-      // Validate required fields
+ 
       if (!products.skinType || products.skinType.trim() === '') {
           return res.status(400).json({ 
               success: false, 
@@ -47,7 +47,6 @@ const addProducts = async (req, res) => {
           });
       }
 
-      //  product already exists
       const productExists = await Product.findOne({ productName: products.productName });
       if (productExists) {
           req.files.forEach(file => {
@@ -64,7 +63,7 @@ const addProducts = async (req, res) => {
           fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Process and save images
+   
       const images = [];
       for (let i = 0; i < req.files.length; i++) {
           try {
@@ -368,9 +367,9 @@ const EditProduct = async (req, res) => {
         productImage: updatedImages.filter(Boolean),
       };
   
-      // Check if quantity is set to 0
+   
       if (parseInt(data.quantity) === 0) {
-        // Remove the product from all carts
+    
         await Cart.updateMany(
           { 'items.product': id },
           { $pull: { items: { product: id } } }

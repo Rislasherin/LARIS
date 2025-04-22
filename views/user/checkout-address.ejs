@@ -21,6 +21,19 @@
       outline: none;
       box-shadow: 0 0 0 2px pink;
     }
+    .input-field.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 1px #ef4444;
+    }
+    .error-message {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
     .checkout-step {
       position: relative;
       display: flex;
@@ -165,78 +178,79 @@
           </button>
         </form>
         
-    <!-- Coupon Section -->
-    <div class="mt-8">
-      <div class="bg-white rounded-lg p-4 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold text-gray-800">Apply Coupon</h3>
-          <button type="button" id="view-coupons-btn" class="text-sm text-pink-600 hover:text-pink-800">
-            View Available Coupons
-          </button>
+        <!-- Coupon Section -->
+        <div class="mt-8">
+          <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold text-gray-800">Apply Coupon</h3>
+              <button type="button" id="view-coupons-btn" class="text-sm text-pink-600 hover:text-pink-800">
+                View Available Coupons
+              </button>
+            </div>
+            <div class="flex">
+              <input type="text" id="coupon-code" placeholder="Enter coupon code" class="input-field flex-1 px-3 py-2 rounded-l-md" />
+              <button type="button" id="apply-coupon-btn" class="bg-black text-white px-4 py-2 rounded-r-md hover:bg-gray-900 transition">
+                Apply
+              </button>
+            </div>
+            <div id="coupon-message" class="mt-2 text-sm hidden"></div>
+          </div>
         </div>
-        <div class="flex">
-          <input type="text" id="coupon-code" placeholder="Enter coupon code" class="input-field flex-1 px-3 py-2 rounded-l-md" />
-          <button type="button" id="apply-coupon-btn" class="bg-black text-white px-4 py-2 rounded-r-md hover:bg-gray-900 transition">
-            Apply
+      </div>
+      
+      <!-- Order Summary Column -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+          <h2 class="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">
+            Order Summary
+          </h2>
+          <div class="space-y-3 mb-6">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Subtotal</span>
+              <span>₹<%= subtotal ? subtotal.toFixed(2) : '0.00' %></span>
+            </div>
+            <% if (discount && discount > 0) { %>
+              <div class="flex justify-between text-sm text-green-600">
+                <span>Discount</span>
+                <span>-₹<%= discount.toFixed(2) %></span>
+              </div>
+            <% } %>
+            <% if (appliedCoupon) { %>
+              <div class="flex justify-between text-sm text-green-600">
+                <span>Coupon (<%= appliedCoupon.code %>)</span>
+                <span>-₹<%= (discount - (subtotal * 0.1)).toFixed(2) %></span>
+              </div>
+              <div class="flex justify-end text-sm">
+                <button id="remove-coupon-btn" class="text-red-600 hover:text-red-800">Remove Coupon</button>
+              </div>
+            <% } %>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Shipping</span>
+              <span>₹<%= shippingCost ? shippingCost.toFixed(2) : '0.00' %></span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Tax</span>
+              <span>₹<%= tax ? tax.toFixed(2) : '0.00' %></span>
+            </div>
+          </div>
+          <div class="flex justify-between font-bold text-lg pt-4 border-t">
+            <span>Total</span>
+            <span>₹<%= total ? total.toFixed(2) : '0.00' %></span>
+          </div>
+          <button type="submit" form="address-form" class="w-full bg-black text-white py-3 rounded hover:bg-gray-900 transition mt-6 font-medium"
+            <%= userAddresses && userAddresses.length > 0 ? '' : 'disabled' %>
+          >
+            Proceed to Payment
           </button>
+          <div class="mt-4 flex items-center justify-center text-gray-500 text-sm">
+            <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+            Secure Checkout
+          </div>
         </div>
-        <div id="coupon-message" class="mt-2 text-sm hidden"></div>
       </div>
     </div>
   </div>
-  
-  <!-- Order Summary Column -->
-  <div class="lg:col-span-1">
-    <div class="bg-white rounded-lg shadow p-6 sticky top-6">
-      <h2 class="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">
-        Order Summary
-      </h2>
-      <div class="space-y-3 mb-6">
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">Subtotal</span>
-          <span>₹<%= subtotal ? subtotal.toFixed(2) : '0.00' %></span>
-        </div>
-        <% if (discount && discount > 0) { %>
-          <div class="flex justify-between text-sm text-green-600">
-            <span>Discount</span>
-            <span>-₹<%= discount.toFixed(2) %></span>
-          </div>
-        <% } %>
-        <% if (appliedCoupon) { %>
-          <div class="flex justify-between text-sm text-green-600">
-            <span>Coupon (<%= appliedCoupon.code %>)</span>
-            <span>-₹<%= (discount - (subtotal * 0.1)).toFixed(2) %></span>
-          </div>
-          <div class="flex justify-end text-sm">
-            <button id="remove-coupon-btn" class="text-red-600 hover:text-red-800">Remove Coupon</button>
-          </div>
-        <% } %>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">Shipping</span>
-          <span>₹<%= shippingCost ? shippingCost.toFixed(2) : '0.00' %></span>
-        </div>
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">Tax</span>
-          <span>₹<%= tax ? tax.toFixed(2) : '0.00' %></span>
-        </div>
-      </div>
-      <div class="flex justify-between font-bold text-lg pt-4 border-t">
-        <span>Total</span>
-        <span>₹<%= total ? total.toFixed(2) : '0.00' %></span>
-      </div>
-      <button type="submit" form="address-form" class="w-full bg-black text-white py-3 rounded hover:bg-gray-900 transition mt-6 font-medium"
-        <%= userAddresses && userAddresses.length > 0 ? '' : 'disabled' %>
-      >
-        Proceed to Payment
-      </button>
-      <div class="mt-4 flex items-center justify-center text-gray-500 text-sm">
-        <i class="fas fa-shield-alt mr-2 text-green-500"></i>
-        Secure Checkout
-      </div>
-    </div>
-  </div>
-</div>
-</div>
+
   <!-- Address Modal -->
   <div id="address-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-6 border max-w-md w-full shadow-lg rounded-lg bg-white">
@@ -251,39 +265,47 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input type="text" name="fullName" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="fullName" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-fullName"></div>
           </div>
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input type="tel" name="phone" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="tel" name="phone" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-phone"></div>
           </div>
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <input type="text" name="address" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="address" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-address"></div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-            <input type="text" name="city" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="city" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-city"></div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-            <input type="text" name="state" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="state" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-state"></div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-            <input type="text" name="country" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="country" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-country"></div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-            <input type="text" name="pincode" class="input-field w-full px-3 py-2 rounded-md" required>
+            <input type="text" name="pincode" class="input-field w-full px-3 py-2 rounded-md">
+            <div class="error-message" id="error-pincode"></div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
-            <select name="addressType" class="input-field w-full px-3 py-2 rounded-md bg-white" required>
+            <select name="addressType" class="input-field w-full px-3 py-2 rounded-md bg-white">
               <option value="Home">Home</option>
               <option value="Work">Work</option>
               <option value="Other">Other</option>
             </select>
+            <div class="error-message" id="error-addressType"></div>
           </div>
           <div class="md:col-span-2">
             <div class="flex items-center mt-2">
@@ -329,333 +351,427 @@
 
   <script>
 document.addEventListener('DOMContentLoaded', function() {
-      const addAddressBtn = document.getElementById('add-address-btn');
-      const addressModal = document.getElementById('address-modal');
-      const cancelAddressBtn = document.getElementById('cancel-address');
-      const closeModalBtn = document.getElementById('close-modal');
-      const newAddressForm = document.getElementById('new-address-form');
-      let isEditMode = false;
-      let currentAddressId = null;
-    
-      // Open modal for adding address
-      addAddressBtn.addEventListener('click', () => {
-        isEditMode = false;
-        currentAddressId = null;
-        document.querySelector('#address-modal h3').textContent = 'Add New Address';
-        newAddressForm.reset();
-        addressModal.classList.remove('hidden');
-      });
-      
-      // Close modal functions
-      function closeModal() {
-        addressModal.classList.add('hidden');
-        newAddressForm.reset();
-        isEditMode = false;
-        currentAddressId = null;
-        document.querySelector('#address-modal h3').textContent = 'Add New Address';
+  const addAddressBtn = document.getElementById('add-address-btn');
+  const addressModal = document.getElementById('address-modal');
+  const cancelAddressBtn = document.getElementById('cancel-address');
+  const closeModalBtn = document.getElementById('close-modal');
+  const newAddressForm = document.getElementById('new-address-form');
+  let isEditMode = false;
+  let currentAddressId = null;
+
+  // Open modal for adding address
+  addAddressBtn.addEventListener('click', () => {
+    isEditMode = false;
+    currentAddressId = null;
+    document.querySelector('#address-modal h3').textContent = 'Add New Address';
+    newAddressForm.reset();
+    clearErrors();
+    addressModal.classList.remove('hidden');
+  });
+  
+  // Close modal functions
+  function closeModal() {
+    addressModal.classList.add('hidden');
+    newAddressForm.reset();
+    clearErrors();
+    isEditMode = false;
+    currentAddressId = null;
+    document.querySelector('#address-modal h3').textContent = 'Add New Address';
+  }
+  
+  cancelAddressBtn.addEventListener('click', closeModal);
+  closeModalBtn.addEventListener('click', closeModal);
+  
+  addressModal.addEventListener('click', function(e) {
+    if (e.target === addressModal) closeModal();
+  });
+
+  // Address selection logic
+  const addressCards = document.querySelectorAll('.address-card');
+  addressCards.forEach(card => {
+    const radioInput = card.querySelector('input[type="radio"]');
+    card.addEventListener('click', function(e) {
+      if (e.target.tagName !== 'A') {
+        addressCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        radioInput.checked = true;
       }
+    });
+  });
+
+  // Edit Address
+  const editButtons = document.querySelectorAll('.edit-address');
+  editButtons.forEach(button => {
+    button.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const addressId = button.getAttribute('data-address-id');
       
-      cancelAddressBtn.addEventListener('click', closeModal);
-      closeModalBtn.addEventListener('click', closeModal);
-      
-      addressModal.addEventListener('click', function(e) {
-        if (e.target === addressModal) closeModal();
-      });
-    
-      // Address selection logic
-      const addressCards = document.querySelectorAll('.address-card');
-      addressCards.forEach(card => {
-        const radioInput = card.querySelector('input[type="radio"]');
-        card.addEventListener('click', function(e) {
-          if (e.target.tagName !== 'A') {
-            addressCards.forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            radioInput.checked = true;
-          }
-        });
-      });
-      // Edit Address
-      const editButtons = document.querySelectorAll('.edit-address');
-      editButtons.forEach(button => {
-        button.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const addressId = button.getAttribute('data-address-id');
-          
-          try {
-            const response = await fetch(`/get-address/${addressId}`);
-            const address = await response.json();
-    
-            if (address.success) {
-              // Populate the modal with existing address data
-              document.querySelector('[name="fullName"]').value = address.data.fullName || '';
-              document.querySelector('[name="phone"]').value = address.data.phone || '';
-              document.querySelector('[name="address"]').value = address.data.address || '';
-              document.querySelector('[name="city"]').value = address.data.city || '';
-              document.querySelector('[name="state"]').value = address.data.state || '';
-              document.querySelector('[name="country"]').value = address.data.country || '';
-              document.querySelector('[name="pincode"]').value = address.data.pincode || '';
-              document.querySelector('[name="addressType"]').value = address.data.addressType || 'Home';
-              document.querySelector('[name="isDefault"]').checked = address.data.isDefault || false;
-    
-              // Switch to edit mode
-              isEditMode = true;
-              currentAddressId = addressId;
-              document.querySelector('#address-modal h3').textContent = 'Edit Address'; // Update modal title
-              addressModal.classList.remove('hidden');
-            } else {
-              showNotification(address.message || 'Failed to load address', false);
-            }
-          } catch (error) {
-            console.error('Error fetching address:', error);
-            showNotification('Error loading address', false);
-          }
-        });
-      });
-    
-      // Remove Address
-      const removeButtons = document.querySelectorAll('.remove-address');
-      removeButtons.forEach(button => {
-        button.addEventListener('click', async (e) => {
-          e.preventDefault();
-          const addressId = button.getAttribute('data-address-id');
-          if (confirm('Are you sure you want to remove this address?')) {
-            try {
-              const response = await fetch(`/remove-address/${addressId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-              });
-              const result = await response.json();
-    
-              if (result.success) {
-                showNotification('Address removed successfully');
-                button.closest('.address-card').remove();
-              } else {
-                showNotification(result.message || 'Error removing address', false);
-              }
-            } catch (error) {
-              console.error('Error:', error);
-              showNotification('Error removing address', false);
-            }
-          }
-        });
-      });
-    
-      // Form Submission (Add or Edit)
-      newAddressForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(newAddressForm);
-        const data = Object.fromEntries(formData);
-        data.isDefault = formData.get('isDefault') ? true : false;
-    
-        const url = isEditMode ? `/edit-address/${currentAddressId}` : '/add-address';
-        const method = isEditMode ? 'PUT' : 'POST';
-    
+      try {
+        const response = await fetch(`/get-address/${addressId}`);
+        const address = await response.json();
+
+        if (address.success) {
+          // Populate the modal with existing address data
+          document.querySelector('[name="fullName"]').value = address.data.fullName || '';
+          document.querySelector('[name="phone"]').value = address.data.phone || '';
+          document.querySelector('[name="address"]').value = address.data.address || '';
+          document.querySelector('[name="city"]').value = address.data.city || '';
+          document.querySelector('[name="state"]').value = address.data.state || '';
+          document.querySelector('[name="country"]').value = address.data.country || '';
+          document.querySelector('[name="pincode"]').value = address.data.pincode || '';
+          document.querySelector('[name="addressType"]').value = address.data.addressType || 'Home';
+          document.querySelector('[name="isDefault"]').checked = address.data.isDefault || false;
+
+          // Switch to edit mode
+          isEditMode = true;
+          currentAddressId = addressId;
+          document.querySelector('#address-modal h3').textContent = 'Edit Address';
+          clearErrors();
+          addressModal.classList.remove('hidden');
+        } else {
+          showNotification(address.message || 'Failed to load address', false);
+        }
+      } catch (error) {
+        console.error('Error fetching address:', error);
+        showNotification('Error loading address', false);
+      }
+    });
+  });
+
+  // Remove Address
+  const removeButtons = document.querySelectorAll('.remove-address');
+  removeButtons.forEach(button => {
+    button.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const addressId = button.getAttribute('data-address-id');
+      if (confirm('Are you sure you want to remove this address?')) {
         try {
-          const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+          const response = await fetch(`/remove-address/${addressId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
           });
           const result = await response.json();
-    
+
           if (result.success) {
-            showNotification(isEditMode ? 'Address updated successfully' : 'Address saved successfully');
-            closeModal();
-            location.reload(); // Reload to reflect changes
+            showNotification('Address removed successfully');
+            button.closest('.address-card').remove();
           } else {
-            showNotification(result.message || `Error ${isEditMode ? 'updating' : 'saving'} address`, false);
+            showNotification(result.message || 'Error removing address', false);
           }
         } catch (error) {
           console.error('Error:', error);
-          showNotification(`Error ${isEditMode ? 'updating' : 'saving'} address`, false);
+          showNotification('Error removing address', false);
         }
-      });
-    
-      function showNotification(message, isSuccess = true) {
-        let notificationContainer = document.getElementById('notification-container');
-        if (!notificationContainer) {
-          notificationContainer = document.createElement('div');
-          notificationContainer.id = 'notification-container';
-          notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
-          document.body.appendChild(notificationContainer);
-        }
-    
-        const notification = document.createElement('div');
-        notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-        notification.textContent = message;
-        notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
-        
-        notificationContainer.appendChild(notification);
-        notification.offsetWidth; // Trigger reflow
-        notification.style.transform = 'translateX(0)';
-        
-        setTimeout(() => {
-          notification.style.transform = 'translateX(100%)';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }
-
-
-      // Coupon-related functionality
-      const viewCouponsBtn = document.getElementById('view-coupons-btn');
-      const couponModal = document.getElementById('coupon-modal');
-      const closeCouponModalBtn = document.getElementById('close-coupon-modal');
-      const applyBtn = document.getElementById('apply-coupon-btn');
-      const couponInput = document.getElementById('coupon-code');
-      const couponMessage = document.getElementById('coupon-message');
-      const couponsList = document.getElementById('coupons-list');
-      const removeCouponBtn = document.getElementById('remove-coupon-btn');
-      const subtotal = <%= subtotal %>; 
-
-      // Open coupon modal
-      viewCouponsBtn.addEventListener('click', async () => {
-        couponModal.classList.remove('hidden');
-        await loadAvailableCoupons();
-      });
-      
-      // Close coupon modal
-      function closeCouponModal() {
-        couponModal.classList.add('hidden');
-      }
-      
-      closeCouponModalBtn.addEventListener('click', closeCouponModal);
-      couponModal.addEventListener('click', function(e) {
-        if (e.target === couponModal) closeCouponModal();
-      });
-      
-      // Load available coupons
-      async function loadAvailableCoupons() {
-        try {
-          const response = await fetch('/coupons/available');
-          const result = await response.json();
-          
-          if (result.success) {
-            renderCoupons(result.coupons);
-          } else {
-            couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
-          }
-        } catch (error) {
-          console.error('Error loading coupons:', error);
-          couponsList.innerHTML = `<div class="p-4 text-center text-red-500">Error loading coupons. Please try again.</div>`;
-        }
-      }
-      
-      // Render coupons in the modal
-      function renderCoupons(coupons) {
-        if (!coupons.length) {
-          couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
-          return;
-        }
-        
-        couponsList.innerHTML = coupons.map(coupon => {
-          const expiryDate = new Date(coupon.expiryDate).toLocaleDateString();
-          const discountText = coupon.discountType === 'percentage' 
-            ? `${coupon.discountValue}% off`
-            : `₹${coupon.discountValue} off`;
-          
-          let minOrderText = '';
-          if (coupon.minOrderValue > 0) {
-            minOrderText = `<div class="text-xs text-gray-500 mt-1">Minimum order value: ₹${coupon.minOrderValue}</div>`;
-          }
-          
-          return `
-            <div class="coupon-item p-3 border border-gray-200 rounded-md cursor-pointer hover:border-pink-300 hover:bg-pink-50 transition" data-code="${coupon.code}">
-              <div class="flex justify-between items-start">
-                <div class="font-medium text-gray-800">${coupon.code}</div>
-                <div class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">${discountText}</div>
-              </div>
-              ${minOrderText}
-              <div class="text-xs text-gray-500 mt-1">Valid till: ${expiryDate}</div>
-            </div>
-          `;
-        }).join('');
-        
-        // Add click events to coupon items (only populate input)
-        document.querySelectorAll('.coupon-item').forEach(item => {
-          item.addEventListener('click', function() {
-            const code = this.getAttribute('data-code');
-            couponInput.value = code; // Only fill the input, don't apply yet
-            closeCouponModal();
-          });
-        });
-      }
-      
-      // Apply coupon button click
-      applyBtn.addEventListener('click', function() {
-        const code = couponInput.value.trim();
-        if (!code) {
-          showCouponMessage('Please enter a coupon code', false);
-          return;
-        }
-        
-        applyCoupon(code);
-      });
-      
-      // Apply coupon function
-      async function applyCoupon(code) {
-        try {
-          const response = await fetch('/coupons/apply', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ couponCode: code })
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            if (subtotal < result.minOrderValue) {
-              showCouponMessage(`This coupon can only be applied to purchases above ₹${result.minOrderValue}`, false);
-            } else {
-              showCouponMessage(result.message, true);
-              location.reload(); // Reload to update order summary with coupon discount
-            }
-          } else {
-            showCouponMessage(result.message, false);
-          }
-        } catch (error) {
-          console.error('Error applying coupon:', error);
-          showCouponMessage('Error applying coupon. Please try again.', false);
-        }
-      }
-      
-      // Remove coupon
-      if (removeCouponBtn) {
-        removeCouponBtn.addEventListener('click', async () => {
-          try {
-            const response = await fetch('/coupons/remove', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
-            });
-            const result = await response.json();
-            
-            if (result.success) {
-              showCouponMessage('Coupon removed successfully', true);
-              location.reload(); // Reload to update order summary without coupon
-            } else {
-              showCouponMessage(result.message || 'Error removing coupon', false);
-            }
-          } catch (error) {
-            console.error('Error removing coupon:', error);
-            showCouponMessage('Error removing coupon. Please try again.', false);
-          }
-        });
-      }
-      
-      // Show coupon message function
-      function showCouponMessage(message, isSuccess) {
-        couponMessage.textContent = message;
-        couponMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
-        couponMessage.classList.add(isSuccess ? 'text-green-600' : 'text-red-600');
-        
-        setTimeout(() => {
-          couponMessage.style.opacity = '0';
-          setTimeout(() => {
-            couponMessage.classList.add('hidden');
-            couponMessage.style.opacity = '1';
-          }, 300);
-        }, 5000);
       }
     });
+  });
+
+  // Form Validation and Submission
+  newAddressForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get form values
+    const formData = new FormData(newAddressForm);
+    const data = Object.fromEntries(formData);
+    data.isDefault = formData.get('isDefault') ? true : false;
+
+    // Validate form
+    if (!validateForm(data)) {
+      return;
+    }
+
+    const url = isEditMode ? `/edit-address/${currentAddressId}` : '/add-address';
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification(isEditMode ? 'Address updated successfully' : 'Address saved successfully');
+        closeModal();
+        location.reload();
+      } else {
+        showNotification(result.message || `Error ${isEditMode ? 'updating' : 'saving'} address`, false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showNotification(`Error ${isEditMode ? 'updating' : 'saving'} address`, false);
+    }
+  });
+
+  // Validation function
+  function validateForm(data) {
+    let isValid = true;
+    clearErrors();
+
+    // Full Name
+    if (!data.fullName || data.fullName.trim() === '') {
+      showError('fullName', 'Full name is required');
+      isValid = false;
+    }
+
+    // Phone
+    const phonePattern = /^\d{10}$/;
+    if (!data.phone || !phonePattern.test(data.phone)) {
+      showError('phone', 'Phone number must be exactly 10 digits');
+      isValid = false;
+    } else if (data.phone === '0000000000') {
+      showError('phone', 'Phone number cannot be all zeros');
+      isValid = false;
+    }
+
+    // Address
+    if (!data.address || data.address.trim() === '') {
+      showError('address', 'Address is required');
+      isValid = false;
+    }
+
+    // City
+    if (!data.city || data.city.trim() === '') {
+      showError('city', 'City is required');
+      isValid = false;
+    }
+
+    // State
+    if (!data.state || data.state.trim() === '') {
+      showError('state', 'State is required');
+      isValid = false;
+    }
+
+    // Country
+    if (!data.country || data.country.trim() === '') {
+      showError('country', 'Country is required');
+      isValid = false;
+    }
+
+    // Pincode
+    const pincodePattern = /^\d{6}$/;
+    if (!data.pincode || !pincodePattern.test(data.pincode)) {
+      showError('pincode', 'Pincode must be exactly 6 digits');
+      isValid = false;
+    } else if (data.pincode === '000000') {
+      showError('pincode', 'Pincode cannot be all zeros');
+      isValid = false;
+    }
+
+    // Address Type
+    if (!data.addressType || data.addressType.trim() === '') {
+      showError('addressType', 'Address type is required');
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  // Show error message
+  function showError(fieldName, message) {
+    const input = document.querySelector(`[name="${fieldName}"]`);
+    const errorDiv = document.getElementById(`error-${fieldName}`);
+    input.classList.add('error');
+    errorDiv.textContent = message;
+    errorDiv.classList.add('show');
+  }
+
+  // Clear all errors
+  function clearErrors() {
+    const inputs = newAddressForm.querySelectorAll('.input-field');
+    const errorDivs = newAddressForm.querySelectorAll('.error-message');
+    inputs.forEach(input => input.classList.remove('error'));
+    errorDivs.forEach(div => {
+      div.textContent = '';
+      div.classList.remove('show');
+    });
+  }
+
+  function showNotification(message, isSuccess = true) {
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+      notificationContainer = document.createElement('div');
+      notificationContainer.id = 'notification-container';
+      notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
+      document.body.appendChild(notificationContainer);
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+    notification.textContent = message;
+    notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
+    
+    notificationContainer.appendChild(notification);
+    notification.offsetWidth; // Trigger reflow
+    notification.style.transform = 'translateX(0)';
+    
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
+  // Coupon-related functionality
+  const viewCouponsBtn = document.getElementById('view-coupons-btn');
+  const couponModal = document.getElementById('coupon-modal');
+  const closeCouponModalBtn = document.getElementById('close-coupon-modal');
+  const applyBtn = document.getElementById('apply-coupon-btn');
+  const couponInput = document.getElementById('coupon-code');
+  const couponMessage = document.getElementById('coupon-message');
+  const couponsList = document.getElementById('coupons-list');
+  const removeCouponBtn = document.getElementById('remove-coupon-btn');
+  const subtotal = <%= subtotal %>; 
+
+  // Open coupon modal
+  viewCouponsBtn.addEventListener('click', async () => {
+    couponModal.classList.remove('hidden');
+    await loadAvailableCoupons();
+  });
+  
+  // Close coupon modal
+  function closeCouponModal() {
+    couponModal.classList.add('hidden');
+  }
+  
+  closeCouponModalBtn.addEventListener('click', closeCouponModal);
+  couponModal.addEventListener('click', function(e) {
+    if (e.target === couponModal) closeCouponModal();
+  });
+  
+  // Load available coupons
+  async function loadAvailableCoupons() {
+    try {
+      const response = await fetch('/coupons/available');
+      const result = await response.json();
+      
+      if (result.success) {
+        renderCoupons(result.coupons);
+      } else {
+        couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
+      }
+    } catch (error) {
+      console.error('Error loading coupons:', error);
+      couponsList.innerHTML = `<div class="p-4 text-center text-red-500">Error loading coupons. Please try again.</div>`;
+    }
+  }
+  
+  // Render coupons in the modal
+  function renderCoupons(coupons) {
+    if (!coupons.length) {
+      couponsList.innerHTML = `<div class="p-4 text-center text-gray-500">No coupons available at the moment</div>`;
+      return;
+    }
+    
+    couponsList.innerHTML = coupons.map(coupon => {
+      const expiryDate = new Date(coupon.expiryDate).toLocaleDateString();
+      const discountText = coupon.discountType === 'percentage' 
+        ? `${coupon.discountValue}% off`
+        : `₹${coupon.discountValue} off`;
+      
+      let minOrderText = '';
+      if (coupon.minOrderValue > 0) {
+        minOrderText = `<div class="text-xs text-gray-500 mt-1">Minimum order value: ₹${coupon.minOrderValue}</div>`;
+      }
+      
+      return `
+        <div class="coupon-item p-3 border border-gray-200 rounded-md cursor-pointer hover:border-pink-300 hover:bg-pink-50 transition" data-code="${coupon.code}">
+          <div class="flex justify-between items-start">
+            <div class="font-medium text-gray-800">${coupon.code}</div>
+            <div class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">${discountText}</div>
+          </div>
+          ${minOrderText}
+          <div class="text-xs text-gray-500 mt-1">Valid till: ${expiryDate}</div>
+        </div>
+      `;
+    }).join('');
+    
+    // Add click events to coupon items
+    document.querySelectorAll('.coupon-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const code = this.getAttribute('data-code');
+        couponInput.value = code;
+        closeCouponModal();
+      });
+    });
+  }
+  
+  // Apply coupon button click
+  applyBtn.addEventListener('click', function() {
+    const code = couponInput.value.trim();
+    if (!code) {
+      showCouponMessage('Please enter a coupon code', false);
+      return;
+    }
+    
+    applyCoupon(code);
+  });
+  
+  // Apply coupon function
+  async function applyCoupon(code) {
+    try {
+      const response = await fetch('/coupons/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode: code })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        if (subtotal < result.minOrderValue) {
+          showCouponMessage(`This coupon can only be applied to purchases above ₹${result.minOrderValue}`, false);
+        } else {
+          showCouponMessage(result.message, true);
+          location.reload();
+        }
+      } else {
+        showCouponMessage(result.message, false);
+      }
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      showCouponMessage('Error applying coupon. Please try again.', false);
+    }
+  }
+  
+  // Remove coupon
+  if (removeCouponBtn) {
+    removeCouponBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/coupons/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          showCouponMessage('Coupon removed successfully', true);
+          location.reload();
+        } else {
+          showCouponMessage(result.message || 'Error removing coupon', false);
+        }
+      } catch (error) {
+        console.error('Error removing coupon:', error);
+        showCouponMessage('Error removing coupon. Please try again.', false);
+      }
+    });
+  }
+  
+  // Show coupon message function
+  function showCouponMessage(message, isSuccess) {
+    couponMessage.textContent = message;
+    couponMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+    couponMessage.classList.add(isSuccess ? 'text-green-600' : 'text-red-600');
+    
+    setTimeout(() => {
+      couponMessage.style.opacity = '0';
+      setTimeout(() => {
+        couponMessage.classList.add('hidden');
+        couponMessage.style.opacity = '1';
+      }, 300);
+    }, 5000);
+  }
+});
   </script>
 </body>
 </html>

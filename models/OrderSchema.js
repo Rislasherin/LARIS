@@ -29,7 +29,8 @@ const orderSchema = new mongoose.Schema({
                 'Cancellation Requested'
             ],
             default: 'Pending'
-        }
+        },
+        deliveryDate: { type: Date },
     }],
     totalPrice: { type: Number, required: true },
     discount: { type: Number, default: 0 },
@@ -54,7 +55,7 @@ const orderSchema = new mongoose.Schema({
             'Payment Failed'
         ]
     },
-    paymentMethod: { type: String, required: true, enum: ['cod', 'bank', 'credit', 'razorpay', 'paylater'] },
+    paymentMethod: { type: String, required: true, enum: ['cod', 'bank', 'credit', 'razorpay', 'paylater','wallet'] },
     transactionId: { type: String, default: () => uuidv4() },
     couponCode: { type: String },
     couponDiscount: { type: Number, default: 0 },

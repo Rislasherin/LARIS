@@ -13,15 +13,13 @@ const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
 const couponController = require('../controllers/admin/coupenController')
 const salesReportController = require('../controllers/admin/salesReportController')
-
-
-
+const walletController = require('../controllers/admin/adminWalletController')
+const dashboardController = require("../controllers/admin/dashboardController"); // New controller
 
 
 router.get('/pageerror', adminController.pageError);
 router.get('/login', adminController.loadLogin);
 router.post('/login', adminController.login);
-router.get('/', adminAuth, adminController.loadDashboard);
 router.get('/logout', adminController.logout);
 
 
@@ -82,5 +80,22 @@ router.delete('/coupon/delete/:id', adminAuth, couponController.deleteCoupon);
 router.get("/reports/sales", adminAuth,salesReportController.getSalesReport);
 router.get("/reports/sales/download/pdf", salesReportController.downloadSalesReportPDF);
 router.get("/reports/sales/download/excel", salesReportController.downloadSalesReportExcel);
+
+
+
+//wallet
+
+router.get('/wallet', adminAuth,  walletController.getWalletManagement);
+router.get('/wallet-order/:orderId', adminAuth, walletController.getWalletOrderDetails);
+
+
+router.get('/dashboard', dashboardController.getDashboard);
+router.get('/api/sales-data', dashboardController.getSalesDataAPI);
+router.get('/api/category-data', dashboardController.getCategoryDataAPI);
+router.get('/api/inventory-status', dashboardController.getInventoryStatus);
+router.get('/api/stats-overview', dashboardController.getStatsOverviewAPI);
+router.get('/api/customer-insights', dashboardController.getCustomerInsightsAPI);
+
+
 
 module.exports = router;

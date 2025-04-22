@@ -26,7 +26,13 @@
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 0.75rem;
-    }
+    };
+    .add-to-wishlist-btn:disabled,
+.toggle-wishlist-btn:disabled,
+.add-to-cart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
   </style>
 </head>
 <body>
@@ -125,30 +131,61 @@
               <% }); %>
             </div>
             
-            <div class="mt-6 flex justify-between items-center">
-              <a href="/shop" class="text-blue-600 hover:text-blue-800 flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
-              </a>
-              <button id="clear-wishlist" class="text-gray-600 hover:text-red-600 flex items-center">
-                <i class="fas fa-trash mr-2"></i> Clear Wishlist
-              </button>
-            </div>
-          <% } else { %>
-            <div class="text-center bg-white p-10 rounded-lg shadow">
-              <div class="text-gray-400 mb-6">
-                <i class="fas fa-heart text-5xl"></i>
-              </div>
-              <h2 class="text-2xl font-medium text-gray-700 mb-4">Your wishlist is empty</h2>
-              <p class="text-gray-500 mb-6">You haven't added any products to your wishlist yet.</p>
-              <a 
-                href="/shop" 
-                class="inline-block bg-black text-white py-2 px-6 rounded hover:bg-gray-900 transition"
-              >
-                Discover Products
-              </a>
-            </div>
-          <% } %>
-        </div>
+           <!-- Pagination Controls -->
+    <% if (pagination.totalPages > 1) { %>
+      <div class="mt-6 flex justify-center items-center space-x-2">
+        <!-- Previous Button -->
+        <a
+          href="/wishlist?page=<%= pagination.currentPage - 1 %>"
+          class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 <%= !pagination.hasPrevPage ? 'pointer-events-none opacity-50' : '' %>"
+        >
+          Previous
+        </a>
+
+        <!-- Page Numbers -->
+        <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+          <a
+            href="/wishlist?page=<%= i %>"
+            class="px-4 py-2 border rounded <%= pagination.currentPage === i ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100' %>"
+          >
+            <%= i %>
+          </a>
+        <% } %>
+
+        <!-- Next Button -->
+        <a
+          href="/wishlist?page=<%= pagination.currentPage + 1 %>"
+          class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 <%= !pagination.hasNextPage ? 'pointer-events-none opacity-50' : '' %>"
+        >
+          Next
+        </a>
+      </div>
+    <% } %>
+
+    <div class="mt-6 flex justify-between items-center">
+      <a href="/shop" class="text-blue-600 hover:text-blue-800 flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
+      </a>
+      <button id="clear-wishlist" class="text-gray-600 hover:text-red-600 flex items-center">
+        <i class="fas fa-trash mr-2"></i> Clear Wishlist
+      </button>
+    </div>
+  <% } else { %>
+    <div class="text-center bg-white p-10 rounded-lg shadow">
+      <div class="text-gray-400 mb-6">
+        <i class="fas fa-heart text-5xl"></i>
+      </div>
+      <h2 class="text-2xl font-medium text-gray-700 mb-4">Your wishlist is empty</h2>
+      <p class="text-gray-500 mb-6">You haven't added any products to your wishlist yet.</p>
+      <a
+        href="/shop"
+        class="inline-block bg-black text-white py-2 px-6 rounded hover:bg-gray-900 transition"
+      >
+        Discover Products
+      </a>
+    </div>
+  <% } %>
+</div>
         
         <!-- Recommendations Section -->
         <div class="lg:col-span-1">
@@ -219,309 +256,317 @@
     </div>
   
     <%- include('../partials/user/footer') %>
-  
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-          // Notification container setup
-          let notificationContainer = document.getElementById('notification-container');
-          if (!notificationContainer) {
-              notificationContainer = document.createElement('div');
-              notificationContainer.id = 'notification-container';
-              notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
-              document.body.appendChild(notificationContainer);
-          }
-      
-          // Function to show notification
-          function showNotification(message, isSuccess = true) {
-              const notification = document.createElement('div');
-              notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-              notification.textContent = message;
-              notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
-              
-              notificationContainer.appendChild(notification);
-              notification.offsetWidth; // Trigger reflow
-              notification.style.transform = 'translateX(0)';
-              
-              setTimeout(() => {
-                  notification.style.transform = 'translateX(100%)';
-                  setTimeout(() => notification.remove(), 300);
-              }, 3000);
-          }
-      
-          // Function to rebuild wishlist items
-          function rebuildWishlistItems(wishlistItems) {
-              const wishlistContainer = document.getElementById('wishlist-items');
-              if (!wishlistContainer) return; // Exit if container not found
-              
-              wishlistContainer.innerHTML = ''; // Clear existing items
-      
-              if (wishlistItems.length === 0) {
-                  return;
+      document.addEventListener('DOMContentLoaded', function () {
+        let notificationContainer = document.getElementById('notification-container');
+        if (!notificationContainer) {
+          notificationContainer = document.createElement('div');
+          notificationContainer.id = 'notification-container';
+          notificationContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
+          document.body.appendChild(notificationContainer);
+        }
+    
+        function showNotification(message, isSuccess = true) {
+          const notification = document.createElement('div');
+          notification.className = `text-white px-4 py-2 rounded shadow-lg mb-2 ${
+            isSuccess ? 'bg-green-500' : 'bg-red-500'
+          }`;
+          notification.textContent = message;
+          notification.style.cssText = 'transform: translateX(100%); transition: transform 0.3s ease-out;';
+    
+          notificationContainer.appendChild(notification);
+          notification.offsetWidth;
+          notification.style.transform = 'translateX(0)';
+    
+          setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 300);
+          }, 3000);
+        }
+    
+        function debounce(fn, wait) {
+          let timeout;
+          return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), wait);
+          };
+        }
+    
+        async function toggleWishlist(productId, button, maxRetries = 3) {
+          if (button.disabled) return;
+          button.disabled = true;
+    
+          const wasFilled = button.innerHTML.includes('fas fa-heart');
+          const originalHTML = button.innerHTML;
+          const originalClasses = button.className;
+    
+          button.innerHTML = wasFilled ? '<i class="far fa-heart"></i>' : '<i class="fas fa-heart"></i>';
+          button.classList.toggle('text-gray-400', !wasFilled);
+          button.classList.toggle('text-red-500', wasFilled);
+    
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              const response = await fetch('/wishlist/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId }),
+              });
+    
+              button.disabled = false;
+              const data = await response.json();
+    
+              if (data.success) {
+                const isAdded = data.message.includes('added');
+                button.innerHTML = isAdded ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
+                button.classList.toggle('text-gray-400', !isAdded);
+                button.classList.toggle('text-red-500', isAdded);
+                showNotification(data.message);
+    
+                const wishlistCountElement = document.getElementById('wishlist-count');
+                if (wishlistCountElement && data.wishlistCount !== undefined) {
+                  wishlistCountElement.textContent = data.wishlistCount;
+                }
+    
+                if (isAdded) {
+                  rebuildWishlistItems(data.wishlistItems);
+                }
+                return;
+              } else {
+                button.innerHTML = originalHTML;
+                button.className = originalClasses;
+                showNotification(data.message, false);
+                return;
               }
-      
-              wishlistItems.forEach(item => {
-                  const regularPrice = item.product.regularPrice || 0;
-                  const productOffer = item.product.productOffer || 0;
-                  const categoryOffer = item.product.category?.categoryOffer || 0;
-                  const effectiveOffer = Math.max(productOffer, categoryOffer);
-                  const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
-      
-                  const itemHtml = `
-                    <div class="border-b last:border-b-0 wishlist-item" data-product-id="${item.product._id}">
-                      <div class="md:grid md:grid-cols-12 gap-4 p-4 flex flex-wrap">
-                        <div class="md:col-span-8 flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto">
-                          <div class="w-20 h-20 flex-shrink-0">
-                            <img 
-                              src="/uploads/product-images/${item.product.productImage?.[0] || 'placeholder.jpg'}" 
-                              alt="${item.product.productName}" 
-                              class="w-full h-full object-cover rounded"
-                              onerror="this.src='/images/placeholder.jpg'"
-                            >
-                          </div>
-                          <div>
-                            <h3 class="font-medium text-gray-800">${item.product.productName}</h3>
-                            <p class="text-sm text-gray-500 mt-1">${item.product.description ? item.product.description.substring(0, 40) + '...' : ''}</p>
-                            <p class="text-xs text-gray-500 mt-1">
-                              ${item.product.skintype ? `<span class="mr-2">Skin type: ${item.product.skintype}</span>` : ''}
-                              ${item.product.category?.name ? `<span>Category: ${item.product.category.name}</span>` : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
-                          <div class="md:text-center">
-                            ${regularPrice > effectivePrice ? `
-                              <div class="flex md:flex-col md:items-center">
-                                <span class="text-gray-500 line-through text-sm mr-2 md:mr-0">₹${regularPrice.toFixed(2)}</span>
-                                <span class="text-gray-900 font-medium">₹${effectivePrice.toFixed(2)}</span>
-                              </div>
-                              ${effectiveOffer > 0 ? `<span class="discount-badge md:mt-1 md:inline-block hidden">${effectiveOffer}% off</span>` : ''}
-                            ` : `
-                              <span class="text-gray-900 font-medium">₹${regularPrice.toFixed(2)}</span>
-                            `}
-                          </div>
-                        </div>
-                        <div class="md:col-span-2 flex md:justify-end items-center space-x-3 w-1/2 md:w-auto">
-                          <button 
-                            style="width: 65px; height: 22px;" 
-                            class="add-to-cart-btn bg-black text-white rounded text-sm hover:bg-gray-800 transition" 
-                            data-product-id="${item.product._id}"
-                          >
-                            Cart
-                          </button>
-                          <button 
-                            class="toggle-wishlist-btn text-red-500 hover:text-red-700 transition heart-icon" 
-                            data-product-id="${item.product._id}"
-                          >
-                            <i class="fas fa-heart"></i>
-                          </button>
-                        </div>
-                      </div>
+            } catch (error) {
+              button.disabled = false;
+              if (error.message.includes('409') && attempt < maxRetries) {
+                await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
+                continue;
+              }
+              button.innerHTML = originalHTML;
+              button.className = originalClasses;
+              console.error('Error toggling wishlist:', error);
+              showNotification('An error occurred. Please try again.', false);
+              return;
+            }
+          }
+        }
+    
+        function rebuildWishlistItems(wishlistItems) {
+          const wishlistContainer = document.getElementById('wishlist-items');
+          if (!wishlistContainer) return;
+    
+          wishlistContainer.innerHTML = '';
+    
+          if (wishlistItems.length === 0) {
+            return;
+          }
+    
+          wishlistItems.forEach((item) => {
+            const regularPrice = item.product.regularPrice || 0;
+            const productOffer = item.product.productOffer || 0;
+            const categoryOffer = item.product.category?.categoryOffer || 0;
+            const effectiveOffer = Math.max(productOffer, categoryOffer);
+            const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
+    
+            const itemHtml = `
+              <div class="border-b last:border-b-0 wishlist-item" data-product-id="${item.product._id}">
+                <div class="md:grid md:grid-cols-12 gap-4 p-4 flex flex-wrap">
+                  <div class="md:col-span-8 flex items-center space-x-4 mb-4 md:mb-0 w-full md:w-auto">
+                    <div class="w-20 h-20 flex-shrink-0">
+                      <img 
+                        src="/Uploads/product-images/${item.product.productImage?.[0] || 'placeholder.jpg'}" 
+                        alt="${item.product.productName}" 
+                        class="w-full h-full object-cover rounded"
+                        onerror="this.src='/images/placeholder.jpg'"
+                      >
                     </div>
-                  `;
-                  wishlistContainer.insertAdjacentHTML('beforeend', itemHtml);
-              });
-      
-              // Reattach event listeners
-              attachEventListeners();
-          }
-      
-          // Function to attach event listeners
-          function attachEventListeners() {
-              document.querySelectorAll('.toggle-wishlist-btn').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const productId = this.getAttribute('data-product-id');
-                      const wishlistItem = document.querySelector(`.wishlist-item[data-product-id="${productId}"]`);
-                      
-                      fetch('/wishlist/toggle', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ productId })
-                      })
-                      .then(response => response.json())
-                      .then(data => {
-                          if (data.success) {
-                              if (data.message.includes('removed')) {
-                                  wishlistItem.style.opacity = '0';
-                                  setTimeout(() => {
-                                      wishlistItem.remove();
-                                      showNotification(data.message);
-                                      
-                                      const wishlistCountElement = document.getElementById('wishlist-count');
-                                      if (wishlistCountElement) {
-                                          wishlistCountElement.textContent = data.wishlistCount;
-                                      }
-                                      
-                                      if (document.querySelectorAll('.wishlist-item').length === 0) {
-                                          location.reload();
-                                      }
-                                  }, 300);
-                              } else {
-                                  rebuildWishlistItems(data.wishlistItems);
-                                  showNotification(data.message);
-                                  
-                                  const wishlistCountElement = document.getElementById('wishlist-count');
-                                  if (wishlistCountElement) {
-                                      wishlistCountElement.textContent = data.wishlistCount;
-                                  }
-                              }
-                          } else {
-                              showNotification(data.message, false);
-                          }
-                      })
-                      .catch(error => {
-                          console.error('Error:', error);
-                          showNotification('An error occurred. Please try again.', false);
-                      });
-                  });
-              });
-      
-              document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const productId = this.getAttribute('data-product-id');
-                      const wishlistItem = document.querySelector(`.wishlist-item[data-product-id="${productId}"]`);
-                      
-                      // Step 1: Add to cart
-                      fetch('/cart/add', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ productId, quantity: 1 })
-                      })
-                      .then(response => response.json())
-                      .then(data => {
-                          if (data.success) {
-                              // Step 2: Remove from wishlist after adding to cart
-                              return fetch('/wishlist/toggle', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ productId })
-                              });
-                          } else {
-                              throw new Error(data.message || 'Failed to add to cart');
-                          }
-                      })
-                      .then(response => response.json())
-                      .then(data => {
-                          if (data.success && data.message.includes('removed')) {
-                              // Update UI
-                              wishlistItem.style.opacity = '0';
-                              setTimeout(() => {
-                                  wishlistItem.remove();
-                                  showNotification('Product moved to cart!');
-                                  
-                                  const cartCountElement = document.getElementById('cart-count');
-                                  if (cartCountElement) {
-                                      cartCountElement.textContent = data.cartCount || parseInt(cartCountElement.textContent) + 1;
-                                  }
-                                  
-                                  const wishlistCountElement = document.getElementById('wishlist-count');
-                                  if (wishlistCountElement) {
-                                      wishlistCountElement.textContent = data.wishlistCount;
-                                  }
-                                  
-                                  if (document.querySelectorAll('.wishlist-item').length === 0) {
-                                      location.reload();
-                                  }
-                              }, 300);
-                          } else {
-                              showNotification(data.message || 'Failed to remove from wishlist', false);
-                          }
-                      })
-                      .catch(error => {
-                          console.error('Error:', error);
-                          showNotification(`An error occurred: ${error.message}. Please try again.`, false);
-                      });
-                  });
-              });
-      
-              document.querySelectorAll('.add-to-wishlist-btn').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const productId = this.getAttribute('data-product-id');
-                      
-                      fetch('/wishlist/toggle', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ productId })
-                      })
-                      .then(response => response.json())
-                      .then(data => {
-                          if (data.success) {
-                              if (data.message.includes('added')) {
-                                  this.innerHTML = '<i class="fas fa-heart"></i>';
-                                  this.classList.remove('text-gray-400');
-                                  this.classList.add('text-red-500');
-                                  showNotification(data.message);
-                                  
-                                  const wishlistCountElement = document.getElementById('wishlist-count');
-                                  if (wishlistCountElement) {
-                                      wishlistCountElement.textContent = data.wishlistCount;
-                                  }
-                                  
-                                  rebuildWishlistItems(data.wishlistItems);
-                              } else {
-                                  this.innerHTML = '<i class="far fa-heart"></i>';
-                                  this.classList.remove('text-red-500');
-                                  this.classList.add('text-gray-400');
-                                  showNotification(data.message);
-                                  
-                                  const wishlistCountElement = document.getElementById('wishlist-count');
-                                  if (wishlistCountElement) {
-                                      wishlistCountElement.textContent = data.wishlistCount;
-                                  }
-                              }
-                          } else {
-                              showNotification(data.message, false);
-                          }
-                      })
-                      .catch(error => {
-                          console.error('Error:', error);
-                          showNotification('An error occurred. Please try again.', false);
-                      });
-                  });
-              });
-          }
-      
-          // Handle clear wishlist button
-          const clearWishlistBtn = document.getElementById('clear-wishlist');
-          if (clearWishlistBtn) {
-              clearWishlistBtn.addEventListener('click', function(e) {
-                  e.preventDefault();
-                  if (confirm('Are you sure you want to clear your entire wishlist?')) {
-                      fetch('/wishlist/clear', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          credentials: 'include'
-                      })
-                      .then(response => {
-                          console.log('Clear Wishlist Response Status:', response.status);
-                          if (!response.ok) {
-                              throw new Error(`HTTP error! Status: ${response.status}`);
-                          }
-                          return response.json();
-                      })
-                      .then(data => {
-                          console.log('Clear Wishlist Response Data:', data);
-                          if (data.success) {
-                              showNotification('Wishlist cleared successfully');
-                              const wishlistCountElement = document.getElementById('wishlist-count');
-                              if (wishlistCountElement) {
-                                  wishlistCountElement.textContent = data.wishlistCount || '0';
-                              }
-                              rebuildWishlistItems(data.wishlistItems);
-                              setTimeout(() => location.reload(), 1000);
-                          } else {
-                              showNotification(data.message || 'Failed to clear wishlist', false);
-                          }
-                      })
-                      .catch(error => {
-                          console.error('Error clearing wishlist:', error);
-                          showNotification(`An error occurred while clearing the wishlist: ${error.message}. Please try again.`, false);
-                      });
-                  }
-              });
-          }
-      
-          // Initial attachment of event listeners
+                    <div>
+                      <h3 class="font-medium text-gray-800">${item.product.productName}</h3>
+                      <p class="text-sm text-gray-500 mt-1">${
+                        item.product.description ? item.product.description.substring(0, 40) + '...' : ''
+                      }</p>
+                      <p class="text-xs text-gray-500 mt-1">
+                        ${item.product.skintype ? `<span class="mr-2">Skin type: ${item.product.skintype}</span>` : ''}
+                        ${item.product.category?.name ? `<span>Category: ${item.product.category.name}</span>` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="md:col-span-2 flex md:justify-center items-center mb-4 md:mb-0 w-1/2 md:w-auto">
+                    <div class="md:text-center">
+                      ${
+                        regularPrice > effectivePrice
+                          ? `
+                            <div class="flex md:flex-col md:items-center">
+                              <span class="text-gray-500 line-through text-sm mr-2 md:mr-0">₹${regularPrice.toFixed(
+                                2
+                              )}</span>
+                              <span class="text-gray-900 font-medium">₹${effectivePrice.toFixed(2)}</span>
+                            </div>
+                            ${
+                              effectiveOffer > 0
+                                ? `<span class="discount-badge md:mt-1 md:inline-block hidden">${effectiveOffer}% off</span>`
+                                : ''
+                            }
+                          `
+                          : `<span class="text-gray-900 font-medium">₹${regularPrice.toFixed(2)}</span>`
+                      }
+                    </div>
+                  </div>
+                  <div class="md:col-span-2 flex md:justify-end items-center space-x-3 w-1/2 md:w-auto">
+                    <button 
+                      style="width: 65px; height: 22px;" 
+                      class="add-to-cart-btn bg-black text-white rounded text-sm hover:bg-gray-800 transition" 
+                      data-product-id="${item.product._id}"
+                    >
+                      Cart
+                    </button>
+                    <button 
+                      class="toggle-wishlist-btn text-red-500 hover:text-red-700 transition heart-icon" 
+                      data-product-id="${item.product._id}"
+                    >
+                      <i class="fas fa-heart"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+            wishlistContainer.insertAdjacentHTML('beforeend', itemHtml);
+          });
+    
           attachEventListeners();
+        }
+    
+        function attachEventListeners() {
+          document.querySelectorAll('.toggle-wishlist-btn').forEach((button) => {
+            button.removeEventListener('click', button._clickHandler);
+            button._clickHandler = debounce(function () {
+              const productId = this.getAttribute('data-product-id');
+              const wishlistItem = document.querySelector(`.wishlist-item[data-product-id="${productId}"]`);
+              toggleWishlist(productId, this).then(() => {
+                if (this.innerHTML.includes('far fa-heart')) {
+                  wishlistItem.style.opacity = '0';
+                  setTimeout(() => {
+                    wishlistItem.remove();
+                    if (document.querySelectorAll('.wishlist-item').length === 0) {
+                      location.reload();
+                    }
+                  }, 300);
+                }
+              });
+            }, 300);
+            button.addEventListener('click', button._clickHandler);
+          });
+    
+          document.querySelectorAll('.add-to-cart-btn').forEach((button) => {
+            button.removeEventListener('click', button._clickHandler);
+            button._clickHandler = debounce(async function () {
+              if (this.disabled) return;
+              this.disabled = true;
+              const productId = this.getAttribute('data-product-id');
+              const wishlistItem = document.querySelector(`.wishlist-item[data-product-id="${productId}"]`);
+    
+              try {
+                const cartResponse = await fetch('/cart/add', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ productId, quantity: 1 }),
+                });
+                const cartData = await cartResponse.json();
+                if (!cartData.success) {
+                  throw new Error(cartData.message || 'Failed to add to cart');
+                }
+    
+                const wishlistResponse = await fetch('/wishlist/toggle', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ productId }),
+                });
+                const wishlistData = await wishlistResponse.json();
+    
+                this.disabled = false;
+                if (wishlistData.success && wishlistData.message.includes('removed')) {
+                  wishlistItem.style.opacity = '0';
+                  setTimeout(() => {
+                    wishlistItem.remove();
+                    showNotification('Product moved to cart!');
+    
+                    const cartCountElement = document.getElementById('cart-count');
+                    if (cartCountElement) {
+                      cartCountElement.textContent = cartData.cartCount || parseInt(cartCountElement.textContent) + 1;
+                    }
+    
+                    const wishlistCountElement = document.getElementById('wishlist-count');
+                    if (wishlistCountElement) {
+                      wishlistCountElement.textContent = wishlistData.wishlistCount;
+                    }
+    
+                    if (document.querySelectorAll('.wishlist-item').length === 0) {
+                      location.reload();
+                    }
+                  }, 300);
+                } else {
+                  showNotification(wishlistData.message || 'Failed to remove from wishlist', false);
+                }
+              } catch (error) {
+                this.disabled = false;
+                console.error('Error:', error);
+                showNotification(`An error occurred: ${error.message}. Please try again.`, false);
+              }
+            }, 300);
+            button.addEventListener('click', button._clickHandler);
+          });
+    
+          document.querySelectorAll('.add-to-wishlist-btn').forEach((button) => {
+            button.removeEventListener('click', button._clickHandler);
+            button._clickHandler = debounce(function () {
+              const productId = this.getAttribute('data-product-id');
+              toggleWishlist(productId, this);
+            }, 300);
+            button.addEventListener('click', button._clickHandler);
+          });
+        }
+    
+        const clearWishlistBtn = document.getElementById('clear-wishlist');
+        if (clearWishlistBtn) {
+          clearWishlistBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            if (!confirm('Are you sure you want to clear your entire wishlist?')) return;
+    
+            try {
+              const response = await fetch('/wishlist/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+              });
+    
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+    
+              const data = await response.json();
+              if (data.success) {
+                showNotification('Wishlist cleared successfully');
+                const wishlistCountElement = document.getElementById('wishlist-count');
+                if (wishlistCountElement) {
+                  wishlistCountElement.textContent = data.wishlistCount || '0';
+                }
+                rebuildWishlistItems(data.wishlistItems);
+                setTimeout(() => location.reload(), 1000);
+              } else {
+                showNotification(data.message || 'Failed to clear wishlist', false);
+              }
+            } catch (error) {
+              console.error('Error clearing wishlist:', error);
+              showNotification(
+                `An error occurred while clearing the wishlist: ${error.message}. Please try again.`,
+                false
+              );
+            }
+          });
+        }
+    
+        attachEventListeners();
       });
     </script>
   </body>

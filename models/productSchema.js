@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema({
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     regularPrice: { type: Number, required: true },
     salePrice: { type: Number,required:true },
-    quantity: { type: Number, required: true ,default:0},
+    quantity: { type: Number, required: true ,default:0,min:0},
     skintype: { type: String ,default :'', required:true},
     skinConcern: { type: [String] ,required:true},
     reviewCount: { type: Number, default: 0 },
@@ -22,6 +22,20 @@ const productSchema = new mongoose.Schema({
     ingredients: [String],
     brand: { type: String },
     howToUse: {type: String,default :'',required: false},
+    lowStockThreshold: { type: Number, default: 20 },
+    stockHistory: [{
+        quantity: Number,
+        type: {
+            type: String,
+            enum: ['add', 'remove', 'adjust'],
+            required: true
+        },
+        reason: String,
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 
 }, { timestamps: true });
 

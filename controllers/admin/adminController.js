@@ -10,7 +10,7 @@ const pageError = async (req, res) => {
 
 const loadLogin = (req, res) => {
     if(req.session.admin){
-        return res.redirect('/admin')
+        return res.redirect('/admin/dashboard')
     }
     res.render('admin-login',{message:null})
 }
@@ -25,7 +25,7 @@ const login = async (req, res) => {
             if (passwordMatch) {
                
                 req.session.admin = true;
-                return res.redirect('/admin');
+                return res.redirect('/admin/dashboard');
             } else {
                 return res.redirect('/admin/login');
             }
@@ -38,18 +38,6 @@ const login = async (req, res) => {
     }
 };
 
-
-const loadDashboard = async (req, res) => {
-    if(req.session.admin){
-        try {
-            res.render('dashboard')
-        } catch (error) {
-            res.redirect('/admin/pageerror')
-        }
-    } else{
-        return res.redirect('/admin/login')
-    }
-}
 
 
 const logout = async (req, res) => {
@@ -72,7 +60,6 @@ const logout = async (req, res) => {
 module.exports = {
     loadLogin,
     login,
-    loadDashboard,
     pageError,
     logout,
     

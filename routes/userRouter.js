@@ -130,7 +130,7 @@ router.post('/verify-payment', checkoutController.verifyPayment);
 router.get('/order-success', checkoutController.getOrderSuccessPage);
 router.get('/order-error', checkoutController.getOrderErrorPage);
 router.post('/retry-payment', checkoutController.retryPayment);
-
+router.post('/wallet/process-payment', checkoutController.processWalletPayment);
 //coupon
 router.get('/coupons/available',checkoutController.getAvailableCoupons); // New route
 router.post('/coupons/apply', checkoutController.applyCoupon);
@@ -160,11 +160,12 @@ router.get('/wallet', walletController.renderWalletPage);
 router.get('/wallet/transactions',  walletController.getMoreTransactions);
 router.post('/wallet/add-cash', walletController.addCashToWallet);
 router.post('/wallet/verify-payment', userAuth, walletController.verifyPayment);
-
+router.post('/orders/:orderId/process-return', walletController.processReturnAndCreditWallet);
 
 
 //referral
 router.get('/referral', referralController.renderReferral);
+
 
 
 module.exports = router;

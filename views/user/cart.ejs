@@ -166,28 +166,60 @@
                 </div>
               <% }); %>
             </div>
+
           
-          <div class="mt-4 flex justify-between items-center">
-            <a href="/shop" class="text-blue-600 hover:text-blue-800 flex items-center">
-              <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
-            </a>
-          </div>
-        <% } else { %>
-          <div class="text-center bg-white p-10 rounded-lg shadow">
-            <div class="text-gray-400 mb-6">
-              <i class="fas fa-shopping-cart text-5xl"></i>
-            </div>
-            <h2 class="text-2xl font-medium text-gray-700 mb-4">Your cart is empty</h2>
-            <p class="text-gray-500 mb-6">Looks like you haven't added any products to your cart yet.</p>
-            <a 
-              href="/shop" 
-              class="inline-block bg-black text-white py-2 px-6 rounded hover:bg-gray-900 transition"
-            >
-              Start Shopping
-            </a>
-          </div>
+         <!-- Pagination Controls -->
+    <% if (pagination.totalPages > 1) { %>
+      <div class="mt-6 flex justify-center items-center space-x-2">
+        <!-- Previous Button -->
+        <a
+          href="/cart?page=<%= pagination.currentPage - 1 %>"
+          class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 <%= !pagination.hasPrevPage ? 'pointer-events-none opacity-50' : '' %>"
+        >
+          Previous
+        </a>
+
+        <!-- Page Numbers -->
+        <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+          <a
+            href="/cart?page=<%= i %>"
+            class="px-4 py-2 border rounded <%= pagination.currentPage === i ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100' %>"
+          >
+            <%= i %>
+          </a>
         <% } %>
+
+        <!-- Next Button -->
+        <a
+          href="/cart?page=<%= pagination.currentPage + 1 %>"
+          class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 <%= !pagination.hasNextPage ? 'pointer-events-none opacity-50' : '' %>"
+        >
+          Next
+        </a>
       </div>
+    <% } %>
+
+    <div class="mt-4 flex justify-between items-center">
+      <a href="/shop" class="text-blue-600 hover:text-blue-800 flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
+      </a>
+    </div>
+  <% } else { %>
+    <div class="text-center bg-white p-10 rounded-lg shadow">
+      <div class="text-gray-400 mb-6">
+        <i class="fas fa-shopping-cart text-5xl"></i>
+      </div>
+      <h2 class="text-2xl font-medium text-gray-700 mb-4">Your cart is empty</h2>
+      <p class="text-gray-500 mb-6">Looks like you haven't added any products to your cart yet.</p>
+      <a
+        href="/shop"
+        class="inline-block bg-black text-white py-2 px-6 rounded hover:bg-gray-900 transition"
+      >
+        Start Shopping
+      </a>
+    </div>
+  <% } %>
+</div>
       
       <!-- Order Summary Section -->
       <div class="lg:col-span-1">
@@ -236,73 +268,71 @@
   <%- include('../partials/user/footer') %>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      function showNotification(message, isSuccess = true) {
-        const notification = document.createElement('div');
-        notification.className = `text-white px-4 py-2 rounded shadow-lg ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-        notification.textContent = message;
-        notification.style.position = 'fixed';
-        notification.style.top = '20px';
-        notification.style.right = '20px';
-        notification.style.zIndex = '1000';
-        notification.style.transform = 'translateX(100%)';
-        notification.style.transition = 'transform 0.3s ease-out';
-        document.body.appendChild(notification);
-        setTimeout(() => notification.style.transform = 'translateX(0)', 10);
-        setTimeout(() => {
-          notification.style.transform = 'translateX(100%)';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }
-  
-      function updateOrderSummary(data) {
-        document.getElementById('subtotal').textContent = `₹${data.subtotal.toFixed(2)}`;
-        if (data.discount > 0) {
-          let discountEl = document.getElementById('discount');
-          if (!discountEl) {
-            const discountDiv = document.createElement('div');
-            discountDiv.className = 'flex justify-between text-sm text-green-600';
-            discountDiv.innerHTML = `<span>Discount</span><span id="discount">-₹${data.discount.toFixed(2)}</span>`;
-            document.getElementById('shipping').parentElement.insertAdjacentElement('beforebegin', discountDiv);
-          } else {
-            discountEl.textContent = `-₹${data.discount.toFixed(2)}`;
-          }
-        }
-        document.getElementById('shipping').textContent = `₹${data.shippingCost.toFixed(2)}`;
-        document.getElementById('tax').textContent = `₹${data.tax.toFixed(2)}`;
-        document.getElementById('total').textContent = `₹${data.total.toFixed(2)}`;
-        const cartCountEl = document.getElementById('cart-count');
-        if (cartCountEl) cartCountEl.textContent = data.cartCount;
-      }
-  
-      function updateCartContents() {
-      fetch('/cart/contents', { method: 'GET' })
-        .then(response => response.text())
-        .then(html => {
-          const cartItems = document.getElementById('cart-items');
-          if (!html.includes('cart-item') && cartItems.children.length > 0) {
-            showNotification('Some products were removed as they are out of stock', false);
-            location.reload();
-          } else {
-            cartItems.innerHTML = html;
-            attachEventListeners();
-          }
-        })
-        .catch(error => console.error('Error updating cart:', error));
+document.addEventListener('DOMContentLoaded', function () {
+    let isNotificationActive = false;
 
+    function showNotification(message, isSuccess = true) {
+      if (isNotificationActive) return;
+      isNotificationActive = true;
+
+      const notification = document.createElement('div');
+      notification.className = `text-white px-4 py-2 rounded shadow-lg ${
+        isSuccess ? 'bg-green-500' : 'bg-red-500'
+      }`;
+      notification.textContent = message;
+      notification.style.position = 'fixed';
+      notification.style.top = '20px';
+      notification.style.right = '20px';
+      notification.style.zIndex = '1000';
+      notification.style.transform = 'translateX(100%)';
+      notification.style.transition = 'transform 0.3s ease-out';
+      document.body.appendChild(notification);
+      setTimeout(() => (notification.style.transform = 'translateX(0)'), 10);
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          notification.remove();
+          isNotificationActive = false;
+        }, 300);
+      }, 3000);
+    }
+
+    function updateOrderSummary(data) {
+      document.getElementById('subtotal').textContent = `₹${data.subtotal.toFixed(2)}`;
+      if (data.discount > 0) {
+        let discountEl = document.getElementById('discount');
+        if (!discountEl) {
+          const discountDiv = document.createElement('div');
+          discountDiv.className = 'flex justify-between text-sm text-green-600';
+          discountDiv.innerHTML = `<span>Discount</span><span id="discount">-₹${data.discount.toFixed(
+            2
+          )}</span>`;
+          document.getElementById('shipping').parentElement.insertAdjacentElement('beforebegin', discountDiv);
+        } else {
+          discountEl.textContent = `-₹${data.discount.toFixed(2)}`;
+        }
+      }
+      document.getElementById('shipping').textContent = `₹${data.shippingCost.toFixed(2)}`;
+      document.getElementById('tax').textContent = `₹${data.tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `₹${data.total.toFixed(2)}`;
+      const cartCountEl = document.getElementById('cart-count');
+      if (cartCountEl) cartCountEl.textContent = data.cartCount;
+    }
+
+    function updateCartContents() {
       fetch('/cart/summary', { method: 'GET' })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           if (data.success) {
             updateOrderSummary(data);
           }
         })
-        .catch(error => console.error('Error updating summary:', error));
+        .catch((error) => console.error('Error updating summary:', error));
     }
 
     function attachEventListeners() {
-      document.querySelectorAll('.update-quantity-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
+      document.querySelectorAll('.update-quantity-btn').forEach((button) => {
+        button.addEventListener('click', function (e) {
           e.preventDefault();
           const productId = this.getAttribute('data-product-id');
           const action = this.getAttribute('data-action');
@@ -313,10 +343,10 @@
           fetch('/cart/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId, action })
+            body: JSON.stringify({ productId, action }),
           })
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
               if (data.success) {
                 const newQuantity = action === 'increase' ? currentQuantity + 1 : currentQuantity - 1;
                 if (newQuantity >= 1 && newQuantity <= maxQuantity) {
@@ -334,38 +364,39 @@
                 showNotification(data.message || 'Failed to update quantity', false);
               }
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Error:', error);
               showNotification('An error occurred', false);
             });
         });
       });
 
-      document.querySelectorAll('.remove-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
+      document.querySelectorAll('.remove-form').forEach((form) => {
+        form.addEventListener('submit', function (e) {
           e.preventDefault();
           const productId = this.querySelector('input[name="productId"]').value;
 
           fetch('/cart/remove', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId })
+            body: JSON.stringify({ productId }),
           })
-            .then(response => response.json())
-            .then(data => {
+            .then((response) => response.json())
+            .then((data) => {
               if (data.success) {
-                showNotification('Product removed from cart');
                 updateOrderSummary(data);
                 const item = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
                 if (item) item.remove();
-                if (!document.querySelectorAll('.cart-item').length) {
+                showNotification('Product removed from cart');
+                // Reload to adjust pagination if needed
+                if (!document.querySelectorAll('.cart-item').length || data.cartCount <= 5) {
                   location.reload();
                 }
               } else {
                 showNotification(data.message || 'Failed to remove product', false);
               }
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Error:', error);
               showNotification('An error occurred. Please try again.', false);
             });
@@ -373,10 +404,7 @@
       });
     }
 
-    // Run update every 5 seconds
     setInterval(updateCartContents, 5000);
-
-    // Initial attachment of event listeners
     attachEventListeners();
   });
 

@@ -6,64 +6,84 @@ const Category = require('../../models/CategorySchema');
 const Address = require('../../models/addressSchema');
 
 const getCartPage = async (req, res) => {
-    try {
-        const userId = req.user._id;
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1; // Get page number from query, default to 1
+    const limit = 5; // Number of items per page
+    const skip = (page - 1) * limit; // Calculate items to skip
 
-        const cart = await Cart.findOne({ user: userId })
-          .populate({
-            path: 'items.product',
-            populate: { path: 'category' }
-          });
-  
-        let subtotal = 0;
-        let shippingCost = 50;
-        let discount = 0;
-  
-        if (cart && cart.items && cart.items.length > 0) {
-            cart.items = cart.items.reverse();
-            subtotal = cart.items.reduce((sum, item) => {
-                if (item.product && item.product.regularPrice) {
-                    const regularPrice = item.product.regularPrice;
-                    const productOffer = item.product.productOffer || 0;
-                    const categoryOffer = item.product.category?.categoryOffer || 0;
-                    const effectiveOffer = Math.max(productOffer, categoryOffer);
-                    const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
-                    discount += (regularPrice - effectivePrice) * item.quantity;
-                    return sum + (effectivePrice * item.quantity);
-                }
-                return sum;
-            }, 0);
-            
-            shippingCost = subtotal > 1000 ? 0 : 50;
-        } else {
-            shippingCost = 0;
+    const cart = await Cart.findOne({ user: userId }).populate({
+      path: 'items.product',
+      populate: { path: 'category' },
+    });
+
+    let subtotal = 0;
+    let shippingCost = 50;
+    let discount = 0;
+    let totalItems = 0;
+    let paginatedItems = [];
+
+    if (cart && cart.items && cart.items.length > 0) {
+      totalItems = cart.items.length; // Total items in cart
+      cart.items = cart.items.reverse(); // Reverse for display order
+      paginatedItems = cart.items.slice(skip, skip + limit); // Slice items for current page
+
+      // Calculate totals based on all items (not just paginated)
+      subtotal = cart.items.reduce((sum, item) => {
+        if (item.product && item.product.regularPrice) {
+          const regularPrice = item.product.regularPrice;
+          const productOffer = item.product.productOffer || 0;
+          const categoryOffer = item.product.category?.categoryOffer || 0;
+          const effectiveOffer = Math.max(productOffer, categoryOffer);
+          const effectivePrice = regularPrice * (1 - effectiveOffer / 100);
+          discount += (regularPrice - effectivePrice) * item.quantity;
+          return sum + (effectivePrice * item.quantity);
         }
-  
-        const tax = subtotal * 0.1;
-        const total = subtotal + shippingCost + tax;
-  
-        const relatedProducts = cart && cart.items.length > 0
-            ? await Product.find({
-                category: cart.items[0].product?.category?._id,
-                _id: { $nin: cart.items.map(item => item.product?._id).filter(Boolean) }
-            }).limit(4)
-            : await Product.find().limit(4);
-  
-        res.render("cart", { 
-            cart, 
-            user: req.user,
-            subtotal,
-            shippingCost,
-            tax,
-            total,
-            discount,
-            relatedProducts 
-        });
-    } catch (error) {
-        console.error("Error loading cart page:", error);
-        res.status(500).send("Internal Server Error");
+        return sum;
+      }, 0);
+
+      shippingCost = subtotal > 1000 ? 0 : 50;
+    } else {
+      shippingCost = 0;
     }
-  };
+
+    const tax = subtotal * 0.1;
+    const total = subtotal + shippingCost + tax;
+
+    const relatedProducts =
+      cart && cart.items.length > 0
+        ? await Product.find({
+            category: cart.items[0].product?.category?._id,
+            _id: { $nin: cart.items.map((item) => item.product?._id).filter(Boolean) },
+          }).limit(4)
+        : await Product.find().limit(4);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalItems / limit);
+    const pagination = {
+      currentPage: page,
+      totalPages: totalPages,
+      hasPrevPage: page > 1,
+      hasNextPage: page < totalPages,
+      totalItems: totalItems,
+    };
+
+    res.render('cart', {
+      cart: { ...cart, items: paginatedItems }, // Pass only paginated items
+      user: req.user,
+      subtotal,
+      shippingCost,
+      tax,
+      total,
+      discount,
+      relatedProducts,
+      pagination, // Pass pagination data to template
+    });
+  } catch (error) {
+    console.error('Error loading cart page:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
   const addToCart = async (req, res) => {
     try {
       const userId = req.session.user?._id;

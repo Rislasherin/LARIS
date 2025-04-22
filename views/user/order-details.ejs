@@ -408,81 +408,77 @@
               <!-- Products List -->
               <div class="mt-3">
                 <% order.products.forEach(product => { %>
-                <div class="product-card">
-                  <div class="d-flex flex-column flex-md-row">
-                    <div class="me-md-3 mb-3 mb-md-0 text-center">
-                      <img
-                        src="<%= product.image %>"
-                        alt="<%= product.name %>"
-                        class="product-image"
-                      />
-                    </div>
-                    <div class="product-details">
-                      <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <h6 class="product-name"><%= product.name %></h6>
-                          <p class="product-price mb-1">
-                            ₹<%= product.price.toFixed(2) %>
-                            <small>(x<%= product.quantity %>)</small>
-                          </p>
-                          <% if (product.offerDiscount > 0) { %>
-                          <p class="mb-1 text-success">
-                            <i class="fas fa-tag me-1"></i> <%= product.offerName
-                            %> (-₹<%= product.offerDiscount.toFixed(2) %>)
-                          </p>
-                          <% } %>
-                          <p class="product-quantity mb-1">
-                            Subtotal: ₹<%= (product.price * product.quantity -
-                            (product.offerDiscount || 0)).toFixed(2) %>
-                          </p>
-                          <!-- Product status badge -->
-                          <p class="mb-0">
-                            <span class="status-badge <%= product.productStatus === 'Shipped' || product.productStatus === 'Delivered' ? 'status-shipped' : product.productStatus === 'Cancelled' ? 'status-cancelled' : product.productStatus === 'Cancellation Requested' ? 'status-pending' : product.productStatus === 'Return Requested' ? 'status-pending' : product.productStatus === 'Returned' ? 'status-delivered' : 'status-pending' %>">
-                              <i class="fas <%= product.productStatus === 'Delivered' ? 'fa-check-circle' : product.productStatus === 'Shipped' ? 'fa-shipping-fast' : product.productStatus === 'Cancelled' ? 'fa-ban' : product.productStatus === 'Cancellation Requested' ? 'fa-hourglass-half' : product.productStatus === 'Return Requested' ? 'fa-undo' : product.productStatus === 'Returned' ? 'fa-check-circle' : 'fa-clock' %> me-1"></i>
-                              <%= product.productStatus %>
-                            </span>
-                          </p>
-                        </div>
-                        <div class="d-none d-md-block">
-                          <% if (product.productStatus !== "Cancelled" &&
-                          product.productStatus !== "Delivered" &&
-                          product.productStatus !== "Cancellation Requested" &&
-                          product.productStatus !== "Return Requested" &&
-                          product.productStatus !== "Returned") { %>
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger cancel-product-btn"
-                            data-bs-toggle="modal"
-                            data-bs-target="#cancelOrderModal"
-                            data-order-id="<%= order._id %>"
-                            data-product-id="<%= product._id %>"
-                            data-action="cancel"
-                            data-status="<%= product.productStatus %>"
-                          >
-                            <i class="fas fa-ban me-1"></i> Cancel
-                          </button>
-                          <% } %> <% if (product.productStatus === "Delivered" &&
-                          (new Date() - new Date(product.deliveryDate ||
-                          order.orderDate)) <= 30 * 24 * 60 * 60 * 1000) { %>
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger return-product-btn"
-                            data-bs-toggle="modal"
-                            data-bs-target="#cancelOrderModal"
-                            data-order-id="<%= order._id %>"
-                            data-product-id="<%= product._id %>"
-                            data-action="return"
-                            data-status="<%= product.productStatus %>"
-                          >
-                            <i class="fas fa-undo me-1"></i> Return
-                          </button>
-                          <% } %>
-                        </div>
+                  <div class="product-card">
+                      <div class="d-flex flex-column flex-md-row">
+                          <div class="me-md-3 mb-3 mb-md-0 text-center">
+                              <img
+                                  src="<%= product.image %>"
+                                  alt="<%= product.name %>"
+                                  class="product-image"
+                              />
+                          </div>
+                          <div class="product-details">
+                              <div class="d-flex justify-content-between align-items-start mb-2">
+                                  <div>
+                                      <h6 class="product-name"><%= product.name %></h6>
+                                      <p class="product-price mb-1">
+                                          ₹<%= product.price.toFixed(2) %>
+                                          <small>(x<%= product.quantity %>)</small>
+                                      </p>
+                                      <% if (product.offerDiscount > 0) { %>
+                                      <p class="mb-1 text-success">
+                                          <i class="fas fa-tag me-1"></i> <%= product.offerName %> (-₹<%= product.offerDiscount.toFixed(2) %>)
+                                      </p>
+                                      <% } %>
+                                      <p class="product-quantity mb-1">
+                                          Subtotal: ₹<%= (product.price * product.quantity - (product.offerDiscount || 0)).toFixed(2) %>
+                                      </p>
+                                      <p class="mb-0">
+                                          <span class="status-badge <%= product.productStatus === 'Shipped' || product.productStatus === 'Delivered' ? 'status-shipped' : product.productStatus === 'Cancelled' ? 'status-cancelled' : product.productStatus === 'Cancellation Requested' ? 'status-pending' : product.productStatus === 'Return Requested' ? 'status-pending' : product.productStatus === 'Returned' ? 'status-delivered' : 'status-pending' %>">
+                                              <i class="fas <%= product.productStatus === 'Delivered' ? 'fa-check-circle' : product.productStatus === 'Shipped' ? 'fa-shipping-fast' : product.productStatus === 'Cancelled' ? 'fa-ban' : product.productStatus === 'Cancellation Requested' ? 'fa-hourglass-half' : product.productStatus === 'Return Requested' ? 'fa-undo' : product.productStatus === 'Returned' ? 'fa-check-circle' : 'fa-clock' %> me-1"></i>
+                                              <%= product.productStatus %>
+                                          </span>
+                                      </p>
+                                  </div>
+                                  <div class="d-none d-md-block">
+                                      <% if (product.productStatus !== "Cancelled" &&
+                                          product.productStatus !== "Delivered" &&
+                                          product.productStatus !== "Cancellation Requested" &&
+                                          product.productStatus !== "Return Requested" &&
+                                          product.productStatus !== "Returned") { %>
+                                      <button
+                                          type="button"
+                                          class="btn btn-sm btn-outline-danger cancel-product-btn"
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#cancelOrderModal"
+                                          data-order-id="<%= order._id %>"
+                                          data-product-id="<%= product._id %>"
+                                          data-action="cancel"
+                                          data-status="<%= product.productStatus %>"
+                                      >
+                                          <i class="fas fa-ban me-1"></i> Cancel
+                                      </button>
+                                      <% } %>
+                                      <% if (product.productStatus === "Delivered" && product.canReturn) { %>
+                                      <button
+                                          type="button"
+                                          class="btn btn-sm btn-outline-danger return-product-btn"
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#cancelOrderModal"
+                                          data-order-id="<%= order._id %>"
+                                          data-product-id="<%= product._id %>"
+                                          data-action="return"
+                                          data-status="<%= product.productStatus %>"
+                                      >
+                                          <i class="fas fa-undo me-1"></i> Return
+                                      </button>
+                                      <% } %>
+                                  </div>
+                              </div>
+                          </div>
                       </div>
-                    </div>
                   </div>
-                </div>
-                <% }) %>
+                  <% }) %>
               </div>
             </div>
             

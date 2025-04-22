@@ -106,7 +106,6 @@ const updateOrderStatus = async (req, res) => {
   
       const currentStatus = order.status;
   
-      // Restore stock if setting to Cancelled
       if (newStatus === 'Cancelled' && currentStatus !== 'Cancelled') {
         for (const item of order.orderItems) {
           if (!['Cancelled', 'Returned'].includes(item.status)) {
@@ -121,7 +120,7 @@ const updateOrderStatus = async (req, res) => {
       }
   
       order.status = newStatus;
-      order.orderStatus = newStatus; // Maintain consistency (orderStatus seems unused but included)
+      order.orderStatus = newStatus; 
   
       if (!order.history) order.history = [];
       order.history.push({
@@ -131,7 +130,7 @@ const updateOrderStatus = async (req, res) => {
         updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
       });
   
-      // Update timeline
+   
       if (!order.timeline) order.timeline = [];
       order.timeline.push({
         title: newStatus,
@@ -153,100 +152,103 @@ const updateOrderStatus = async (req, res) => {
     }
   };
 
-const updateProductStatus = async (req, res) => {
+  const updateProductStatus = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const { orderId } = req.params;
-      const { productStatuses } = req.body;
-      console.log('Request body:', req.body);
-  
-      const order = await Order.findOne({ _id: orderId }).session(session);
-      if (!order) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-  
-      if (order.status === 'Cancelled' || order.status === 'Returned') {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'Cannot update products in Cancelled or Returned orders' });
-      }
-  
-      for (const { productId, status } of productStatuses) {
-        const item = order.orderItems.find(i => i._id.toString() === productId);
-        if (!item) {
-          console.log(`Item ${productId} not found in order`);
-          continue;
-        }
-  
-        if (item.status === 'Cancelled' || item.status === 'Returned') {
-          console.log(`Skipping ${productId}: Already ${item.status}`);
-          continue;
-        }
-        if (item.status === 'Shipped' && (status === 'Pending' || status === 'Processing')) {
-          console.log(`Skipping ${productId}: Cannot revert Shipped to ${status}`);
-          continue;
-        }
-        if (item.status === 'Processing' && status === 'Pending') {
-          console.log(`Skipping ${productId}: Cannot revert Processing to Pending`);
-          continue;
-        }
-  
-        // Restore stock if setting to Cancelled
-        if (status === 'Cancelled' && item.status !== 'Cancelled') {
-          const product = await Product.findById(item.productId).session(session);
-          if (product) {
-            product.quantity += item.quantity;
-            await product.save({ session });
-          }
-        }
-  
-        item.status = status;
-        console.log(`Updated ${productId} to ${status}`);
-      }
-  
-      const itemCount = order.orderItems.length;
-      const deliveredCount = order.orderItems.filter(i => i.status === 'Delivered').length;
-  
-      if (itemCount > 1) {
-        if (deliveredCount > 0 && deliveredCount < itemCount) {
-          order.status = 'Partially Delivered';
-          console.log('Order status set to Partially Delivered');
-        } else if (deliveredCount === itemCount) {
-          order.status = 'Delivered';
-          console.log('Order status set to Delivered');
-        }
-      }
-  
-      const allCancelled = order.orderItems.every(i => i.status === 'Cancelled');
-      if (allCancelled) {
-        order.status = 'Cancelled';
-        console.log('All items cancelled - updating order to Cancelled');
-      }
-  
-      if (!order.history) order.history = [];
-      order.history.push({
-        status: 'Product Status Update',
-        timestamp: new Date(),
-        notes: `Updated product statuses`,
-        updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-      });
-  
-      await order.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-  
-      res.json({ success: true, message: 'Product statuses updated successfully!' });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Error updating product status:', error);
-      res.status(500).json({ success: false, message: 'Internal Server Error' });
-    }
-  };
+        const { orderId } = req.params;
+        const { productStatuses } = req.body;
 
+        const order = await Order.findOne({ _id: orderId }).session(session);
+        if (!order) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.status === 'Cancelled' || order.status === 'Returned') {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ success: false, message: 'Cannot update products in Cancelled or Returned orders' });
+        }
+
+        for (const { productId, status } of productStatuses) {
+            const item = order.orderItems.find(i => i._id.toString() === productId);
+            if (!item) {
+                console.log(`Item ${productId} not found in order`);
+                continue;
+            }
+
+            if (item.status === 'Cancelled' || item.status === 'Returned') {
+                console.log(`Skipping ${productId}: Already ${item.status}`);
+                continue;
+            }
+            if (item.status === 'Shipped' && (status === 'Pending' || status === 'Processing')) {
+                console.log(`Skipping ${productId}: Cannot revert Shipped to ${status}`);
+                continue;
+            }
+            if (item.status === 'Processing' && status === 'Pending') {
+                console.log(`Skipping ${productId}: Cannot revert Processing to Pending`);
+                continue;
+            }
+
+            if (status === 'Cancelled' && item.status !== 'Cancelled') {
+                const product = await Product.findById(item.productId).session(session);
+                if (product) {
+                    product.quantity += item.quantity;
+                    await product.save({ session });
+                }
+            }
+
+            // Set deliveryDate when status is changed to Delivered
+            if (status === 'Delivered' && item.status !== 'Delivered') {
+                item.deliveryDate = new Date();
+            }
+
+            item.status = status;
+            console.log(`Updated ${productId} to ${status}`);
+        }
+
+        const itemCount = order.orderItems.length;
+        const deliveredCount = order.orderItems.filter(i => i.status === 'Delivered').length;
+
+        if (itemCount > 1) {
+            if (deliveredCount > 0 && deliveredCount < itemCount) {
+                order.status = 'Partially Delivered';
+                console.log('Order status set to Partially Delivered');
+            } else if (deliveredCount === itemCount) {
+                order.status = 'Delivered';
+                order.deliveryDate = new Date(); // Set order-level delivery date
+                console.log('Order status set to Delivered');
+            }
+        }
+
+        const allCancelled = order.orderItems.every(i => i.status === 'Cancelled');
+        if (allCancelled) {
+            order.status = 'Cancelled';
+            console.log('All items cancelled - updating order to Cancelled');
+        }
+
+        if (!order.history) order.history = [];
+        order.history.push({
+            status: 'Product Status Update',
+            timestamp: new Date(),
+            notes: `Updated product statuses`,
+            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+        });
+
+        await order.save({ session });
+        await session.commitTransaction();
+        session.endSession();
+
+        res.json({ success: true, message: 'Product statuses updated successfully!' });
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error('Error updating product status:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
 const renderReturnRequestsList = async (req, res) => {
     try {
        
@@ -306,7 +308,6 @@ const updateAllOrderItems = async (req, res) => {
                   continue;
               }
 
-              // Restore stock if setting to Cancelled
               if (status === 'Cancelled' && item.status !== 'Cancelled') {
                   const product = await Product.findById(item.productId);
                   if (product) {
@@ -315,12 +316,16 @@ const updateAllOrderItems = async (req, res) => {
                   }
               }
 
+              // Set deliveryDate when status is changed to Delivered
+              if (status === 'Delivered' && item.status !== 'Delivered') {
+                  item.deliveryDate = new Date();
+              }
+
               item.status = status;
               updatedCount++;
           }
       }
 
-      // Determine new order status
       const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
       const allShipped = order.orderItems.every(item => item.status === 'Shipped');
       const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
@@ -328,8 +333,10 @@ const updateAllOrderItems = async (req, res) => {
       const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
 
       let newOrderStatus = order.status;
-      if (allDelivered) newOrderStatus = 'Delivered';
-      else if (allShipped) newOrderStatus = 'Shipped';
+      if (allDelivered) {
+          newOrderStatus = 'Delivered';
+          order.deliveryDate = new Date(); // Set order-level delivery date if all items are delivered
+      } else if (allShipped) newOrderStatus = 'Shipped';
       else if (allCancelled) newOrderStatus = 'Cancelled';
       else if (anyCancelled && anyDelivered) newOrderStatus = 'Partially Cancelled';
       else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
@@ -429,80 +436,81 @@ const refundToWallet = async (userId, amount, description, orderId) => {
 };
 
 const acceptReturnRequest = async (req, res) => {
-  try {
-      const { orderId, productId } = req.body;
-
-      if (!orderId || !productId) {
-          return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
-      }
-
-      const order = await Order.findById(orderId)
-          .populate('user', 'name email')
-          .populate({ path: 'orderItems.productId', select: 'productName' });
-      if (!order) {
-          return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-
-      const item = order.orderItems.find(item => item._id.toString() === productId);
-      if (!item || item.status !== 'Return Requested') {
-          return res.status(400).json({ success: false, message: 'No return request found for this item' });
-      }
-
-      // Restore stock
-      const product = await Product.findById(item.productId);
-      if (product) {
-          product.quantity += item.quantity;
-          await product.save();
-      }
-
-      item.status = 'Returned';
-
-      const allReturned = order.orderItems.every(item => item.status === 'Returned');
-      const anyReturned = order.orderItems.some(item => item.status === 'Returned');
-      const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-
-      if (allReturned) {
-          order.status = 'Returned';
-          order.refundStatus = 'Processed';
-      } else if (anyReturned && anyDelivered) {
-          order.status = 'Partially Returned';
-          order.refundStatus = 'Partially Processed';
-      } else if (anyReturned) {
-          order.status = 'Partially Returned';
-          order.refundStatus = 'Partially Processed';
-      }
-
-      order.history = order.history || [];
-      order.history.push({
-          status: 'Return Accepted',
-          timestamp: new Date(),
-          notes: `Return accepted for product ${productId}`,
-          updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-      });
-
-      const refundAmount = item.price * item.quantity;
-      if (order.paymentMethod !== 'cod' && refundAmount > 0) {
-          const productName = item.productId?.productName || 'Unknown Product';
-          await refundToWallet(
-              order.user._id,
-              refundAmount,
-              `Refund for returned product ${productName} in order ${order.orderID}`,
-              order._id
-          );
-      }
-
-      await order.save();
-
-      res.json({
-          success: true,
-          message: 'Return accepted successfully',
-          orderStatus: order.status
-      });
-  } catch (error) {
-      console.error('Error accepting return:', error);
-      res.status(500).json({ success: false, message: 'Server error: ' + error.message });
-  }
-};
+    try {
+        const { orderId, productId } = req.body;
+  
+        if (!orderId || !productId) {
+            return res.status(400).json({ success: false, message: 'Order ID and Product ID are required' });
+        }
+  
+        const order = await Order.findById(orderId)
+            .populate('user', 'name email')
+            .populate({ path: 'orderItems.productId', select: 'productName' });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+  
+        const item = order.orderItems.find(item => item._id.toString() === productId);
+        if (!item || item.status !== 'Return Requested') {
+            return res.status(400).json({ success: false, message: 'No return request found for this item' });
+        }
+  
+        const product = await Product.findById(item.productId);
+        if (product) {
+            product.quantity += item.quantity;
+            await product.save();
+        }
+  
+        item.status = 'Returned';
+  
+        const allReturned = order.orderItems.every(item => item.status === 'Returned');
+        const anyReturned = order.orderItems.some(item => item.status === 'Returned');
+        const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
+  
+        if (allReturned) {
+            order.status = 'Returned';
+            order.refundStatus = 'Processed';
+        } else if (anyReturned && anyDelivered) {
+            order.status = 'Partially Returned';
+            order.refundStatus = 'Partially Processed';
+        } else if (anyReturned) {
+            order.status = 'Partially Returned';
+            order.refundStatus = 'Partially Processed';
+        }
+  
+        order.history = order.history || [];
+        order.history.push({
+            status: 'Return Accepted',
+            timestamp: new Date(),
+            notes: `Return accepted for product ${productId}`,
+            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+        });
+  
+        // Credit wallet for COD returns
+        const refundAmount = item.price * item.quantity;
+        if (refundAmount > 0) {
+            const productName = item.productId?.productName || 'Unknown Product';
+            await refundToWallet(
+                order.user._id,
+                refundAmount,
+                `Refund for returned product ${productName} in order ${order.orderID}`,
+                order._id
+            );
+            order.refundStatus = order.refundStatus || 'Processed'; // Ensure refund status reflects wallet credit
+        }
+  
+        await order.save();
+  
+        res.json({
+            success: true,
+            message: 'Return accepted successfully',
+            orderStatus: order.status
+        });
+    } catch (error) {
+        console.error('Error accepting return:', error);
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+  };
   const cancelOrderItem = async (req, res) => {
     try {
       const { orderId, productId } = req.body;
@@ -525,7 +533,6 @@ const acceptReturnRequest = async (req, res) => {
         return res.status(400).json({ success: false, message: `Cannot cancel item with status ${item.status}` });
       }
   
-      // Restore stock
       let product;
       try {
         product = await Product.findById(item.productId);
@@ -567,7 +574,7 @@ const acceptReturnRequest = async (req, res) => {
           orderStatus: newOrderStatus
         });
       } catch (error) {
-        // Rollback stock
+     
         if (product) {
           product.quantity -= item.quantity;
           await product.save();
@@ -604,7 +611,7 @@ const acceptReturnRequest = async (req, res) => {
         return res.status(400).json({ success: false, message: `Cannot cancel order with status ${order.status}` });
       }
   
-      // Restore stock for non-cancelled/non-returned items
+
       for (const item of order.orderItems) {
         if (!['Cancelled', 'Returned'].includes(item.status)) {
           const product = await Product.findById(item.productId).session(session);
