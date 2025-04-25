@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 const mongoose = require('mongoose');
-const Order = require('../../models/orderSchema');
+const Order = require('../../models/OrderSchema');
 const Product = require('../../models/productSchema')
 const Wallet = require('../../models/walletSchema')
 

@@ -1,6 +1,6 @@
 const Wallet = require('../../models/walletSchema');
 const User = require('../../models/userSchema');
-const Order = require('../../models/orderSchema');
+const Order = require('../../models/OrderSchema');
 const bcrypt = require('bcrypt'); 
 require('dotenv').config();
 const Razorpay = require('razorpay');
