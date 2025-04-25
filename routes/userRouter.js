@@ -127,7 +127,7 @@ router.post('/checkout/payment', checkoutController.getPaymentPage);
 router.post('/add-address', checkoutController.addAddress);
 router.post('/place-order', checkoutController.placeOrder);
 router.post('/verify-payment', checkoutController.verifyPayment);
-router.get('/order-success', checkoutController.getOrderSuccessPage);
+router.get('/order-success',userAuth, checkoutController.getOrderSuccessPage);
 router.get('/order-error', checkoutController.getOrderErrorPage);
 router.post('/retry-payment', checkoutController.retryPayment);
 router.post('/wallet/process-payment', checkoutController.processWalletPayment);
@@ -146,6 +146,7 @@ router.get('/order-details/:orderId', OrderController.getOrderDetailsPage);
 router.post('/user/order/cancel-order/:orderId', userAuth, OrderController.cancelOrder);
 router.post('/user/order/cancel-product/:orderId/:productId', userAuth, OrderController.cancelProduct);
 router.post('/user/return', OrderController.requestReturn);
+router.get('/order/invoice/:orderId',userAuth, OrderController.downloadInvoice);
 
 
 

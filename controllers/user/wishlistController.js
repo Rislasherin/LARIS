@@ -14,9 +14,9 @@ const loadWishlist = async (req, res) => {
       return res.status(404).render('error', { message: 'User not found' });
     }
 
-    const page = parseInt(req.query.page) || 1; // Get page number from query, default to 1
-    const limit = 5; // Number of items per page
-    const skip = (page - 1) * limit; // Calculate items to skip
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; 
+    const skip = (page - 1) * limit; 
 
     let wishlistItems = [];
     let totalItems = 0;
@@ -35,17 +35,16 @@ const loadWishlist = async (req, res) => {
       });
     }
 
-    // Reverse wishlist for display
+  
     const reversedWishlist = [...user.wishlist].reverse();
-    totalItems = reversedWishlist.length; // Total items in wishlist
+    totalItems = reversedWishlist.length;
 
-    // Slice for pagination
+  
     const paginatedWishlist = reversedWishlist.slice(skip, skip + limit);
 
-    // Fetch products for the paginated wishlist
+  
     const products = await Product.find({ _id: { $in: paginatedWishlist } }).populate('category');
 
-    // Map wishlist items to maintain order
     wishlistItems = paginatedWishlist
       .map((id) => {
         const product = products.find((p) => p._id.toString() === id.toString());
@@ -53,7 +52,7 @@ const loadWishlist = async (req, res) => {
       })
       .filter((item) => item !== null);
 
-    // Fetch recommended products based on all wishlist items (not just paginated)
+
     const wishlistCategories = [...new Set(products.map((p) => p.category?._id?.toString()))].filter(Boolean);
     const wishlistSkinTypes = [...new Set(products.map((p) => p.skintype))].filter(Boolean);
 
@@ -66,7 +65,7 @@ const loadWishlist = async (req, res) => {
       .limit(4)
       .populate('category');
 
-    // Calculate pagination metadata
+
     const totalPages = Math.ceil(totalItems / limit);
     const pagination = {
       currentPage: page,

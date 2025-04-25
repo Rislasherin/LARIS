@@ -200,7 +200,7 @@ const updateOrderStatus = async (req, res) => {
                 }
             }
 
-            // Set deliveryDate when status is changed to Delivered
+
             if (status === 'Delivered' && item.status !== 'Delivered') {
                 item.deliveryDate = new Date();
             }
@@ -218,7 +218,7 @@ const updateOrderStatus = async (req, res) => {
                 console.log('Order status set to Partially Delivered');
             } else if (deliveredCount === itemCount) {
                 order.status = 'Delivered';
-                order.deliveryDate = new Date(); // Set order-level delivery date
+                order.deliveryDate = new Date();
                 console.log('Order status set to Delivered');
             }
         }
@@ -281,99 +281,102 @@ function getBadgeClass(status) {
     }
 }
 const updateAllOrderItems = async (req, res) => {
-  try {
-      const { orderId } = req.params;
-      const { status, productIds } = req.body;
-
-      if (!mongoose.Types.ObjectId.isValid(orderId)) {
-          return res.status(400).json({ success: false, message: 'Invalid order ID' });
-      }
-
-      const order = await Order.findById(orderId);
-      if (!order) {
-          return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-
-      let updatedCount = 0;
-      let skippedCount = 0;
-
-      for (const item of order.orderItems) {
-          if (productIds.includes(item._id.toString())) {
-              if (
-                  item.status === 'Returned' ||
-                  (item.status === 'Delivered' && status !== 'Delivered') ||
-                  (item.status === 'Cancelled' && status !== 'Cancelled')
-              ) {
-                  skippedCount++;
-                  continue;
-              }
-
-              if (status === 'Cancelled' && item.status !== 'Cancelled') {
-                  const product = await Product.findById(item.productId);
-                  if (product) {
-                      product.quantity += item.quantity;
-                      await product.save();
-                  }
-              }
-
-              // Set deliveryDate when status is changed to Delivered
-              if (status === 'Delivered' && item.status !== 'Delivered') {
-                  item.deliveryDate = new Date();
-              }
-
-              item.status = status;
-              updatedCount++;
-          }
-      }
-
-      const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
-      const allShipped = order.orderItems.every(item => item.status === 'Shipped');
-      const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
-      const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
-      const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
-
-      let newOrderStatus = order.status;
-      if (allDelivered) {
-          newOrderStatus = 'Delivered';
-          order.deliveryDate = new Date(); // Set order-level delivery date if all items are delivered
-      } else if (allShipped) newOrderStatus = 'Shipped';
-      else if (allCancelled) newOrderStatus = 'Cancelled';
-      else if (anyCancelled && anyDelivered) newOrderStatus = 'Partially Cancelled';
-      else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
-      else if (anyDelivered) newOrderStatus = 'Partially Delivered';
-      else newOrderStatus = status === 'Pending' ? 'Pending' : status === 'Processing' ? 'Processing' : 'Shipped';
-
-      if (order.status !== newOrderStatus) {
-          order.status = newOrderStatus;
-          order.timeline = order.timeline || [];
-          order.timeline.push({
-              title: newOrderStatus,
-              text: `Order status updated to ${newOrderStatus}`,
-              date: new Date(),
-              completed: true
-          });
-      }
-
-      order.history = order.history || [];
-      order.history.push({
-          status: 'Bulk Update',
-          timestamp: new Date(),
-          notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} item(s) skipped` : ''}`,
-          updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
-      });
-
-      await order.save();
-
-      res.json({
-          success: true,
-          message: `${updatedCount} item(s) updated${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
-          orderStatus: newOrderStatus
-      });
-  } catch (error) {
-      console.error('Error updating all order items:', error);
-      res.status(500).json({ success: false, message: 'Server error occurred' });
-  }
-};
+    try {
+        const { orderId } = req.params;
+        const { status, productIds } = req.body;
+  
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({ success: false, message: 'Invalid order ID' });
+        }
+  
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+  
+        let updatedCount = 0;
+        let skippedCount = 0;
+  
+        for (const item of order.orderItems) {
+            if (productIds.includes(item._id.toString())) {
+                if (
+                    item.status === 'Returned' ||
+                    (item.status === 'Delivered' && status !== 'Delivered') ||
+                    (item.status === 'Cancelled' && status !== 'Cancelled')
+                ) {
+                    skippedCount++;
+                    continue;
+                }
+  
+                if (status === 'Cancelled' && item.status !== 'Cancelled') {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        product.quantity += item.quantity;
+                        await product.save();
+                    }
+                }
+  
+                if (status === 'Delivered' && item.status !== 'Delivered') {
+                    item.deliveryDate = new Date();
+                }
+  
+                item.status = status;
+                updatedCount++;
+            }
+        }
+  
+        const allDelivered = order.orderItems.every(item => item.status === 'Delivered');
+        const allShipped = order.orderItems.every(item => item.status === 'Shipped');
+        const anyCancelled = order.orderItems.some(item => item.status === 'Cancelled');
+        const allCancelled = order.orderItems.every(item => item.status === 'Cancelled');
+        const anyDelivered = order.orderItems.some(item => item.status === 'Delivered');
+  
+        let newOrderStatus = order.status;
+        if (allDelivered) {
+            newOrderStatus = 'Delivered';
+            order.deliveryDate = new Date();
+            // Update paymentStatus for COD orders
+            if (order.paymentMethod === 'cod' && order.paymentStatus !== 'Paid') {
+                order.paymentStatus = 'Paid';
+            }
+        } else if (allShipped) newOrderStatus = 'Shipped';
+        else if (allCancelled) newOrderStatus = 'Cancelled';
+        else if (anyCancelled && anyDelivered) newOrderStatus = 'Partially Cancelled';
+        else if (anyCancelled) newOrderStatus = 'Partially Cancelled';
+        else if (anyDelivered) newOrderStatus = 'Partially Delivered';
+        else newOrderStatus = status === 'Pending' ? 'Pending' : status === 'Processing' ? 'Processing' : 'Shipped';
+  
+        if (order.status !== newOrderStatus) {
+            order.status = newOrderStatus;
+            order.timeline = order.timeline || [];
+            order.timeline.push({
+                title: newOrderStatus,
+                text: `Order status updated to ${newOrderStatus}`,
+                date: new Date(),
+                completed: true
+            });
+        }
+  
+        order.history = order.history || [];
+        order.history.push({
+            status: 'Bulk Update',
+            timestamp: new Date(),
+            notes: `${updatedCount} product(s) status changed to ${status}${skippedCount > 0 ? `, ${skippedCount} item(s) skipped` : ''}`,
+            updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
+        });
+  
+        await order.save();
+  
+        res.json({
+            success: true,
+            message: `${updatedCount} item(s) updated${skippedCount > 0 ? `, ${skippedCount} skipped` : ''}`,
+            orderStatus: newOrderStatus
+        });
+    } catch (error) {
+        console.error('Error updating all order items:', error);
+        res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+  };
 const rejectReturnRequest = async (req, res) => {
     try {
         const { orderId, productId } = req.body;
@@ -486,7 +489,7 @@ const acceptReturnRequest = async (req, res) => {
             updatedBy: req.session.admin ? req.session.admin.username : 'Admin'
         });
   
-        // Credit wallet for COD returns
+      
         const refundAmount = item.price * item.quantity;
         if (refundAmount > 0) {
             const productName = item.productId?.productName || 'Unknown Product';
@@ -496,7 +499,7 @@ const acceptReturnRequest = async (req, res) => {
                 `Refund for returned product ${productName} in order ${order.orderID}`,
                 order._id
             );
-            order.refundStatus = order.refundStatus || 'Processed'; // Ensure refund status reflects wallet credit
+            order.refundStatus = order.refundStatus || 'Processed'; 
         }
   
         await order.save();

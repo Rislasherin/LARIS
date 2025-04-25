@@ -10,26 +10,29 @@ const customerInfo = async (req, res) => {
         let page = req.query.page || 1;
         const limit = 10;
 
-        const userData = await User.find({
+        // Check if the search might be for a Google user
+        const query = {
             isAdmin: false,
             $or: [
-                { name: { $regex: ".*" + search + ".*" } },
-                { email: { $regex: ".*" + search + ".*" } },
+                { name: { $regex: ".*" + search + ".*", $options: 'i' } },  // Added case insensitivity
+                { email: { $regex: ".*" + search + ".*", $options: 'i' } }, // Added case insensitivity
+                // Add any Google-specific fields that might exist
+                { "google.email": { $regex: ".*" + search + ".*", $options: 'i' } },
+                { "google.name": { $regex: ".*" + search + ".*", $options: 'i' } }
             ],
-        })
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .sort({ createdAt : -1})
+        };
 
-        console.log(userData)
+        // Debug what's in your User collection
+        console.log("All users before pagination:", await User.find({}).lean());
 
-        const count = await User.countDocuments({
-            isAdmin: false,
-            $or: [
-                { name: { $regex: ".*" + search + ".*" } },
-                { email: { $regex: ".*" + search + ".*" } },
-            ],
-        });
+        const userData = await User.find(query)
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .sort({ createdAt: -1 });
+
+        console.log("Found users with query:", userData);
+
+        const count = await User.countDocuments(query);
 
         res.render("customers", {
             data: userData, 

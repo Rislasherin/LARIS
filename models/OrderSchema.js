@@ -67,6 +67,11 @@ const orderSchema = new mongoose.Schema({
         date: { type: Date },
         completed: { type: Boolean, default: false }
     }],
+    paymentStatus: {
+        type: String,
+        enum: ['Pending', 'Paid', 'Completed'],
+        default: 'Pending'
+      },
     createdAt: { type: Date, default: Date.now },
     refundStatus: {
         type: String,

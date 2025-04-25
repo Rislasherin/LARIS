@@ -149,10 +149,10 @@ const verifyPayment = async (req, res) => {
     }
 };const processReturnAndCreditWallet = async (req, res) => {
     try {
-        const orderId = req.params.orderId; // Assuming orderId is passed via URL
-        const userId = req.session.user._id; // Admin user ID (or customer ID if self-initiated)
+        const orderId = req.params.orderId; 
+        const userId = req.session.user._id; 
 
-        // Find the order
+    
         const order = await Order.findById(orderId)
             .populate('user', 'name email')
             .populate('address');
@@ -160,13 +160,11 @@ const verifyPayment = async (req, res) => {
         if (!order) {
             return res.status(404).json({ success: false, error: 'Order not found' });
         }
-
-        // Check if the order meets the criteria
         if (order.paymentMethod !== 'cod' || order.status !== 'Returned' || !order.history.some(h => h.status === 'Delivered')) {
             return res.status(400).json({ success: false, error: 'Invalid return request: Must be COD, Delivered, and Returned' });
         }
 
-        // Find or create the user's wallet
+      
         let wallet = await Wallet.findOne({ user: order.user });
         if (!wallet) {
             wallet = new Wallet({
@@ -175,7 +173,6 @@ const verifyPayment = async (req, res) => {
             });
         }
 
-        // Credit the wallet with the final amount
         const refundAmount = order.finalAmount;
         wallet.balance += refundAmount;
         wallet.transactions.push({
@@ -186,7 +183,6 @@ const verifyPayment = async (req, res) => {
             orderId: order._id
         });
 
-        // Update order history to reflect return acceptance
         order.history.push({
             status: 'Returned',
             timestamp: new Date(),
@@ -195,11 +191,10 @@ const verifyPayment = async (req, res) => {
         });
         order.refundStatus = 'Processed';
 
-        // Save changes
+      
         await wallet.save();
         await order.save();
 
-        // Optional: Send notification to user
         req.flash('success', 'Return accepted and amount credited to wallet');
         res.json({ success: true, message: 'Return processed and wallet updated' });
     } catch (error) {

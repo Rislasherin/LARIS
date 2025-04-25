@@ -20,283 +20,320 @@
             <h1 class="text-xl font-semibold">Laris</h1>
         </div>
         
-        <!-- Navigation Links -->
-        <nav class="flex space-x-4">
+        <!-- Navigation Links - Hide on mobile -->
+        <nav class="hidden md:flex space-x-4">
             <a class="text-gray-600 hover:text-gray-800 text-sm" href="/">Home</a>
             <a class="text-gray-600 hover:text-gray-800 text-sm" href="/shop">Shop</a>
             <a class="text-gray-600 hover:text-gray-800 text-sm" href="#trending-section">Trending Now</a>
             <a class="text-gray-600 hover:text-gray-800 text-sm" href="#bestselling-section">Best Selling</a>
-            <a class="text-gray-600 hover:text-gray-800 text-sm" href="/about">About</a>
-            <a class="text-gray-600 hover:text-gray-800 text-sm" href="/contact">Contact</a>
         </nav>
         
         <!-- Action Buttons -->
-        <div class="flex items-center space-x-4">
-                <!-- Search Icon -->
-                <div class="relative">
-                    <button id="search-toggle" class="text-gray-600 hover:text-gray-800">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </button>
-                    
-<!-- Search Dropdown -->
-<div id="search-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg border p-4 z-50">
-    <div class="relative">
-      <input 
-        type="text" 
-        id="search-input"
-        placeholder="Search products..." 
-        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      
-    </div>
-    <div class="mt-3">
-      <div class="flex justify-between items-center mb-2">
-        <p class="text-sm font-semibold">Recent Searches</p>
-        <button id="clear-all-searches" class="text-xs text-red-500 hover:underline hidden">Clear All</button>
-      </div>
-      <ul id="recent-searches" class="text-sm">
-        <!-- Dynamically populated -->
-      </ul>
-    </div>
-  </div>
-                </div>
-
-                <a href="/wishlist" class="text-gray-600 hover:text-gray-800">
+        <div class="flex items-center space-x-3 md:space-x-4">
+            <!-- Search Icon -->
+            <div class="relative">
+                <button id="search-toggle" class="text-gray-600 hover:text-gray-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                </a>
+                </button>
                 
-                <!-- Cart -->
-                <a href="/cart" class="text-gray-600 hover:text-gray-800 relative">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        <%= cartCount || 0 %>
-                    </span>
-                </a>
-                
-                <!-- User Profile Dropdown -->
-                <div class="relative">
-                    <button id="user-dropdown-toggle" class="text-gray-600 hover:text-gray-800">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </button>
-                    
-                    <!-- User Dropdown Menu -->
-                    <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border z-50">
-                        <% if (locals.user) { %>
-                            <div class="px-4 py-2 border-b">
-                                <p class="text-sm font-medium text-gray-800"><%= user.name %></p>
-                                <p class="text-xs text-gray-500"><%= user.email %></p>
-                            </div>
-                            <ul>
-                                <li>
-                                    <a href="/userProfile" class="block px-4 py-2 hover:bg-gray-100 text-sm">
-                                        My Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/orders" class=" nav-link  px-4 py-2 hover:bg-gray-100 text-sm">
-                                        My Orders
-                                    </a>
-
-                                </li>
-                                <li>
-                                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
-                                        Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        <% } else { %>
-                            <ul>
-                                <li>
-                                    <a href="/login" class="block px-4 py-2 hover:bg-gray-100 text-sm">
-                                        Login
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/signup" class="block px-4 py-2 hover:bg-gray-100 text-sm">
-                                        Sign Up
-                                    </a>
-                                </li>
-                            </ul>
-                        <% } %>
+                <!-- Search Dropdown -->
+                <div id="search-dropdown" class="hidden absolute right-0 mt-2 w-64 sm:w-80 bg-white shadow-lg rounded-lg border p-4 z-50">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Search products..." 
+                            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm font-semibold">Recent Searches</p>
+                            <button id="clear-all-searches" class="text-xs text-red-500 hover:underline hidden">Clear All</button>
+                        </div>
+                        <ul id="recent-searches" class="text-sm">
+                            <!-- Dynamically populated -->
+                        </ul>
                     </div>
                 </div>
             </div>
+
+            <!-- Wishlist - Hide on smallest screens -->
+            <a href="/wishlist" class="hidden sm:block text-gray-600 hover:text-gray-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+            </a>
+            
+            <!-- Cart -->
+            <a href="/cart" class="text-gray-600 hover:text-gray-800 relative">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <%= cartCount || 0 %>
+                </span>
+            </a>
+            
+            <!-- User Profile Dropdown -->
+            <div class="relative">
+                <button id="user-dropdown-toggle" class="text-gray-600 hover:text-gray-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </button>
+                
+                <!-- User Dropdown Menu -->
+                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border z-50">
+                    <% if (locals.user) { %>
+                        <div class="px-4 py-2 border-b">
+                            <p class="text-sm font-medium text-gray-800"><%= user.name %></p>
+                            <p class="text-xs text-gray-500"><%= user.email %></p>
+                        </div>
+                        <ul>
+                            <li>
+                                <a href="/userProfile" class="block px-4 py-2 hover:bg-gray-100 text-sm">
+                                    My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/orders" class="nav-link px-4 py-2 hover:bg-gray-100 text-sm">
+                                    My Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 text-sm text-red-600">
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    <% } else { %>
+                        <ul>
+                            <li>
+                                <a href="/login" class="block px-4 py-2 hover:bg-gray-100 text-sm">
+                                    Login
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/signup" class="block px-4 py-2 hover:bg-gray-100 text-sm">
+                                    Sign Up
+                                </a>
+                            </li>
+                        </ul>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden text-gray-600 hover:text-gray-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
         </div>
-    </header>
+    </div>
 
-    <!-- Add padding to body to prevent content from hiding under fixed header -->
-    <div class="pt-16"></div>
+    <!-- Mobile Navigation Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t shadow-md">
+        <nav class="container mx-auto px-4 py-2">
+            <ul>
+                <li><a class="block py-2 text-gray-600 hover:text-gray-800" href="/">Home</a></li>
+                <li><a class="block py-2 text-gray-600 hover:text-gray-800" href="/shop">Shop</a></li>
+                <li><a class="block py-2 text-gray-600 hover:text-gray-800" href="#trending-section" onclick="closeMobileMenu()">Trending Now</a></li>
+                <li><a class="block py-2 text-gray-600 hover:text-gray-800" href="#bestselling-section" onclick="closeMobileMenu()">Best Selling</a></li>
+                <li class="sm:hidden"><a class="block py-2 text-gray-600 hover:text-gray-800" href="/wishlist">Wishlist</a></li>
+            </ul>
+        </nav>
+    </div>
+  </header>
 
-    <script>
-        // Font Awesome (for search/delete icons)
-        const faScript = document.createElement('script');
-        faScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js';
-        document.head.appendChild(faScript);
-        
-        // Search Dropdown Toggle
-        const searchToggle = document.getElementById('search-toggle');
-        const searchDropdown = document.getElementById('search-dropdown');
-        const searchInput = document.getElementById('search-input');
-        const recentSearchesList = document.getElementById('recent-searches');
-        const clearAllButton = document.getElementById('clear-all-searches');
-        
-        searchToggle.addEventListener('click', () => {
-          searchDropdown.classList.toggle('hidden');
-          if (!searchDropdown.classList.contains('hidden')) {
-            loadRecentSearches();
+  <!-- Add padding to body to prevent content from hiding under fixed header -->
+  <div class="pt-16"></div>
+
+  <script>
+    // Font Awesome (for search/delete icons)
+    const faScript = document.createElement('script');
+    faScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js';
+    document.head.appendChild(faScript);
+    
+    // Search Dropdown Toggle
+    const searchToggle = document.getElementById('search-toggle');
+    const searchDropdown = document.getElementById('search-dropdown');
+    const searchInput = document.getElementById('search-input');
+    const recentSearchesList = document.getElementById('recent-searches');
+    const clearAllButton = document.getElementById('clear-all-searches');
+    
+    searchToggle.addEventListener('click', () => {
+      searchDropdown.classList.toggle('hidden');
+      if (!searchDropdown.classList.contains('hidden')) {
+        loadRecentSearches();
+      }
+    });
+    
+    // Handle search submission
+    searchInput.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter' && searchInput.value.trim()) {
+        const query = searchInput.value.trim();
+        saveSearch(query);
+        window.location.href = `/shop?query=${encodeURIComponent(query)}`;
+        searchInput.value = '';
+        searchDropdown.classList.add('hidden');
+      }
+    });
+    
+    // Load recent searches
+    async function loadRecentSearches() {
+      recentSearchesList.innerHTML = '';
+      clearAllButton.classList.add('hidden');
+    
+      let searches = [];
+      const user = '<%= locals.user ? user._id : "" %>';
+      if (user) {
+        // Fetch from server for logged-in users
+        try {
+          const response = await fetch('/search/history');
+          const data = await response.json();
+          if (data.success) {
+            searches = data.searches.slice(0, 5); // Limit to 5
           }
-        });
-        
-        // Handle search submission
-        searchInput.addEventListener('keypress', async (e) => {
-          if (e.key === 'Enter' && searchInput.value.trim()) {
-            const query = searchInput.value.trim();
-            saveSearch(query);
-            window.location.href = `/shop?query=${encodeURIComponent(query)}`;
-            searchInput.value = '';
-            searchDropdown.classList.add('hidden');
-          }
-        });
-        
-        // Load recent searches
-        async function loadRecentSearches() {
-          recentSearchesList.innerHTML = '';
-          clearAllButton.classList.add('hidden');
-        
-          let searches = [];
-          const user = '<%= locals.user ? user._id : "" %>';
-          if (user) {
-            // Fetch from server for logged-in users
-            try {
-              const response = await fetch('/search/history');
-              const data = await response.json();
-              if (data.success) {
-                searches = data.searches.slice(0, 5); // Limit to 5
-              }
-            } catch (error) {
-              console.error('Error fetching search history:', error);
-            }
-          } else {
-            // Use localStorage for guests
-            searches = JSON.parse(localStorage.getItem('recentSearches') || '[]').slice(0, 5);
-          }
-        
-          if (searches.length > 0) {
-            clearAllButton.classList.remove('hidden');
-            searches.forEach(search => {
-              const li = document.createElement('li');
-              li.className = 'py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center';
-              li.innerHTML = `
-                <span class="flex-1" onclick="searchAgain('${search.query}')">${search.query}</span>
-                <i class="fas fa-times text-gray-400 hover:text-red-500" onclick="deleteSearch('${search.query}')"></i>
-              `;
-              recentSearchesList.appendChild(li);
-            });
-          } else {
-            recentSearchesList.innerHTML = '<li class="py-1 text-gray-500">No recent searches</li>';
-          }
+        } catch (error) {
+          console.error('Error fetching search history:', error);
         }
-        
-        // Save search
-        async function saveSearch(query) {
-          const user = '<%= locals.user ? user._id : "" %>';
-          if (user) {
-            // Save to server
-            try {
-              await fetch('/search/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-              });
-            } catch (error) {
-              console.error('Error saving search:', error);
-            }
-          } else {
-            // Save to localStorage
-            let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-            searches = searches.filter(s => s.query !== query); // Avoid duplicates
-            searches.unshift({ query, searchedOn: new Date().toISOString() });
-            searches = searches.slice(0, 5); // Limit to 5
-            localStorage.setItem('recentSearches', JSON.stringify(searches));
-          }
-        }
-        
-        // Delete single search
-        async function deleteSearch(query) {
-          const user = '<%= locals.user ? user._id : "" %>';
-          if (user) {
-            try {
-              await fetch('/search/delete', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-              });
-            } catch (error) {
-              console.error('Error deleting search:', error);
-            }
-          } else {
-            let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-            searches = searches.filter(s => s.query !== query);
-            localStorage.setItem('recentSearches', JSON.stringify(searches));
-          }
-          loadRecentSearches();
-        }
-        
-        // Clear all searches
-        async function clearAllSearches() {
-          const user = '<%= locals.user ? user._id : "" %>';
-          if (user) {
-            try {
-              await fetch('/search/clear', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-              });
-            } catch (error) {
-              console.error('Error clearing searches:', error);
-            }
-          } else {
-            localStorage.removeItem('recentSearches');
-          }
-          loadRecentSearches();
-        }
-        
-        clearAllButton.addEventListener('click', clearAllSearches);
-        
-        // Search again
-        function searchAgain(query) {
-          window.location.href = `/shop?query=${encodeURIComponent(query)}`;
-          searchDropdown.classList.add('hidden');
-        }
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (event) => {
-          if (!searchToggle.contains(event.target) && !searchDropdown.contains(event.target)) {
-            searchDropdown.classList.add('hidden');
-          }
+      } else {
+        // Use localStorage for guests
+        searches = JSON.parse(localStorage.getItem('recentSearches') || '[]').slice(0, 5);
+      }
+    
+      if (searches.length > 0) {
+        clearAllButton.classList.remove('hidden');
+        searches.forEach(search => {
+          const li = document.createElement('li');
+          li.className = 'py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center';
+          li.innerHTML = `
+            <span class="flex-1" onclick="searchAgain('${search.query}')">${search.query}</span>
+            <i class="fas fa-times text-gray-400 hover:text-red-500" onclick="deleteSearch('${search.query}')"></i>
+          `;
+          recentSearchesList.appendChild(li);
         });
-        
-        // User Dropdown Toggle
-        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
-        const userDropdown = document.getElementById('user-dropdown');
-        
-        userDropdownToggle.addEventListener('click', () => {
-          userDropdown.classList.toggle('hidden');
-        });
-        
-        // Close user dropdown when clicking outside
-        document.addEventListener('click', (event) => {
-          if (!userDropdownToggle.contains(event.target) && !userDropdown.contains(event.target)) {
-            userDropdown.classList.add('hidden');
-          }
-        });
-        </script>
+      } else {
+        recentSearchesList.innerHTML = '<li class="py-1 text-gray-500">No recent searches</li>';
+      }
+    }
+    
+    // Save search
+    async function saveSearch(query) {
+      const user = '<%= locals.user ? user._id : "" %>';
+      if (user) {
+        // Save to server
+        try {
+          await fetch('/search/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+          });
+        } catch (error) {
+          console.error('Error saving search:', error);
+        }
+      } else {
+        // Save to localStorage
+        let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        searches = searches.filter(s => s.query !== query); // Avoid duplicates
+        searches.unshift({ query, searchedOn: new Date().toISOString() });
+        searches = searches.slice(0, 5); // Limit to 5
+        localStorage.setItem('recentSearches', JSON.stringify(searches));
+      }
+    }
+    
+    // Delete single search
+    async function deleteSearch(query) {
+      const user = '<%= locals.user ? user._id : "" %>';
+      if (user) {
+        try {
+          await fetch('/search/delete', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+          });
+        } catch (error) {
+          console.error('Error deleting search:', error);
+        }
+      } else {
+        let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+        searches = searches.filter(s => s.query !== query);
+        localStorage.setItem('recentSearches', JSON.stringify(searches));
+      }
+      loadRecentSearches();
+    }
+    
+    // Clear all searches
+    async function clearAllSearches() {
+      const user = '<%= locals.user ? user._id : "" %>';
+      if (user) {
+        try {
+          await fetch('/search/clear', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (error) {
+          console.error('Error clearing searches:', error);
+        }
+      } else {
+        localStorage.removeItem('recentSearches');
+      }
+      loadRecentSearches();
+    }
+    
+    clearAllButton.addEventListener('click', clearAllSearches);
+    
+    // Search again
+    function searchAgain(query) {
+      window.location.href = `/shop?query=${encodeURIComponent(query)}`;
+      searchDropdown.classList.add('hidden');
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!searchToggle.contains(event.target) && !searchDropdown.contains(event.target)) {
+        searchDropdown.classList.add('hidden');
+      }
+    });
+    
+    // User Dropdown Toggle
+    const userDropdownToggle = document.getElementById('user-dropdown-toggle');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    userDropdownToggle.addEventListener('click', () => {
+      userDropdown.classList.toggle('hidden');
+    });
+    
+    // Close user dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!userDropdownToggle.contains(event.target) && !userDropdown.contains(event.target)) {
+        userDropdown.classList.add('hidden');
+      }
+    });
+
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking on anchors
+    function closeMobileMenu() {
+      mobileMenu.classList.add('hidden');
+    }
+    
+    // Close mobile menu when screen size changes to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) { // md breakpoint
+        mobileMenu.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>

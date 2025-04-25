@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,6 +26,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
+            width: 100%;
         }
 
         .content {
@@ -32,12 +34,14 @@
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 20px;
+            width: 100%;
         }
 
         .tabs {
             display: flex;
             margin-bottom: 20px;
             border-bottom: 1px solid #e5e7eb;
+            flex-wrap: wrap;
         }
 
         .tab {
@@ -84,6 +88,7 @@
             display: flex;
             gap: 15px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -171,28 +176,32 @@
             margin: 15% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 400px;
+            width: 90%;
+            max-width: 400px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
         .profile-view .form-group {
-        margin-bottom: 15px;
-    }
+            margin-bottom: 15px;
+        }
 
-    .profile-view .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        color: #555;
-        font-weight: bold;
-    }
+        .profile-view .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
 
-    .profile-view .form-group p {
-        margin: 0;
-        padding: 10px;
-        background-color: #f9f9f9;
-        border-radius: 4px;
-    }
-    #success-section {
+        .profile-view .form-group p {
+            margin: 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            word-break: break-word;
+        }
+        
+        #success-section {
             text-align: center;
             padding: 20px;
             background-color: #e6f3e6;
@@ -209,6 +218,87 @@
             font-size: 3rem;
             color: #2e7d32;
             margin-bottom: 10px;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .tabs {
+                justify-content: space-between;
+            }
+            
+            .tab {
+                padding: 8px 12px;
+                font-size: 0.95rem;
+                flex-grow: 1;
+                text-align: center;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+            
+            .modal-content .form-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .security-tips ul {
+                padding-left: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.3rem;
+            }
+            
+            .tab {
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+            
+            .btn {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+            
+            .close-btn {
+                position: absolute !important;
+                right: 15px !important;
+                top: 15px !important;
+                left: auto !important;
+            }
+        }
+        
+        /* Fix for email change button positioning */
+        @media (max-width: 600px) {
+            #display-email {
+                display: block;
+                margin-bottom: 10px;
+            }
+            
+            .btn.btn-secondary {
+                margin-left: 0;
+                margin-top: 5px;
+            }
         }
     </style>
 </head>
@@ -310,10 +400,9 @@
     <!-- Email Change Modal -->
     <div id="email-change-modal" class="modal">
         <div class="modal-content">
-            <span style="position: relative; left: 350px;" class="close-btn">&times;</span>
+            <span class="close-btn">&times;</span>
             <div class="modal-header">
                 <h3>Change Email</h3>
-                
             </div>
 
             <div id="email-input-section">
@@ -335,6 +424,12 @@
                     <button id="verify-otp-btn" class="btn btn-primary">Verify OTP</button>
                     <button id="resend-otp-btn" class="btn btn-secondary">Resend OTP</button>
                 </div>
+            </div>
+            
+            <div id="success-section" style="display: none;">
+                <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="success-message">Email changed successfully!</div>
+                <button class="btn btn-primary" onclick="closeModal()">Done</button>
             </div>
         </div>
     </div>

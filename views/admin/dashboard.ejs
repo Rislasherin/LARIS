@@ -437,381 +437,45 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
-        // Chart data from server
-        const salesData = <%- JSON.stringify(salesData) %> || { labels: [], values: [] };
-        const productsData = <%- JSON.stringify(topProducts) %> || [];
-        const categoriesData = <%- JSON.stringify(topCategories) %> || [];
-        const topCategoryData = <%- JSON.stringify(topCategory) %> || null;
-        
-        // Chart.js default configuration - Dark theme
-        Chart.defaults.color = '#9ca3af';
-        Chart.defaults.borderColor = '#374151';
-        
-        // Initialize charts and event listeners
-        $(document).ready(function() {
-            initSalesChart();
-            initCategoriesChart();
-            renderTopCategory(topCategoryData);
-            
-            // Handle global time filter changes
-            $('#globalTimeFilter').on('change', function() {
-                $('#chartLoading').removeClass('hidden');
-                $('#categoryChartLoading').removeClass('hidden');
-                updateAllSections();
-            });
-            
-            // Handle refresh button for categories
-            $('#refreshCategories').on('click', function() {
-                const $button = $(this);
-                const originalHtml = $button.html();
-                
-                $button.html('<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing...');
-                $button.prop('disabled', true);
-                
-                updateCategoryData(() => {
-                    $button.html(originalHtml);
-                    $button.prop('disabled', false);
-                });
-            });
-            
+// Chart data from server
+const salesData = <%- JSON.stringify(salesData) %> || { labels: [], values: [] };
+const productsData = <%- JSON.stringify(topProducts) %> || [];
+const categoriesData = <%- JSON.stringify(topCategories) %> || [];
+const topCategoryData = <%- JSON.stringify(topCategory) %> || null;
 
-            
-            // Handle chart type change for sales chart
-            $('#chartType').on('change', function() {
-                $('#chartLoading').removeClass('hidden');
-                updateSalesChart();
-            });
-            
-            $('#chartLoading').addClass('hidden');
-            $('#categoryChartLoading').addClass('hidden');
+// Chart.js default configuration - Dark theme
+Chart.defaults.color = '#9ca3af';
+Chart.defaults.borderColor = '#374151';
+
+// Initialize charts and event listeners
+$(document).ready(function() {
+    try {
+        initSalesChart();
+        initCategoriesChart();
+        renderTopCategory(topCategoryData);
+        
+        // Handle global time filter changes
+        $('#globalTimeFilter').on('change', function() {
+            $('#chartLoading').removeClass('hidden');
+            $('#categoryChartLoading').removeClass('hidden');
+            updateAllSections();
         });
         
-        function updateAllSections() {
-            const timeFilter = $('#globalTimeFilter').val();
+        // Handle refresh button for categories
+        $('#refreshCategories').on('click', function() {
+            const $button = $(this);
+            const originalHtml = $button.html();
             
-            // Update Sales Chart
-            updateSalesChart();
+            $button.html('<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing...');
+            $button.prop('disabled', true);
             
-            // Update Category Performance and Top Category
-            updateCategoryData();
-            updateTopCategory();
-            
-            // Update Stats Overview
-            updateStatsOverview(timeFilter);
-            
-            // Update Customer Insights
-            updateCustomerInsights(timeFilter);
-        }
-
-        // Sales Chart
-        let salesChart;
-
-        function initSalesChart() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            salesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: salesData.labels || [],
-                    datasets: [{
-                        label: 'Sales',
-                        data: salesData.values || [],
-                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                        borderColor: 'rgba(139, 92, 246, 1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        pointBackgroundColor: 'rgba(139, 92, 246, 1)',
-                        pointBorderColor: '#fff',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                            padding: 12,
-                            titleColor: '#fff',
-                            bodyColor: '#e5e7eb',
-                            borderColor: '#4b5563',
-                            borderWidth: 1,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return '₹ ' + context.parsed.y.toLocaleString();
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(75, 85, 99, 0.2)' },
-                            ticks: {
-                                callback: function(value) {
-                                    return '₹' + value.toLocaleString();
-                                }
-                            }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
+            updateCategoryData(() => {
+                $button.html(originalHtml);
+                $button.prop('disabled', false);
             });
-        }
+        });
 
-        function updateSalesChart() {
-            const timeFilter = $('#globalTimeFilter').val();
-            const chartType = $('#chartType').val();
-            
-            $.ajax({
-                url: '/admin/api/sales-data',
-                type: 'GET',
-                data: {
-                    timeFilter: timeFilter,
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth()
-                },
-                success: function(data) {
-                    salesChart.config.type = chartType;
-                    salesChart.data.labels = data.labels || [];
-                    salesChart.data.datasets[0].data = data.values || [];
-                    salesChart.update();
-                    $('#chartLoading').addClass('hidden');
-                    showNotification('Sales data updated', 'success');
-                },
-                error: function(err) {
-                    console.error('Error fetching sales data:', err);
-                    $('#chartLoading').addClass('hidden');
-                    showNotification('Failed to update sales data', 'error');
-                }
-            });
-        }
-
-        // Categories Chart
-        let categoriesChart;
-
-        function initCategoriesChart() {
-            const ctx = document.getElementById('categoriesChart').getContext('2d');
-            const categoryNames = categoriesData.map(c => c.name);
-            const categoryRevenues = categoriesData.map(c => c.revenue);
-            
-            categoriesChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: categoryNames,
-                    datasets: [{
-                        data: categoryRevenues,
-                        backgroundColor: [
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(79, 70, 229, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(248, 113, 113, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)'
-                        ],
-                        borderColor: '#1f2937',
-                        borderWidth: 2,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 15,
-                                font: { size: 11 }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                            padding: 12,
-                            titleColor: '#fff',
-                            bodyColor: '#e5e7eb',
-                            borderColor: '#4b5563',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${context.label}: ₹${value.toLocaleString()} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
-        }
-
-        function updateCategoryData(callback) {
-            const timeFilter = $('#globalTimeFilter').val();
-            $('#categoryChartLoading').removeClass('hidden');
-            
-            $.ajax({
-                url: '/admin/api/category-data',
-                type: 'GET',
-                data: { timeFilter: timeFilter },
-                success: function(data) {
-                    categoriesChart.data.labels = data.categories.map(c => c.name);
-                    categoriesChart.data.datasets[0].data = data.categories.map(c => c.revenue);
-                    categoriesChart.update();
-                    
-                    updateCategoryGrid(data.categories.slice(0, 4));
-                    renderTopCategory(data.topCategory);
-                    
-                    $('#categoryChartLoading').addClass('hidden');
-                    showNotification('Category data updated', 'success');
-                    
-                    if (callback) callback();
-                },
-                error: function(err) {
-                    console.error('Error fetching category data:', err);
-                    $('#categoryChartLoading').addClass('hidden');
-                    showNotification('Failed to update category data', 'error');
-                    
-                    if (callback) callback();
-                }
-            });
-        }
-
-        function updateTopCategory(callback) {
-            const timeFilter = $('#globalTimeFilter').val();
-            
-            $.ajax({
-                url: '/admin/api/category-data',
-                type: 'GET',
-                data: { timeFilter: timeFilter },
-                success: function(data) {
-                    renderTopCategory(data.topCategory);
-                    showNotification('Top category updated', 'success');
-                    if (callback) callback();
-                },
-                error: function(err) {
-                    console.error('Error fetching top category data:', err);
-                    showNotification('Failed to update top category', 'error');
-                    if (callback) callback();
-                }
-            });
-        }
-
-        function renderTopCategory(category) {
-            const $container = $('#topCategoryContainer');
-            $container.empty();
-            
-            if (category) {
-                const growthClass = category.growthRate >= 0 ? 'text-green-400' : 'text-red-400';
-                const growthIcon = category.growthRate >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-                
-                const $card = $(`
-                    <h4 class="font-medium text-lg text-white mb-2">${category.name}</h4>
-                    <div class="flex justify-between items-center">
-                        <span class="text-2xl font-bold text-white">₹${category.revenue.toLocaleString()}</span>
-                        <span class="${growthClass} text-sm">
-                            <i class="fas ${growthIcon} mr-1"></i>${Math.abs(category.growthRate)}%
-                        </span>
-                    </div>
-                    <p class="text-gray-300 text-sm mt-2">Units Sold: ${category.unitsSold}</p>
-                `);
-                
-                $container.append($card);
-            } else {
-                $container.append('<p class="text-gray-400">No category data available</p>');
-            }
-        }
-
-        function updateCategoryGrid(categories) {
-            const $container = $('#categoryGridContainer');
-            $container.empty();
-            
-            categories.forEach(category => {
-                const growthClass = category.growthRate >= 0 ? 'text-green-400' : 'text-red-400';
-                const growthIcon = category.growthRate >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-                
-                const $card = $(`
-                    <div class="bg-gray-700 rounded-lg p-3">
-                        <h4 class="font-medium text-sm text-white mb-1 truncate">${category.name}</h4>
-                        <div class="flex justify-between items-center">
-                            <span class="text-lg font-bold text-white">₹${category.revenue.toLocaleString()}</span>
-                            <span class="${growthClass} text-sm">
-                                <i class="fas ${growthIcon} mr-1"></i>${Math.abs(category.growthRate)}%
-                            </span>
-                        </div>
-                    </div>
-                `);
-                
-                $container.append($card);
-            });
-        }
-
-        function updateStatsOverview(timeFilter) {
-            $.ajax({
-                url: '/admin/api/stats-overview',
-                type: 'GET',
-                data: { timeFilter: timeFilter },
-                success: function(data) {
-                    $('.revenue-value').text(`₹${data.totalRevenue.toLocaleString()}`);
-                    $('.revenue-change').text(`${data.revenueChange >= 0 ? '+' : ''}${data.revenueChange}% from last ${timeFilter}`);
-                    $('.orders-value').text(data.totalOrders);
-                    $('.orders-change').text(`${data.ordersChange >= 0 ? '+' : ''}${data.ordersChange}% from last ${timeFilter}`);
-                    $('.products-value').text(data.totalProducts);
-                    $('.products-change').text(`${data.productsChange >= 0 ? '+' : ''}${data.productsChange}% from last ${timeFilter}`);
-                    $('.customers-value').text(data.totalCustomers);
-                    $('.customers-change').text(`${data.customersChange >= 0 ? '+' : ''}${data.customersChange}% from last ${timeFilter}`);
-                    showNotification('Stats overview updated', 'success');
-                },
-                error: function(err) {
-                    console.error('Error fetching stats overview:', err);
-                    showNotification('Failed to update stats overview', 'error');
-                }
-            });
-        }
-
-        function updateCustomerInsights(timeFilter) {
-            $.ajax({
-                url: '/admin/api/customer-insights',
-                type: 'GET',
-                data: { timeFilter: timeFilter },
-                success: function(data) {
-                    $('.new-customers-count').text(`+${data.newCustomers.count}`);
-                    $('.new-customers-change').html(`
-                        <i class="fas fa-${data.newCustomers.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
-                        ${Math.abs(data.newCustomers.changePercent)}% from last ${timeFilter}
-                    `).removeClass('text-green-400 text-red-400')
-                      .addClass(data.newCustomers.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
-                    
-                    $('.returning-rate').text(`${data.returningRate.percentage}%`);
-                    $('.returning-rate-change').html(`
-                        <i class="fas fa-${data.returningRate.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
-                        ${Math.abs(data.returningRate.changePercent)}% from last ${timeFilter}
-                    `).removeClass('text-green-400 text-red-400')
-                      .addClass(data.returningRate.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
-                    
-                    $('.avg-order-value').text(`₹${data.avgOrderValue.amount.toLocaleString()}`);
-                    $('.avg-order-change').html(`
-                        <i class="fas fa-${data.avgOrderValue.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
-                        ${Math.abs(data.avgOrderValue.changePercent)}% from last ${timeFilter}
-                    `).removeClass('text-green-400 text-red-400')
-                      .addClass(data.avgOrderValue.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
-                    
-                    showNotification('Customer insights updated', 'success');
-                },
-                error: function(err) {
-                    console.error('Error fetching customer insights:', err);
-                    showNotification('Failed to update customer insights', 'error');
-                }
-            });
-        }
-
-        // Inventory Refresh
+        // Handle refresh button for inventory
         $('#refreshInventory').on('click', function() {
             const $button = $(this);
             const originalHtml = $button.html();
@@ -838,8 +502,382 @@
                 }
             });
         });
+        
+        // Handle chart type change for sales chart
+        $('#chartType').on('change', function() {
+            $('#chartLoading').removeClass('hidden');
+            updateSalesChart();
+        });
+        
+        $('#chartLoading').addClass('hidden');
+        $('#categoryChartLoading').addClass('hidden');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showNotification('Error initializing dashboard', 'error');
+    }
+});
 
-        function updateStockDistributionBar(distribution) {
+function updateAllSections() {
+    const timeFilter = $('#globalTimeFilter').val();
+    
+    // Define update tasks as promise-returning functions
+    const updateTasks = [
+        () => new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/admin/api/sales-data',
+                type: 'GET',
+                data: {
+                    timeFilter: timeFilter,
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth()
+                },
+                success: function(data) {
+                    salesChart.config.type = $('#chartType').val();
+                    salesChart.data.labels = data.labels || [];
+                    salesChart.data.datasets[0].data = data.values || [];
+                    salesChart.update();
+                    resolve();
+                },
+                error: function(err) {
+                    console.error('Error fetching sales data:', err);
+                    reject(err);
+                }
+            });
+        }),
+        () => new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/admin/api/category-data',
+                type: 'GET',
+                data: { timeFilter: timeFilter },
+                success: function(data) {
+                    categoriesChart.data.labels = data.categories.map(c => c.name);
+                    categoriesChart.data.datasets[0].data = data.categories.map(c => c.revenue);
+                    categoriesChart.update();
+                    updateCategoryGrid(data.categories.slice(0, 4));
+                    renderTopCategory(data.topCategory);
+                    resolve();
+                },
+                error: function(err) {
+                    console.error('Error fetching category data:', err);
+                    reject(err);
+                }
+            });
+        }),
+        () => new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/admin/api/stats-overview',
+                type: 'GET',
+                data: { timeFilter: timeFilter },
+                success: function(data) {
+                    $('.revenue-value').text(`₹${data.totalRevenue.toLocaleString()}`);
+                    $('.revenue-change').text(`${data.revenueChange >= 0 ? '+' : ''}${data.revenueChange}% from last ${timeFilter}`);
+                    $('.orders-value').text(data.totalOrders);
+                    $('.orders-change').text(`${data.ordersChange >= 0 ? '+' : ''}${data.ordersChange}% from last ${timeFilter}`);
+                    $('.products-value').text(data.totalProducts);
+                    $('.products-change').text(`${data.productsChange >= 0 ? '+' : ''}${data.productsChange}% from last ${timeFilter}`);
+                    $('.customers-value').text(data.totalCustomers);
+                    $('.customers-change').text(`${data.customersChange >= 0 ? '+' : ''}${data.customersChange}% from last ${timeFilter}`);
+                    resolve();
+                },
+                error: function(err) {
+                    console.error('Error fetching stats overview:', err);
+                    reject(err);
+                }
+            });
+        }),
+        () => new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/admin/api/customer-insights',
+                type: 'GET',
+                data: { timeFilter: timeFilter },
+                success: function(data) {
+                    $('.new-customers-count').text(`+${data.newCustomers.count}`);
+                    $('.new-customers-change').html(`
+                        <i class="fas fa-${data.newCustomers.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
+                        ${Math.abs(data.newCustomers.changePercent)}% from last ${timeFilter}
+                    `).removeClass('text-green-400 text-red-400')
+                      .addClass(data.newCustomers.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
+                    
+                    $('.returning-rate').text(`${data.returningRate.percentage}%`);
+                    $('.returning-rate-change').html(`
+                        <i class="fas fa-${data.returningRate.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
+                        ${Math.abs(data.returningRate.changePercent)}% from last ${timeFilter}
+                    `).removeClass('text-green-400 text-red-400')
+                      .addClass(data.returningRate.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
+                    
+                    $('.avg-order-value').text(`₹${data.avgOrderValue.amount.toLocaleString()}`);
+                    $('.avg-order-change').html(`
+                        <i class="fas fa-${data.avgOrderValue.changePercent >= 0 ? 'arrow-up' : 'arrow-down'} mr-1"></i>
+                        ${Math.abs(data.avgOrderValue.changePercent)}% from last ${timeFilter}
+                    `).removeClass('text-green-400 text-red-400')
+                      .addClass(data.avgOrderValue.changePercent >= 0 ? 'text-green-400' : 'text-red-400');
+                    
+                    resolve();
+                },
+                error: function(err) {
+                    console.error('Error fetching customer insights:', err);
+                    reject(err);
+                }
+            });
+        })
+    ];
+
+    // Run all updates and show a single notification
+    Promise.all(updateTasks.map(task => task()))
+        .then(() => {
+            $('#chartLoading').addClass('hidden');
+            $('#categoryChartLoading').addClass('hidden');
+            showNotification('All dashboard sections updated', 'success');
+        })
+        .catch((err) => {
+            console.error('Error updating dashboard sections:', err);
+            $('#chartLoading').addClass('hidden');
+            $('#categoryChartLoading').addClass('hidden');
+            showNotification('Failed to update some dashboard sections', 'error');
+        });
+}
+
+// Sales Chart
+let salesChart;
+
+function initSalesChart() {
+    try {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesData.labels || [],
+                datasets: [{
+                    label: 'Sales',
+                    data: salesData.values || [],
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#e5e7eb',
+                        borderColor: '#4b5563',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '₹ ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(75, 85, 99, 0.2)' },
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing sales chart:', error);
+        showNotification('Error initializing sales chart', 'error');
+    }
+}
+
+function updateSalesChart() {
+    const timeFilter = $('#globalTimeFilter').val();
+    const chartType = $('#chartType').val();
+    
+    $.ajax({
+        url: '/admin/api/sales-data',
+        type: 'GET',
+        data: {
+            timeFilter: timeFilter,
+            year: new Date().getFullYear(),
+            month: new Date().getMonth()
+        },
+        success: function(data) {
+            salesChart.config.type = chartType;
+            salesChart.data.labels = data.labels || [];
+            salesChart.data.datasets[0].data = data.values || [];
+            salesChart.update();
+            $('#chartLoading').addClass('hidden');
+            showNotification('Sales data updated', 'success');
+        },
+        error: function(err) {
+            console.error('Error fetching sales data:', err);
+            $('#chartLoading').addClass('hidden');
+            showNotification('Failed to update sales data', 'error');
+        }
+    });
+}
+
+// Categories Chart
+let categoriesChart;
+
+function initCategoriesChart() {
+    try {
+        const ctx = document.getElementById('categoriesChart').getContext('2d');
+        const categoryNames = categoriesData.map(c => c.name);
+        const categoryRevenues = categoriesData.map(c => c.revenue);
+        
+        categoriesChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryNames,
+                datasets: [{
+                    data: categoryRevenues,
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(79, 70, 229, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(248, 113, 113, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)'
+                    ],
+                    borderColor: '#1f2937',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#e5e7eb',
+                        borderColor: '#4b5563',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${context.label}: ₹${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing categories chart:', error);
+        showNotification('Error initializing categories chart', 'error');
+    }
+}
+
+function updateCategoryData(callback) {
+    const timeFilter = $('#globalTimeFilter').val();
+    $('#categoryChartLoading').removeClass('hidden');
+    
+    $.ajax({
+        url: '/admin/api/category-data',
+        type: 'GET',
+        data: { timeFilter: timeFilter },
+        success: function(data) {
+            categoriesChart.data.labels = data.categories.map(c => c.name);
+            categoriesChart.data.datasets[0].data = data.categories.map(c => c.revenue);
+            categoriesChart.update();
+            
+            updateCategoryGrid(data.categories.slice(0, 4));
+            renderTopCategory(data.topCategory);
+            
+            $('#categoryChartLoading').addClass('hidden');
+            showNotification('Category data updated', 'success');
+            
+            if (callback) callback();
+        },
+        error: function(err) {
+            console.error('Error fetching category data:', err);
+            $('#categoryChartLoading').addClass('hidden');
+            showNotification('Failed to update category data', 'error');
+            
+            if (callback) callback();
+        }
+    });
+}
+
+function renderTopCategory(category) {
+    const $container = $('#topCategoryContainer');
+    $container.empty();
+    
+    if (category && category.name && category.revenue !== undefined) {
+        const growthClass = category.growthRate >= 0 ? 'text-green-400' : 'text-red-400';
+        const growthIcon = category.growthRate >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        
+        const $card = $(`
+            <h4 class="font-medium text-lg text-white mb-2">${category.name}</h4>
+            <div class="flex justify-between items-center">
+                <span class="text-2xl font-bold text-white">₹${category.revenue.toLocaleString()}</span>
+                <span class="${growthClass} text-sm">
+                    <i class="fas ${growthIcon} mr-1"></i>${Math.abs(category.growthRate)}%
+                </span>
+            </div>
+            <p class="text-gray-300 text-sm mt-2">Units Sold: ${category.unitsSold}</p>
+        `);
+        
+        $container.append($card);
+    } else {
+        $container.append('<p class="text-gray-400">No category data available</p>');
+    }
+}
+
+function updateCategoryGrid(categories) {
+    const $container = $('#categoryGridContainer');
+    $container.empty();
+    
+    categories.forEach(category => {
+        const growthClass = category.growthRate >= 0 ? 'text-green-400' : 'text-red-400';
+        const growthIcon = category.growthRate >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        
+        const $card = $(`
+            <div class="bg-gray-700 rounded-lg p-3">
+                <h4 class="font-medium text-sm text-white mb-1 truncate">${category.name}</h4>
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold text-white">₹${category.revenue.toLocaleString()}</span>
+                    <span class="${growthClass} text-sm">
+                        <i class="fas ${growthIcon} mr-1"></i>${Math.abs(category.growthRate)}%
+                    </span>
+                </div>
+            </div>
+        `);
+        
+        $container.append($card);
+    });
+}
+
+function updateStockDistributionBar(distribution) {
+    try {
         const $bar = $('.stock-distribution-bar');
         
         $bar.children().eq(0).css('width', distribution.highStock.percentage + '%');
@@ -849,22 +887,27 @@
         $('.high-stock-label').text('High Stock (' + distribution.highStock.percentage + '%)');
         $('.low-stock-label').text('Low (' + distribution.lowStock.percentage + '%)');
         $('.out-stock-label').text('Out (' + distribution.outOfStock.percentage + '%)');
+    } catch (error) {
+        console.error('Error updating stock distribution bar:', error);
+        showNotification('Error updating stock distribution', 'error');
     }
-        function showNotification(message, type) {
-            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            const $notification = $(`
-                <div class="fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded shadow-lg z-50 flex items-center">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
-                    ${message}
-                </div>
-            `).appendTo('body');
-            
-            setTimeout(() => {
-                $notification.fadeOut(300, function() {
-                    $(this).remove();
-                });
-            }, 3000);
-        }
+}
+
+function showNotification(message, type) {
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const $notification = $(`
+        <div class="fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded shadow-lg z-50 flex items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+            ${message}
+        </div>
+    `).appendTo('body');
+    
+    setTimeout(() => {
+        $notification.fadeOut(300, function() {
+            $(this).remove();
+        });
+    }, 3000);
+}
     </script>
 </body>
 </html>

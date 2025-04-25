@@ -8,40 +8,37 @@ const fs = require('fs');
 const path = require('path');
 
 
-// controllers/admin/dashboardController.js
+
 exports.getDashboard = async (req, res) => {
     try {
         const globalTimeFilter = req.query.timeFilter || 'monthly';
 
-        // Get summary metrics
+      
         const totalRevenue = await calculateTotalRevenue(globalTimeFilter);
         const totalOrders = await Order.countDocuments({ status: { $nin: ['Cancelled', 'Payment Failed'] } });
         const totalProducts = await Product.countDocuments({ isBlocked: false });
         const totalCustomers = await User.countDocuments({ isAdmin: false });
 
-        // Get percentage changes
+   
         const { revenueChange, ordersChange, productsChange, customersChange } = await getStatsOverviewChanges(globalTimeFilter);
 
-        // Get sales data
         const currentYear = new Date().getFullYear();
         const salesData = await getSalesData(globalTimeFilter, currentYear, new Date().getMonth());
 
-        // Get top products and categories
-        const topProducts = await getTopProducts(10, globalTimeFilter); // Explicitly set limit to 10
+        const topProducts = await getTopProducts(10, globalTimeFilter); 
         const { topCategory, categories: topCategories } = await getTopCategories(10, globalTimeFilter);
 
-        console.log('Rendering Dashboard with topCategory:', topCategory); // Debug log
+        console.log('Rendering Dashboard with topCategory:', topCategory);
 
-        // Get customer insights
+      
         const customerInsights = await getCustomerInsights(globalTimeFilter);
 
-        // Get inventory status
+     
         const inventoryStatus = await getInventoryStatus();
 
-        // Get recent signups
+    
         const recentSignups = await getRecentSignups(3);
 
-        // Get recent orders
         const recentOrders = await Order.find({ status: { $nin: ['Cancelled', 'Payment Failed'] } })
             .populate('user', 'name')
             .sort({ createdAt: -1 })
@@ -72,20 +69,20 @@ exports.getDashboard = async (req, res) => {
         res.status(500).render('error', { message: 'Error loading dashboard' });
     }
 };
-// Helper function to calculate date ranges
+
 // Helper function to calculate date ranges
 function getDateRange(timeFilter) {
     const now = new Date();
     let startDate, endDate, prevStartDate, prevEndDate;
 
     if (timeFilter === 'daily') {
-        endDate = new Date(now.setHours(23, 59, 59, 999)); // End of today
-        startDate = new Date(now.setHours(0, 0, 0, 0));   // Start of today
+        endDate = new Date(now.setHours(23, 59, 59, 999)); 
+        startDate = new Date(now.setHours(0, 0, 0, 0));   
         prevEndDate = new Date(startDate);
-        prevEndDate.setDate(prevEndDate.getDate() - 1);    // End of yesterday
+        prevEndDate.setDate(prevEndDate.getDate() - 1);
         prevEndDate.setHours(23, 59, 59, 999);
         prevStartDate = new Date(prevEndDate);
-        prevStartDate.setHours(0, 0, 0, 0);               // Start of yesterday
+        prevStartDate.setHours(0, 0, 0, 0);               
     } else if (timeFilter === 'weekly') {
         endDate = now;
         startDate = new Date(now);
@@ -107,7 +104,7 @@ function getDateRange(timeFilter) {
         prevEndDate.setDate(prevEndDate.getDate() - 1);
         prevStartDate = new Date(prevEndDate.getFullYear(), 0, 1);
     } else {
-        // Default to monthly
+   
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         prevEndDate = new Date(startDate);
@@ -118,7 +115,7 @@ function getDateRange(timeFilter) {
     return { startDate, endDate, prevStartDate, prevEndDate };
 }
 
-// Helper function to calculate total revenue
+
 async function calculateTotalRevenue(timeFilter) {
     try {
         const { startDate, endDate } = getDateRange(timeFilter);
@@ -143,12 +140,12 @@ async function calculateTotalRevenue(timeFilter) {
     }
 }
 
-// Helper function to get Stats Overview changes
+
 async function getStatsOverviewChanges(timeFilter) {
     try {
         const { startDate, endDate, prevStartDate, prevEndDate } = getDateRange(timeFilter);
 
-        // Current period metrics
+      
         const currentRevenue = await calculateTotalRevenue(timeFilter);
         const currentOrders = await Order.countDocuments({
             status: { $nin: ['Cancelled', 'Payment Failed'] },
@@ -163,7 +160,7 @@ async function getStatsOverviewChanges(timeFilter) {
             createdAt: { $gte: startDate, $lte: endDate }
         });
 
-        // Previous period metrics
+     
         const prevRevenue = await Order.aggregate([
             {
                 $match: {
@@ -191,7 +188,6 @@ async function getStatsOverviewChanges(timeFilter) {
             createdAt: { $gte: prevStartDate, $lte: prevEndDate }
         });
 
-        // Calculate percentage changes
         const revenueChange = prevRevenue.length > 0 && prevRevenue[0].totalRevenue > 0
             ? Math.round(((currentRevenue - prevRevenue[0].totalRevenue) / prevRevenue[0].totalRevenue) * 100)
             : currentRevenue > 0 ? 100 : 0;
@@ -247,12 +243,12 @@ exports.getStatsOverviewAPI = async (req, res) => {
     }
 };
 
-// Get customer insights
+
 async function getCustomerInsights(timeFilter) {
     try {
         const { startDate, endDate, prevStartDate, prevEndDate } = getDateRange(timeFilter);
 
-        // New customers
+     
         const newCustomersThisPeriod = await User.countDocuments({
             isAdmin: false,
             createdAt: { $gte: startDate, $lte: endDate }
@@ -265,7 +261,6 @@ async function getCustomerInsights(timeFilter) {
             ? Math.round(((newCustomersThisPeriod - newCustomersPreviousPeriod) / newCustomersPreviousPeriod) * 100)
             : newCustomersThisPeriod > 0 ? 100 : 0;
 
-        // Returning customers rate
         const ordersThisPeriod = await Order.find({
             status: { $nin: ['Cancelled', 'Payment Failed'] },
             createdAt: { $gte: startDate, $lte: endDate }
@@ -300,7 +295,7 @@ async function getCustomerInsights(timeFilter) {
             ? Math.round(((returningRateThisPeriod - returningRatePreviousPeriod) / returningRatePreviousPeriod) * 100)
             : returningRateThisPeriod > 0 ? 100 : 0;
 
-        // Average order value
+      
         const ordersThisPeriodFull = await Order.find({
             status: { $nin: ['Cancelled', 'Payment Failed'] },
             createdAt: { $gte: startDate, $lte: endDate }
@@ -347,7 +342,7 @@ async function getCustomerInsights(timeFilter) {
     }
 }
 
-// API endpoint for Customer Insights
+
 exports.getCustomerInsightsAPI = async (req, res) => {
     try {
         const { timeFilter } = req.query;
@@ -361,21 +356,20 @@ exports.getCustomerInsightsAPI = async (req, res) => {
 
 async function getInventoryStatus() {
     try {
-        // Count total products (excluding blocked ones)
+  
         const totalProducts = await Product.countDocuments({ isBlocked: false });
 
-        // Count out-of-stock items (quantity = 0)
+        
         const outOfStockItemsCount = await Product.countDocuments({
             quantity: 0,
             isBlocked: false
         });
 
-        // Aggregate to count low stock and high stock items
         const stockCounts = await Product.aggregate([
             {
                 $match: {
                     isBlocked: false,
-                    quantity: { $gt: 0 } // Exclude out-of-stock for low/high stock
+                    quantity: { $gt: 0 }
                 }
             },
             {
@@ -398,12 +392,12 @@ async function getInventoryStatus() {
         const lowStockItemsCount = stockCounts.length > 0 ? stockCounts[0].lowStockItems : 0;
         const highStockItemsCount = stockCounts.length > 0 ? stockCounts[0].highStockItems : 0;
 
-        // Calculate percentages
+    
         const highStockPercentage = totalProducts > 0 ? Math.round((highStockItemsCount / totalProducts) * 100) : 0;
         const lowStockPercentage = totalProducts > 0 ? Math.round((lowStockItemsCount / totalProducts) * 100) : 0;
         const outOfStockPercentage = totalProducts > 0 ? Math.round((outOfStockItemsCount / totalProducts) * 100) : 0;
 
-        // Fetch low stock products (for display)
+       
         const lowStockProducts = await Product.aggregate([
             {
                 $match: {
@@ -415,7 +409,6 @@ async function getInventoryStatus() {
             { $project: { productName: 1, quantity: 1, lowStockThreshold: 1 } }
         ]);
 
-        // Fetch out-of-stock products (for display)
         const outOfStockProducts = await Product.find({
             quantity: 0,
             isBlocked: false
@@ -424,7 +417,7 @@ async function getInventoryStatus() {
             .limit(10)
             .lean();
 
-        // Fetch recent stock history
+    
         const recentStockHistory = await Product.aggregate([
             { $match: { isBlocked: false } },
             { $unwind: '$stockHistory' },
@@ -470,7 +463,7 @@ async function getInventoryStatus() {
     }
 }
 
-// Get recent signups
+
 async function getRecentSignups(limit) {
     try {
         const recentUsers = await User.find({ isAdmin: false })
@@ -516,7 +509,7 @@ exports.getInventoryStatus = async (req, res) => {
     }
 };
 
-// API endpoint to get filtered sales data
+
 exports.getSalesDataAPI = async (req, res) => {
     try {
         const { timeFilter, year, month } = req.query;
@@ -531,7 +524,7 @@ exports.getSalesDataAPI = async (req, res) => {
     }
 };
 
-// Helper function to get sales data based on filters
+
 async function getSalesData(timeFilter, year, month) {
     try {
         let labels = [];
@@ -620,9 +613,8 @@ async function getSalesData(timeFilter, year, month) {
     }
 }
 
-// Helper function to get top products
-// controllers/admin/dashboardController.js
-async function getTopProducts(limit = 10, timeFilter) { // Changed limit to 10
+
+async function getTopProducts(limit = 10, timeFilter) { 
     try {
         const { startDate, endDate } = getDateRange(timeFilter);
         const productsFromOrders = await Order.aggregate([
@@ -664,15 +656,14 @@ async function getTopProducts(limit = 10, timeFilter) { // Changed limit to 10
             }
         ]);
 
-        console.log('Top Products:', productsFromOrders); // Debug log
+        console.log('Top Products:', productsFromOrders); 
         return productsFromOrders;
     } catch (error) {
         console.error('Error getting top products:', error);
         return [];
     }
 }
-// Helper function to get top categories
-// controllers/admin/dashboardController.js
+
 async function getTopCategories(limit = 10, timeFilter) {
     try {
         const { startDate, endDate } = getDateRange(timeFilter);
@@ -721,9 +712,9 @@ async function getTopCategories(limit = 10, timeFilter) {
             }
         ]);
 
-        console.log('Category Data:', categoryData); // Debug log
+        console.log('Category Data:', categoryData); 
 
-        // Calculate growth rates
+      
         const { prevStartDate, prevEndDate } = getDateRange(timeFilter);
         const previousPeriodData = await Order.aggregate([
             {
@@ -767,7 +758,7 @@ async function getTopCategories(limit = 10, timeFilter) {
             };
         });
 
-        // Ensure topCategory is always an object
+      
         const topCategory = categoriesWithGrowth[0] || {
             name: 'N/A',
             revenue: 0,
@@ -775,7 +766,7 @@ async function getTopCategories(limit = 10, timeFilter) {
             growthRate: 0
         };
 
-        console.log('Top Category:', topCategory); // Debug log
+        console.log('Top Category:', topCategory);
 
         return {
             topCategory,
@@ -795,7 +786,6 @@ async function getTopCategories(limit = 10, timeFilter) {
     }
 }
 
-// Update API endpoint for category data
 exports.getCategoryDataAPI = async (req, res) => {
     try {
         const { timeFilter } = req.query;

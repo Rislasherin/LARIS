@@ -1,4 +1,3 @@
-<!-- views/user/orderDetails.ejs -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -273,65 +272,65 @@
       }
 
       .timeline-step::before {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: calc(50% + 15px);
-  right: 50%;
-  height: 2px;
-  background-color: var(--secondary-color);
-  z-index: 1;
-}
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: calc(50% + 15px);
+        right: 50%;
+        height: 2px;
+        background-color: var(--secondary-color);
+        z-index: 1;
+      }
 
-.timeline-step:last-child::before {
-  display: none;
-}
+      .timeline-step:last-child::before {
+        display: none;
+      }
 
-.timeline-step.completed::before {
-  background-color: #28a745; /* Green for completed */
-}
+      .timeline-step.completed::before {
+        background-color: #28a745;
+      }
 
-.timeline-dot {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: var(--secondary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 10px;
-  position: relative;
-  z-index: 2;
-}
+      .timeline-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--secondary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        position: relative;
+        z-index: 2;
+      }
 
-.timeline-step.completed .timeline-dot {
-  background-color: #28a745; /* Green for completed */
-  color: white;
-}
+      .timeline-step.completed .timeline-dot {
+        background-color: #28a745;
+        color: white;
+      }
 
-.timeline-step.current .timeline-dot {
-  background-color: var(--accent-color); /* Orange for active/current */
-  color: white;
-  border: 2px solid #fff; /* Optional: Add a white border to make it stand out */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow for emphasis */
-}
+      .timeline-step.current .timeline-dot {
+        background-color: var(--accent-color);
+        color: white;
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
 
-.timeline-label {
-  font-size: 0.75rem;
-  color: #6c757d;
-  max-width: 80px;
-  margin: 0 auto;
-}
+      .timeline-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        max-width: 80px;
+        margin: 0 auto;
+      }
 
-.timeline-step.completed .timeline-label {
-  color: var(--text-color);
-  font-weight: 500;
-}
+      .timeline-step.completed .timeline-label {
+        color: var(--text-color);
+        font-weight: 500;
+      }
 
-.timeline-step.current .timeline-label {
-  color: var(--accent-color); /* Match the active color */
-  font-weight: 600;
-}
+      .timeline-step.current .timeline-label {
+        color: var(--accent-color);
+        font-weight: 600;
+      }
 
       .refund-status {
         margin-top: 1rem;
@@ -347,8 +346,8 @@
     </style>
   </head>
   <body>
-    <%- include('../partials/user/header') %> <%-
-    include('../partials/user/profileHeader') %>
+    <%- include('../partials/user/header') %>
+    <%- include('../partials/user/profileHeader') %>
 
     <div class="container">
       <div class="order-container">
@@ -365,33 +364,46 @@
               <p class="text-muted mb-0 mt-1">Placed on <%= order.orderDate.toLocaleDateString() %></p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-              <% if (order.paymentStatus === 'Pending') { %>
-              <button onclick="payNow('<%= order._id %>', '<%= order.shippingAddress._id %>')" class="btn btn-primary">
-                <i class="fas fa-credit-card me-2"></i> Pay Now
-              </button>
+              <% if (order.paymentStatus === 'Pending' && order.paymentMethod !== 'cod') { %>
+                <button onclick="payNow('<%= order._id %>', '<%= order.shippingAddress._id %>')" class="btn btn-primary">
+                  <i class="fas fa-credit-card me-2"></i> Pay Now
+                </button>
               <% } %>
               <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Delivered' && !order.products.every(p => ['Cancelled', 'Delivered', 'Cancellation Requested', 'Returned'].includes(p.productStatus))) { %>
-              <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelOrderModal" data-order-id="<%= order._id %>" data-action="cancel-order">
-                <i class="fas fa-ban me-1"></i> Cancel Order
-              </button>
+                <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#cancelOrderModal" data-order-id="<%= order._id %>" data-action="cancel-order">
+                  <i class="fas fa-ban me-1"></i> Cancel Order
+                </button>
+              <% } %>
+              <% 
+                const canDownloadInvoice = 
+                  order.paymentMethod && 
+                  (
+                    ((order.paymentMethod === 'razorpay' || order.paymentMethod === 'wallet') && order.paymentStatus === 'Paid') ||
+                    (order.paymentMethod === 'cod' && order.orderStatus === 'Delivered')
+                  ); 
+              %>
+              <% if (canDownloadInvoice) { %>
+                <a href="/order/invoice/<%= order._id %>" target="_blank" class="btn btn-primary ms-2" style="width: auto; padding-left: 0.75rem; padding-right: 0.75rem;">
+                  <i class="fas fa-file-download me-2"></i> Invoice
+                </a>
               <% } %>
             </div>
           </div>
         </div>
 
-<!-- Order Timeline -->
-<div class="mb-4">
-  <div class="timeline-compact">
-    <% order.timeline.forEach(step => { %>
-    <div class="timeline-step <%= step.completed ? 'completed' : '' %> <%= step.current ? 'current' : '' %>">
-      <div class="timeline-dot">
-        <i class="fas <%= step.title === 'Order Placed' ? 'fa-check' : step.title === 'Processing' ? 'fa-cog' : step.title === 'Shipped' ? 'fa-shipping-fast' : 'fa-home' %> fa-sm"></i>
-      </div>
-      <div class="timeline-label"><%= step.title %></div>
-    </div>
-    <% }) %>
-  </div>
-</div>
+        <!-- Order Timeline -->
+        <div class="mb-4">
+          <div class="timeline-compact">
+            <% order.timeline.forEach(step => { %>
+            <div class="timeline-step <%= step.completed ? 'completed' : '' %> <%= step.current ? 'current' : '' %>">
+              <div class="timeline-dot">
+                <i class="fas <%= step.title === 'Order Placed' ? 'fa-check' : step.title === 'Processing' ? 'fa-cog' : step.title === 'Shipped' ? 'fa-shipping-fast' : 'fa-home' %> fa-sm"></i>
+              </div>
+              <div class="timeline-label"><%= step.title %></div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
 
         <!-- Order Tabs -->
         <div class="order-tabs">
@@ -636,7 +648,6 @@
       </div>
     </div>
 
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -825,76 +836,75 @@
         });
         
         confirmCancelBtn.addEventListener('click', function() {
-  const orderId = document.getElementById('orderId').value;
-  const productId = document.getElementById('productId').value;
-  const actionType = document.getElementById('actionType').value;
-  const reason = document.getElementById('cancelReason').value;
-  const otherReason = document.getElementById('otherReason').value;
+          const orderId = document.getElementById('orderId').value;
+          const productId = document.getElementById('productId').value;
+          const actionType = document.getElementById('actionType').value;
+          const reason = document.getElementById('cancelReason').value;
+          const otherReason = document.getElementById('otherReason').value;
 
-  const finalReason = reason === 'Other' ? otherReason : reason;
+          const finalReason = reason === 'Other' ? otherReason : reason;
 
-  let endpoint = '';
-  let requestData = {};
+          let endpoint = '';
+          let requestData = {};
 
-  if (actionType === 'cancel-order') {
-    endpoint = `/user/order/cancel-order/${orderId}`; // Matches router.post('/order/cancel-order/:orderId')
-    requestData = { reason: finalReason };
-  } else if (actionType === 'cancel') {
-    endpoint = `/user/order/cancel-product/${orderId}/${productId}`; // Matches router.post('/order/cancel-product/:orderId/:productId')
-    requestData = { reason: finalReason };
-  } else if (actionType === 'return') {
-    endpoint = '/user/return'; // Matches router.post('/return')
-    requestData = { orderId, productId, reason: finalReason };
-  }
+          if (actionType === 'cancel-order') {
+            endpoint = `/user/order/cancel-order/${orderId}`;
+            requestData = { reason: finalReason };
+          } else if (actionType === 'cancel') {
+            endpoint = `/user/order/cancel-product/${orderId}/${productId}`;
+            requestData = { reason: finalReason };
+          } else if (actionType === 'return') {
+            endpoint = '/user/return';
+            requestData = { orderId, productId, reason: finalReason };
+          }
 
-  console.log('Fetching endpoint:', endpoint); // Debug log to confirm URL
+          console.log('Fetching endpoint:', endpoint);
 
-  fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestData)
-  })
-    .then(response => {
-      console.log('Response status:', response.status); // Debug log
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(result => {
-      const modal = bootstrap.Modal.getInstance(cancelOrderModal);
-      modal.hide();
+          fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+          })
+            .then(response => {
+              console.log('Response status:', response.status);
+              if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(result => {
+              const modal = bootstrap.Modal.getInstance(cancelOrderModal);
+              modal.hide();
 
-      if (result.success) {
-        Swal.fire({
-          title: 'Success',
-          text: result.message,
-          icon: 'success',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          location.reload();
+              if (result.success) {
+                Swal.fire({
+                  title: 'Success',
+                  text: result.message,
+                  icon: 'success',
+                  confirmButtonText: 'OK'
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  title: 'Error',
+                  text: result.message || 'An error occurred. Please try again.',
+                  icon: 'error',
+                  confirmButtonText: 'OK'
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Fetch Error:', error);
+              Swal.fire({
+                title: 'Error',
+                text: 'There was an error processing your request. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+            });
         });
-      } else {
-        Swal.fire({
-          title: 'Error',
-          text: result.message || 'An error occurred. Please try again.',
-          icon: 'error',
-          confirmButtonText: 'OK'
-        });
-      }
-    })
-    .catch(error => {
-      console.error('Fetch Error:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'There was an error processing your request. Please try again.',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-    });
-});
       });
     </script>
-  
   </body>
 </html>

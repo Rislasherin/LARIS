@@ -4,7 +4,7 @@ const User = require('../../models/userSchema');
 const mongoose = require('mongoose');
 const Category = require('../../models/CategorySchema');
 const Address = require('../../models/addressSchema');
-const  Order  = require('../../models/orderSchema');
+const  Order  = require('../../models/OrderSchema');
 const Coupon = require('../../models/CouponSchema');
 const Wallet = require('../../models/walletSchema')
 const { v4: uuidv4 } = require('uuid');
@@ -357,12 +357,6 @@ const placeOrder = async (req, res) => {
         receipt: uuidv4()
       });
 
-      if (paymentMethod === 'cod' && finalAmount > 1000) {
-        return res.status(400).json({ 
-          message: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.' 
-        });
-      }
-
       req.session.pendingOrder = {
         user: userId,
         orderItems,
@@ -389,13 +383,11 @@ const placeOrder = async (req, res) => {
         finalAmount
       });
     } else if (paymentMethod === 'wallet') {
-      // Check wallet balance (already fetched in getPaymentPage, but re-verify here)
       const wallet = await Wallet.findOne({ user: userId });
       if (!wallet || wallet.balance < finalAmount) {
         return res.status(400).json({ message: 'Insufficient wallet balance' });
       }
 
-      // Proceed with wallet payment logic (handled in a separate endpoint)
       req.session.pendingOrder = {
         user: userId,
         orderItems,
@@ -411,65 +403,74 @@ const placeOrder = async (req, res) => {
       };
 
       return res.json({
-        orderId: uuidv4(), // Temporary order ID, will be replaced after processing
+        orderId: uuidv4(),
         finalAmount
       });
-    }
-
-    const updatedProducts = [];
-    try {
-      for (const item of cart.items) {
-        const product = await Product.findById(item.product._id);
-        product.quantity -= item.quantity;
-        if (product.quantity < 0) {
-          throw new Error(`Stock issue for ${item.product.productName}`);
-        }
-        await product.save();
-        updatedProducts.push({ productId: item.product._id, quantity: item.quantity });
+    } else if (paymentMethod === 'cod') {
+      if (finalAmount > 1000) {
+        return res.status(400).json({ 
+          message: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.' 
+        });
       }
 
-      const order = new Order({
-        user: userId,
-        orderID: uuidv4(),
-        orderItems,
-        totalPrice,
-        discount,
-        finalAmount,
-        address: shippingAddress._id,
-        status: 'Pending',
-        paymentMethod,
-        couponCode,
-        couponDiscount,
-        shipping: shippingCost,
-        tax,
-        timeline: [
-          {
-            title: 'Order Placed',
-            text: 'Your order has been placed successfully.',
-            date: new Date(),
-            completed: true
+      const updatedProducts = [];
+      try {
+        for (const item of cart.items) {
+          const product = await Product.findById(item.product._id);
+          product.quantity -= item.quantity;
+          if (product.quantity < 0) {
+            throw new Error(`Stock issue for ${item.product.productName}`);
           }
-        ]
-      });
-
-      await order.save();
-      await Cart.deleteOne({ user: userId });
-
-      delete req.session.appliedCoupon;
-
-      return res.json({
-        orderId: order._id.toString(),
-        message: 'Order placed successfully'
-      });
-    } catch (error) {
-      for (const { productId, quantity } of updatedProducts) {
-        const product = await Product.findById(productId);
-        if (product) {
-          product.quantity += quantity;
           await product.save();
+          updatedProducts.push({ productId: item.product._id, quantity: item.quantity });
         }
+
+        const order = new Order({
+          user: userId,
+          orderID: uuidv4(),
+          orderItems,
+          totalPrice,
+          discount,
+          finalAmount,
+          address: shippingAddress._id,
+          status: 'Pending',
+          paymentMethod,
+          paymentStatus: 'Pending', // Explicitly set for COD
+          couponCode,
+          couponDiscount,
+          shipping: shippingCost,
+          tax,
+          timeline: [
+            {
+              title: 'Order Placed',
+              text: 'Your order has been placed successfully.',
+              date: new Date(),
+              completed: true
+            }
+          ]
+        });
+
+        await order.save();
+        await Cart.deleteOne({ user: userId });
+
+        delete req.session.appliedCoupon;
+
+        return res.json({
+          orderId: order._id.toString(),
+          message: 'Order placed successfully'
+        });
+      } catch (error) {
+        for (const { productId, quantity } of updatedProducts) {
+          const product = await Product.findById(productId);
+          if (product) {
+            product.quantity += quantity;
+            await product.save();
+          }
+        }
+        throw error;
       }
-      throw error;
+    } else {
+      return res.status(400).json({ message: 'Invalid payment method' });
     }
   } catch (error) {
     console.error("Error placing order:", error.stack);

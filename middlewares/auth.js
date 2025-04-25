@@ -15,8 +15,8 @@ const userAuth = (req, res, next) => {
         .then((user) => {
             if (user && !user.isBlocked) {
                 console.log('User authenticated:', user.email);
-                req.user = user; // Set req.user for consistency
-                req.session.user = { // Ensure session is updated
+                req.user = user; 
+                req.session.user = { 
                     _id: user._id.toString(),
                     name: user.name,
                     email: user.email

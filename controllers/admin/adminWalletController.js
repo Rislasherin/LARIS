@@ -10,15 +10,15 @@ exports.getWalletManagement = async (req, res) => {
         const limit = 10;
         const skip = (page - 1) * limit;
 
-        // Fetch all wallets with populated user data
+       
         const wallets = await Wallet.find()
             .populate('user', 'name email')
             .lean();
 
-        // Flatten and sort transactions by date (latest first)
+       
         let transactions = [];
         wallets.forEach(wallet => {
-            // Only include transactions where user is populated
+         
             if (wallet.user) {
                 wallet.transactions.forEach(transaction => {
                     transactions.push({
@@ -34,10 +34,9 @@ exports.getWalletManagement = async (req, res) => {
             }
         });
 
-        // Sort by date descending (latest first)
+     
         transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // Calculate pagination details
         const totalTransactions = transactions.length;
         const totalPages = Math.ceil(totalTransactions / limit);
         const paginatedTransactions = transactions.slice(skip, skip + limit);
@@ -63,23 +62,23 @@ exports.getWalletOrderDetails = async (req, res) => {
         const orderId = req.params.orderId;
         const order = await Order.findById(orderId)
             .populate('user', 'name email')
-            .populate('orderItems.productId', 'productName regularPrice') // Corrected path
-            .populate('address') // Populate address for shipping details
+            .populate('orderItems.productId', 'productName regularPrice')
+            .populate('address') 
             .lean();
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Transform order data to match expected frontend format
+      
         const transformedOrder = {
             _id: order._id,
             orderID: order.orderID,
-            orderDate: order.createdAt, // Use createdAt as order date
+            orderDate: order.createdAt, 
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,
-            originalAmount: order.totalPrice + order.discount, // Sum of totalPrice and discount
-            totalOfferDiscount: order.discount - (order.couponDiscount || 0), // Non-coupon discount
+            originalAmount: order.totalPrice + order.discount, 
+            totalOfferDiscount: order.discount - (order.couponDiscount || 0), 
             appliedCoupon: {
                 code: order.couponCode || 'N/A',
                 discountAmount: order.couponDiscount || 0

@@ -29,16 +29,17 @@
         }
         
         .account-container {
+            width: 100%;
             max-width: 1400px;
-            margin: 2rem auto;
+            margin: 1rem auto;
             padding: 0 1rem;
         }
         
         .page-title {
             font-weight: 700;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             color: var(--primary-color);
-            padding-bottom: 1rem;
+            padding-bottom: 0.75rem;
         }
         
         /* Referral Header */
@@ -46,8 +47,8 @@
             background-color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
         }
@@ -57,9 +58,10 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             background: url('/api/placeholder/200/200') no-repeat;
+            background-size: contain;
             opacity: 0.05;
             z-index: 1;
         }
@@ -67,33 +69,33 @@
         .referral-welcome h2 {
             color: var(--primary-color);
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: calc(1.2rem + 0.6vw);
         }
         
         .referral-welcome p {
             color: var(--text-light);
-            font-size: 1.1rem;
-            line-height: 1.6;
+            font-size: calc(0.9rem + 0.1vw);
+            line-height: 1.5;
             margin-bottom: 0;
         }
         
         /* Referral Info Cards */
         .referral-info-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 1.5rem;
         }
         
         .referral-info-card {
-            flex: 1;
-            min-width: 250px;
             background-color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
-            padding: 1.5rem;
+            padding: 1.25rem;
             transition: var(--transition);
             border-top: 4px solid var(--primary-color);
+            height: 100%;
         }
         
         .referral-info-card:hover {
@@ -109,7 +111,7 @@
         }
         
         .info-card-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-light);
             margin-bottom: 0.5rem;
             text-transform: uppercase;
@@ -117,17 +119,23 @@
         }
         
         .info-card-value {
-            font-size: 1.8rem;
+            font-size: calc(1.2rem + 0.3vw);
             font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
         
         .referral-code {
             font-family: monospace;
             letter-spacing: 1px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
         
         .copy-btn {
@@ -138,8 +146,8 @@
             padding: 0.4rem 1rem;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-left: 1rem;
             transition: var(--transition);
+            white-space: nowrap;
         }
         
         .copy-btn:hover {
@@ -149,7 +157,7 @@
         
         .info-card-desc {
             color: var(--text-light);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin: 0;
         }
         
@@ -158,32 +166,35 @@
             background-color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
         }
         
         .share-title {
             font-weight: 600;
             color: var(--text-dark);
             margin-bottom: 1rem;
+            font-size: calc(1rem + 0.1vw);
         }
         
         .share-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
-            flex-wrap: wrap;
         }
         
         .share-btn {
-            padding: 0.7rem 1.5rem;
+            padding: 0.7rem 0.5rem;
             border-radius: 50px;
             font-weight: 600;
             font-size: 0.9rem;
             display: flex;
             align-items: center;
+            justify-content: center;
             transition: var(--transition);
             color: white;
             border: none;
+            width: 100%;
         }
         
         .share-btn i {
@@ -216,24 +227,26 @@
             background: white;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
         }
         
         .referred-users-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .referred-users-header h3 {
             color: var(--text-dark);
             font-weight: 600;
             margin-bottom: 0;
-            font-size: 1.25rem;
+            font-size: calc(1rem + 0.1vw);
         }
         
         .referred-users-count {
@@ -243,15 +256,18 @@
             padding: 0.3rem 1rem;
             font-size: 0.85rem;
             font-weight: 600;
+            white-space: nowrap;
         }
         
         .referred-users-table-container {
             overflow-x: auto;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
+            -webkit-overflow-scrolling: touch;
         }
         
         .referred-users-table {
             width: 100%;
+            min-width: 600px;
             border-collapse: separate;
             border-spacing: 0;
         }
@@ -260,17 +276,19 @@
             background-color: #f8f9fa;
             color: var(--text-light);
             font-weight: 600;
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 2px solid #e9ecef;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
         
         .referred-users-table td {
-            padding: 1rem;
+            padding: 0.75rem;
             border-bottom: 1px solid #e9ecef;
             color: var(--text-dark);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            vertical-align: middle;
         }
         
         .referred-users-table tbody tr:hover {
@@ -280,19 +298,20 @@
         .referral-user-cell {
             display: flex;
             align-items: center;
+            gap: 0.5rem;
         }
         
         .referral-user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background-color: #e9ecef;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 0.75rem;
             color: var(--primary-color);
             font-weight: 600;
+            flex-shrink: 0;
         }
         
         .status-badge {
@@ -301,6 +320,7 @@
             font-size: 0.75rem;
             font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
         
         .status-badge.success {
@@ -315,34 +335,37 @@
         
         .no-referrals {
             text-align: center;
-            padding: 2rem;
+            padding: 2rem 1rem;
             color: var(--text-light);
             background-color: #f8f9fa;
             border-radius: var(--border-radius);
         }
         
         .no-referrals i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
             color: #dee2e6;
         }
         
         .no-referrals h4 {
             margin-bottom: 0.5rem;
             font-weight: 600;
+            font-size: calc(1rem + 0.1vw);
         }
         
         .pagination-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .load-more-btn {
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.25rem;
             border-radius: 50px;
             cursor: pointer;
             transition: var(--transition);
@@ -362,7 +385,7 @@
         
         .page-indicator {
             color: var(--text-light);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin: 0;
         }
         
@@ -371,30 +394,29 @@
             background-color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
         }
         
         .how-it-works h3 {
             color: var(--text-dark);
             font-weight: 600;
-            margin-bottom: 1.5rem;
-            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: calc(1rem + 0.1vw);
         }
         
         .steps-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
         }
         
         .step-card {
-            flex: 1;
-            min-width: 200px;
             padding: 1.25rem;
             background-color: #f8f9fa;
             border-radius: var(--border-radius);
             position: relative;
+            height: 100%;
         }
         
         .step-number {
@@ -417,30 +439,95 @@
             font-weight: 600;
             margin-bottom: 0.75rem;
             color: var(--text-dark);
+            font-size: calc(0.9rem + 0.1vw);
         }
         
         .step-desc {
             color: var(--text-light);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin: 0;
         }
         
-        @media (max-width: 768px) {
+        /* Enhanced Responsive Rules */
+        @media (max-width: 992px) {
+            .account-container {
+                padding: 0 0.75rem;
+            }
+            
+            .referral-welcome {
+                padding: 1.25rem;
+            }
+            
             .referral-info-row {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+            
+            .steps-container {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .referred-users-header {
                 flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .referred-users-count {
+                align-self: flex-start;
+            }
+            
+            .pagination-container {
+                flex-direction: column-reverse;
+                align-items: flex-start;
+            }
+            
+            .load-more-btn {
+                width: 100%;
+            }
+            
+            .referral-welcome h2 {
+                font-size: 1.3rem;
+            }
+            
+            .info-card-value {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .referral-welcome {
+                padding: 1rem;
+            }
+            
+            .referred-users-card,
+            .how-it-works,
+            .share-options,
+            .referral-info-card {
+                padding: 1rem;
             }
             
             .step-card {
-                min-width: 100%;
+                padding: 1rem;
+                padding-top: 1.25rem;
+            }
+            
+            .referred-users-table th, 
+            .referred-users-table td {
+                padding: 0.6rem;
             }
             
             .share-buttons {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
             
-            .share-btn {
-                width: 100%;
-                justify-content: center;
+            .referral-info-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .steps-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>

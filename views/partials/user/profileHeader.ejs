@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,125 +9,179 @@
 </head>
 <style>
     * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 30px 20px;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+        background-color: #f5f5f5;
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 15px;
+        width: 100%;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+    
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .sidebar, .content {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        width: 100%;
+    }
+    
+    .sidebar h2, .content h2 {
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .sidebar-section {
+        margin-bottom: 25px;
+    }
+    
+    .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        color: #555;
+        text-decoration: none;
+        transition: color 0.3s;
+        flex-wrap: wrap;
+    }
+    
+    .nav-item:hover {
+        color: #ec4899;
+    }
+    
+    .nav-item.active {
+        background-color: #fdf2f8;
+        color: #ec4899;
+        border-radius: 6px;
+        padding: 10px;
+    }
+    
+    .nav-item i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    
+    .nav-item small {
+        margin-left: 8px;
+        font-size: 0.75rem;
+        color: #888;
+        width: 100%;
+        margin-top: 5px;
+        margin-left: 32px;
+    }
+    
+    /* Hamburger menu styles */
+    .menu-toggle {
+        display: block;
+        font-size: 1.5rem;
+        cursor: pointer;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 12px 20px;
+        margin-bottom: 15px;
+        color: #333;
+        text-align: right;
+    }
+    
+    .sidebar {
+        display: none;
+    }
+    
+    .sidebar.active {
+        display: block;
+    }
+    
+    /* Media query for larger screens */
+    @media (min-width: 768px) {
+        .grid {
+            grid-template-columns: 1fr 2fr;
         }
         
         h1 {
             font-size: 2rem;
-            color: #333;
             margin-bottom: 30px;
-            font-weight: 700;
         }
         
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+        .container {
+            padding: 30px 20px;
         }
         
-        @media (min-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr 2fr;
-            }
+        .sidebar {
+            display: block;
         }
         
-        .sidebar, .content {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 25px;
+        .menu-toggle {
+            display: none;
         }
         
         .sidebar h2, .content h2 {
             font-size: 1.5rem;
-            color: #333;
             margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
-        .sidebar-section {
-            margin-bottom: 30px;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            color: #555;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .nav-item:hover {
-            color: #ec4899;
-        }
-        
-        .nav-item.active {
-            background-color: #fdf2f8;
-            color: #ec4899;
-            border-radius: 6px;
-            padding: 10px;
-        }
-        
-        .nav-item i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
         }
         
         .nav-item small {
+            width: auto;
+            margin-top: 0;
             margin-left: 8px;
-            font-size: 0.75rem;
-            color: #888;
         }
+    }
 </style>
 <body>
 
     <div class="container">
         <h1>My Account</h1>
         
+        <!-- Hamburger Menu Toggle -->
+        <div class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </div>
+        
         <div class="grid">
             <!-- Left Sidebar -->
-            <div class="sidebar">
-
+            <div class="sidebar" id="sidebar">
                 <div class="sidebar-section">
                     <h2>Profile</h2>
                     
                     <nav id="profileNav">
-                        <a href="/userProfile" class="nav-item ">
+                        <a href="/userProfile" class="nav-item">
                             <i class="fas fa-user"></i>
                             Personal Information
                         </a>
                         
-                        <a href='/add' class="nav-item ">
+                        <a href='/add' class="nav-item">
                             <i class="fas fa-home"></i>
                             Address Book
                         </a>
                         
-                        <a href="#" class="nav-item">
-                            <i class="fas fa-credit-card"></i>
-                            Payment Methods
-                        </a>
-                        
-                        <a href="#" class="nav-item">
-                            <i class="fas fa-file-alt"></i>
-                            Skincare Profile
-                        </a>
+
                     </nav>
                 </div>
 
@@ -151,27 +206,42 @@
                         </a>
                         
                         <a href="#" class="nav-item">
-                            <i class="fas fa-life-ring"></i>
-                            Customer Care
+                            <i class="fa fa-sign-outt"></i>
+                            Logout
                         </a>
                     </nav>
                 </div>
-                
-                
             </div>
 
 
             <script>
-                 document.querySelectorAll('#myAccountNav .nav-item, #profileNav .nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                const navSection = this.closest('nav');
-                navSection.querySelectorAll('.nav-item').forEach(navItem => {
-                    navItem.classList.remove('active');
+                // Toggle active class for navigation items
+                document.querySelectorAll('#myAccountNav .nav-item, #profileNav .nav-item').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        const navSection = this.closest('nav');
+                        navSection.querySelectorAll('.nav-item').forEach(navItem => {
+                            navItem.classList.remove('active');
+                        });
+                        
+                        this.classList.add('active');
+                    });
                 });
                 
-                this.classList.add('active');
-            });
-        });
+                // Toggle hamburger menu
+                document.getElementById('menuToggle').addEventListener('click', function() {
+                    const sidebar = document.getElementById('sidebar');
+                    sidebar.classList.toggle('active');
+                    
+                    // Toggle icon
+                    const icon = this.querySelector('i');
+                    if (sidebar.classList.contains('active')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
             </script>
 </body>
 </html>

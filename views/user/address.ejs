@@ -23,29 +23,51 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #F8F9FA;
             color: var(--text-color);
+            overflow-x: hidden;
         }
 
         .account-container {
             max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            width: 100%;
+            margin: 1rem auto;
+            padding: 0 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .account-container {
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
         }
 
         .addresses-container {
             background-color: white;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
-            padding: 1.5rem;
+            padding: 1rem;
             height: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .addresses-container {
+                padding: 1.5rem;
+            }
         }
 
         .address-card {
             border: 1px solid var(--secondary-color);
             border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             position: relative;
             transition: transform 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .address-card {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
         }
 
         .address-card:hover {
@@ -55,12 +77,21 @@
 
         .address-type {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.25rem 0.75rem;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.25rem 0.5rem;
             border-radius: 50px;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            .address-type {
+                top: 1rem;
+                right: 1rem;
+                padding: 0.25rem 0.75rem;
+                font-size: 0.8rem;
+            }
         }
 
         .address-type-home {
@@ -75,32 +106,63 @@
 
         .address-name {
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-bottom: 0.5rem;
+            padding-right: 60px; /* Make room for the address type label */
+            word-break: break-word;
+        }
+
+        @media (min-width: 768px) {
+            .address-name {
+                font-size: 1.1rem;
+            }
         }
 
         .address-details {
             color: var(--light-text);
             margin-bottom: 0.25rem;
+            word-break: break-word;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 768px) {
+            .address-details {
+                font-size: 1rem;
+            }
         }
 
         .address-actions {
             display: flex;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
             gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (min-width: 768px) {
+            .address-actions {
+                margin-top: 1.5rem;
+            }
         }
 
         .add-address-card {
             border: 2px dashed var(--secondary-color);
             border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
+            padding: 1.5rem 1rem;
+            margin-bottom: 1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .add-address-card {
+                padding: 2rem;
+                margin-bottom: 1.5rem;
+            }
         }
 
         .add-address-card:hover {
@@ -109,9 +171,16 @@
         }
 
         .add-address-icon {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--accent-color);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (min-width: 768px) {
+            .add-address-icon {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
         }
 
         .btn-accent {
@@ -151,8 +220,67 @@
             color: white;
             padding: 0.25rem 0.5rem;
             border-radius: 50px;
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            .default-badge {
+                font-size: 0.8rem;
+                margin-left: 0.5rem;
+            }
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 767px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start !important;
+            }
+            
+            .header-container .btn {
+                width: 100%;
+            }
+            
+            .address-actions .btn {
+                flex: 1;
+                min-width: 80px;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            .modal-body .row {
+                margin-left: -5px;
+                margin-right: -5px;
+            }
+            
+            .modal-body .col-md-6 {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            
+            .form-label {
+                margin-bottom: 0.25rem;
+                font-size: 0.9rem;
+            }
+            
+            .form-control, .form-select {
+                font-size: 0.9rem;
+                padding: 0.375rem 0.5rem;
+            }
+        }
+        
+        /* Tablet-specific styles */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .col-lg-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -162,16 +290,16 @@
     <div class="account-container">
         <%- include('../partials/user/profileHeader') %>
         <div class="addresses-container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 header-container">
                 <h2>Address Book</h2>
                 <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#addAddressModal">
                     <i class="fas fa-plus me-2"></i> Add New Address
                 </button>
             </div>
 
-            <div class="row">
+            <div class="row g-3">
                 <% addresses.forEach(function(address) { %>
-                    <div class="col-lg-6 col-md-12 mb-4">
+                    <div class="col-lg-6 col-md-12 mb-0">
                         <div class="address-card">
                             <div class="address-type <%= address.addressType === 'Home' ? 'address-type-home' : 'address-type-work' %>">
                                 <%= address.addressType %>
@@ -206,7 +334,7 @@
                 <% }); %>
 
                 <!-- Add New Address Card -->
-                <div class="col-lg-6 col-md-12 mb-4">
+                <div class="col-lg-6 col-md-12 mb-0">
                     <div class="add-address-card" data-bs-toggle="modal" data-bs-target="#addAddressModal">
                         <div class="add-address-icon">
                             <i class="fas fa-plus-circle"></i>
@@ -221,7 +349,7 @@
     <!-- Edit Address Modal -->
     <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
@@ -307,7 +435,7 @@
     <!-- Add Address Modal -->
     <div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
@@ -393,7 +521,7 @@
     <!-- Delete Address Modal -->
     <div class="modal fade" id="deleteAddressModal" tabindex="-1" aria-labelledby="deleteAddressModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteAddressModalLabel">Delete Address</h5>
