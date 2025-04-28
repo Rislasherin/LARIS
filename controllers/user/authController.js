@@ -432,19 +432,23 @@ const loadShopPage = async (req, res) => {
         const user = req.session.user;
         const userData = user ? await User.findOne({ _id: user._id }) : null;
 
+        // Fetch all listed categories
         const categories = await category.find({ isListed: true });
-        const categoryIds = categories.map(cat => cat._id.toString());
+        const categoryIds = categories.map(cat => cat._id);
 
+        // Pagination parameters
         const page = parseInt(req.query.page) || 1;
         const limit = 9;
         const skip = (page - 1) * limit;
 
+        // Build query object for filtering
         const query = {
             status: "Available",
             quantity: { $gt: 0 }
         };
 
-        const selectedCategoryName = req.query.category;
+        // Handle category filter
+        const selectedCategoryName = req.query.category?.trim();
         let selectedCategoryId = null;
         if (selectedCategoryName) {
             const selectedCategory = await category.findOne({
@@ -453,10 +457,15 @@ const loadShopPage = async (req, res) => {
             });
             if (selectedCategory) {
                 selectedCategoryId = selectedCategory._id.toString();
-                query.category = selectedCategory._id;
+                query.category = selectedCategory._id; // Filter by specific category
             }
         }
+        // If no category is selected, include all listed categories
+        if (!query.category) {
+            query.category = { $in: categoryIds };
+        }
 
+        // Handle search query
         const searchQuery = req.query.query?.trim();
         if (searchQuery) {
             const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -466,22 +475,31 @@ const loadShopPage = async (req, res) => {
             ];
         }
 
-        const selectedSkinType = req.query.skinType;
-        if (selectedSkinType && selectedSkinType !== '') {
-            query.skintype = { $in: [selectedSkinType, 'All Types', null, ''] };
+        // Handle skin type filter (multiple selections)
+        let selectedSkinType = req.query.skinType;
+        if (selectedSkinType && !Array.isArray(selectedSkinType)) {
+            selectedSkinType = [selectedSkinType];
+        }
+        if (selectedSkinType && selectedSkinType.length > 0 && !selectedSkinType.includes('')) {
+            query.skintype = { $in: [...selectedSkinType, 'All Types', null, ''] };
         }
 
-        const selectedSkinConcern = req.query.skinConcern;
-        if (selectedSkinConcern && selectedSkinConcern !== '') {
-            query.skinConcern = { $in: [selectedSkinConcern, 'All Concerns', null, []] };
+        // Handle skin concern filter (multiple selections)
+        let selectedSkinConcern = req.query.skinConcern;
+        if (selectedSkinConcern && !Array.isArray(selectedSkinConcern)) {
+            selectedSkinConcern = [selectedSkinConcern];
+        }
+        if (selectedSkinConcern && selectedSkinConcern.length > 0 && !selectedSkinConcern.includes('')) {
+            query.skinConcern = { $in: [...selectedSkinConcern, 'All Concerns', null, []] };
         }
 
+        // Handle price range filter
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
-      
+        // Aggregation pipeline for products
         const pipeline = [
-            { $match: query },
+            { $match: query }, // Apply initial filters
             {
                 $lookup: {
                     from: 'categories',
@@ -493,7 +511,7 @@ const loadShopPage = async (req, res) => {
             {
                 $unwind: {
                     path: '$categoryData',
-                    preserveNullAndEmptyArrays: true 
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
@@ -525,25 +543,25 @@ const loadShopPage = async (req, res) => {
                         $cond: {
                             if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
                             then: '$productOffer',
-                            else: { $ifNull: ['$categoryData.categoryOffer', null] }
+                            else: { $ifNull: ['$categoryData.categoryOffer', 0] }
                         }
                     }
                 }
             }
         ];
 
-        if (minPrice || maxPrice) {
+        // Apply price filter after calculating effectivePrice
+        if (minPrice !== null || maxPrice !== null) {
             const priceMatch = {};
-            if (minPrice) priceMatch.$gte = minPrice;
-            if (maxPrice) priceMatch.$lte = maxPrice;
-            pipeline.push({
-                $match: { effectivePrice: priceMatch }
-            });
+            if (minPrice !== null) priceMatch.$gte = minPrice;
+            if (maxPrice !== null) priceMatch.$lte = maxPrice;
+            pipeline.push({ $match: { effectivePrice: priceMatch } });
         }
 
-    
+        // Apply sorting
         let sortOption = {};
-        switch (req.query.sort) {
+        const sortBy = req.query.sort || 'newest';
+        switch (sortBy) {
             case 'price-low':
                 sortOption = { effectivePrice: 1 };
                 break;
@@ -554,17 +572,17 @@ const loadShopPage = async (req, res) => {
                 sortOption = { salesCount: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 };
+                sortOption = { createdAt: -1 }; // Newest first
         }
         pipeline.push({ $sort: sortOption });
 
-      
+        // Apply pagination
         pipeline.push({ $skip: skip }, { $limit: limit });
 
-     
+        // Execute pipeline to get products
         let products = await product.aggregate(pipeline);
 
-      
+        // Process products
         products = products.map(product => {
             product.effectivePrice = Math.floor(product.effectivePrice);
             product.category = product.categoryData || null;
@@ -572,7 +590,7 @@ const loadShopPage = async (req, res) => {
             return product;
         });
 
-       
+        // Count total products for pagination
         const countPipeline = [
             { $match: query },
             {
@@ -617,18 +635,17 @@ const loadShopPage = async (req, res) => {
                 }
             }
         ];
-        if (minPrice || maxPrice) {
+        if (minPrice !== null || maxPrice !== null) {
             const priceMatch = {};
-            if (minPrice) priceMatch.$gte = minPrice;
-            if (maxPrice) priceMatch.$lte = maxPrice;
-            countPipeline.push({
-                $match: { effectivePrice: priceMatch }
-            });
+            if (minPrice !== null) priceMatch.$gte = minPrice;
+            if (maxPrice !== null) priceMatch.$lte = maxPrice;
+            countPipeline.push({ $match: { effectivePrice: priceMatch } });
         }
         const totalProductsResult = await product.aggregate([...countPipeline, { $count: 'total' }]);
         const totalProducts = totalProductsResult[0]?.total || 0;
         const totalPages = Math.ceil(totalProducts / limit);
 
+        // Get category counts
         const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
             const count = await product.countDocuments({
                 category: cat._id,
@@ -638,24 +655,26 @@ const loadShopPage = async (req, res) => {
             return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
         }));
 
+        // Get cart and wishlist counts
         const cart = user ? await Cart.findOne({ user: user._id }) : null;
         const cartCount = cart ? cart.items.length : 0;
         const wishlistCount = userData?.wishlist?.length || 0;
 
         // Save search history
-        if (userData && (searchQuery || selectedCategoryId || selectedSkinType || selectedSkinConcern)) {
+        if (userData && (searchQuery || selectedCategoryId || selectedSkinType?.length || selectedSkinConcern?.length)) {
             userData.searchHistory = userData.searchHistory || [];
             userData.searchHistory.push({
                 query: searchQuery || null,
                 category: selectedCategoryId || null,
-                skinType: selectedSkinType || null,
-                skinConcern: selectedSkinConcern || null,
+                skinType: selectedSkinType?.join(', ') || null,
+                skinConcern: selectedSkinConcern?.join(', ') || null,
                 searchedOn: new Date()
             });
             userData.searchHistory = userData.searchHistory.slice(0, 10);
             await userData.save();
         }
 
+        // Render shop page
         res.render("shop", {
             user: userData,
             products,
@@ -664,38 +683,43 @@ const loadShopPage = async (req, res) => {
             currentPage: page,
             totalPages,
             selectedCategoryId,
-            selectedSkinType,
-            selectedSkinConcern,
+            selectedSkinType, // Pass as array
+            selectedSkinConcern, // Pass as array
             minPrice,
             maxPrice,
-            sortBy: req.query.sort || 'newest',
+            sortBy,
             searchQuery: searchQuery || '',
             cartCount,
             wishlistCount
         });
     } catch (error) {
         console.error("Error loading shop page:", error);
-        res.status(500).render("error", { message: "Server Error" });
+        res.status(500).render("pageNotFound", { message: "Server Error" });
     }
 };
+
 const filterProduct = async (req, res) => {
     try {
         const user = req.session.user;
         const userData = user ? await User.findOne({ _id: user._id }) : null;
 
+        // Fetch all listed categories
         const categories = await category.find({ isListed: true });
-        const categoryIds = categories.map(cat => cat._id.toString());
+        const categoryIds = categories.map(cat => cat._id);
 
+        // Pagination parameters
         const page = parseInt(req.query.page) || 1;
         const limit = 9;
         const skip = (page - 1) * limit;
 
+        // Build query object for filtering
         const query = {
             status: 'Available',
             quantity: { $gt: 0 }
         };
 
-        const selectedCategoryName = req.query.category;
+        // Handle category filter
+        const selectedCategoryName = req.query.category?.trim();
         let selectedCategoryId = null;
         if (selectedCategoryName) {
             const selectedCategory = await category.findOne({
@@ -704,10 +728,15 @@ const filterProduct = async (req, res) => {
             });
             if (selectedCategory) {
                 selectedCategoryId = selectedCategory._id.toString();
-                query.category = selectedCategory._id;
+                query.category = selectedCategory._id; // Filter by specific category
             }
         }
+        // If no category is selected, include all listed categories
+        if (!query.category) {
+            query.category = { $in: categoryIds };
+        }
 
+        // Handle search query
         const searchQuery = req.query.query?.trim();
         if (searchQuery) {
             const escapedQuery = searchQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -717,21 +746,31 @@ const filterProduct = async (req, res) => {
             ];
         }
 
-        const selectedSkinType = req.query.skinType;
-        if (selectedSkinType && selectedSkinType !== '') {
-            query.skintype = { $in: [selectedSkinType, 'All Types', null, ''] };
+        // Handle skin type filter (multiple selections)
+        let selectedSkinType = req.query.skinType;
+        if (selectedSkinType && !Array.isArray(selectedSkinType)) {
+            selectedSkinType = [selectedSkinType];
+        }
+        if (selectedSkinType && selectedSkinType.length > 0 && !selectedSkinType.includes('')) {
+            query.skintype = { $in: [...selectedSkinType, 'All Types', null, ''] };
         }
 
-        const selectedSkinConcern = req.query.skinConcern;
-        if (selectedSkinConcern && selectedSkinConcern !== '') {
-            query.skinConcern = { $in: [selectedSkinConcern, 'All Concerns', null, []] };
+        // Handle skin concern filter (multiple selections)
+        let selectedSkinConcern = req.query.skinConcern;
+        if (selectedSkinConcern && !Array.isArray(selectedSkinConcern)) {
+            selectedSkinConcern = [selectedSkinConcern];
+        }
+        if (selectedSkinConcern && selectedSkinConcern.length > 0 && !selectedSkinConcern.includes('')) {
+            query.skinConcern = { $in: [...selectedSkinConcern, 'All Concerns', null, []] };
         }
 
+        // Handle price range filter
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
 
+        // Aggregation pipeline for products
         const pipeline = [
-            { $match: query },
+            { $match: query }, // Apply initial filters
             {
                 $lookup: {
                     from: 'categories',
@@ -775,25 +814,25 @@ const filterProduct = async (req, res) => {
                         $cond: {
                             if: { $gt: [{ $ifNull: ['$productOffer', 0] }, 0] },
                             then: '$productOffer',
-                            else: { $ifNull: ['$categoryData.categoryOffer', null] }
+                            else: { $ifNull: ['$categoryData.categoryOffer', 0] }
                         }
                     }
                 }
             }
         ];
 
-      
-        if (minPrice || maxPrice) {
+        // Apply price filter after calculating effectivePrice
+        if (minPrice !== null || maxPrice !== null) {
             const priceMatch = {};
-            if (minPrice) priceMatch.$gte = minPrice;
-            if (maxPrice) priceMatch.$lte = maxPrice;
-            pipeline.push({
-                $match: { effectivePrice: priceMatch }
-            });
+            if (minPrice !== null) priceMatch.$gte = minPrice;
+            if (maxPrice !== null) priceMatch.$lte = maxPrice;
+            pipeline.push({ $match: { effectivePrice: priceMatch } });
         }
 
+        // Apply sorting
         let sortOption = {};
-        switch (req.query.sort) {
+        const sortBy = req.query.sort || 'newest';
+        switch (sortBy) {
             case 'price-low':
                 sortOption = { effectivePrice: 1 };
                 break;
@@ -804,15 +843,17 @@ const filterProduct = async (req, res) => {
                 sortOption = { salesCount: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 };
+                sortOption = { createdAt: -1 }; // Newest first
         }
         pipeline.push({ $sort: sortOption });
 
-  
+        // Apply pagination
         pipeline.push({ $skip: skip }, { $limit: limit });
 
+        // Execute pipeline to get products
         let products = await product.aggregate(pipeline);
 
+        // Process products
         products = products.map(product => {
             product.effectivePrice = Math.floor(product.effectivePrice);
             product.category = product.categoryData || null;
@@ -820,7 +861,7 @@ const filterProduct = async (req, res) => {
             return product;
         });
 
-  
+        // Count total products for pagination
         const countPipeline = [
             { $match: query },
             {
@@ -865,18 +906,17 @@ const filterProduct = async (req, res) => {
                 }
             }
         ];
-        if (minPrice || maxPrice) {
+        if (minPrice !== null || maxPrice !== null) {
             const priceMatch = {};
-            if (minPrice) priceMatch.$gte = minPrice;
-            if (maxPrice) priceMatch.$lte = maxPrice;
-            countPipeline.push({
-                $match: { effectivePrice: priceMatch }
-            });
+            if (minPrice !== null) priceMatch.$gte = minPrice;
+            if (maxPrice !== null) priceMatch.$lte = maxPrice;
+            countPipeline.push({ $match: { effectivePrice: priceMatch } });
         }
         const totalProductsResult = await product.aggregate([...countPipeline, { $count: 'total' }]);
-        const totalProducts = totalProductsResult[0]?.total || 0;
+        const totalProducts = totalProductsResult[0]?.total || 0; // Fixed line
         const totalPages = Math.ceil(totalProducts / limit);
 
+        // Get category counts
         const categoriesWithCounts = await Promise.all(categories.map(async (cat) => {
             const count = await product.countDocuments({
                 category: cat._id,
@@ -886,24 +926,26 @@ const filterProduct = async (req, res) => {
             return { _id: cat._id, name: cat.name, productCount: count, image: cat.image };
         }));
 
+        // Get cart and wishlist counts
         const cart = user ? await Cart.findOne({ user: user._id }) : null;
         const cartCount = cart ? cart.items.length : 0;
         const wishlistCount = userData?.wishlist?.length || 0;
 
-      
-        if (userData && (searchQuery || selectedCategoryId || selectedSkinType || selectedSkinConcern)) {
+        // Save search history
+        if (userData && (searchQuery || selectedCategoryId || selectedSkinType?.length || selectedSkinConcern?.length)) {
             userData.searchHistory = userData.searchHistory || [];
             userData.searchHistory.push({
                 query: searchQuery || null,
                 category: selectedCategoryId || null,
-                skinType: selectedSkinType || null,
-                skinConcern: selectedSkinConcern || null,
+                skinType: selectedSkinType?.join(', ') || null,
+                skinConcern: selectedSkinConcern?.join(', ') || null,
                 searchedOn: new Date()
             });
             userData.searchHistory = userData.searchHistory.slice(0, 10);
             await userData.save();
         }
 
+        // Render shop page
         res.render("shop", {
             user: userData,
             products,
@@ -912,11 +954,11 @@ const filterProduct = async (req, res) => {
             currentPage: page,
             totalPages,
             selectedCategoryId,
-            selectedSkinType,
-            selectedSkinConcern,
+            selectedSkinType, // Pass as array
+            selectedSkinConcern, // Pass as array
             minPrice,
             maxPrice,
-            sortBy: req.query.sort || 'newest',
+            sortBy,
             searchQuery: searchQuery || '',
             cartCount,
             wishlistCount

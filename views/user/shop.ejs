@@ -214,6 +214,8 @@
                       </div>
                     </div>
                   </div>
+                  ```html
+                  <!-- Skin Types Filter -->
                   <div class="filter-section border-b border-gray-100 pb-4">
                     <button type="button"
                       class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
@@ -221,27 +223,35 @@
                       <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div class="filter-content mt-2 space-y-2">
-                      <% const skinTypes=['Oily', 'Dry' , 'Combination' , 'Sensitive' , 'Normal' ]; %>
-                        <% skinTypes.forEach((type, index)=> { %>
-                          <label class="flex items-center cursor-pointer">
-                            <input id="skin<%= index+1 %>" type="radio" name="skinType" value="<%= type %>"
-                              <%=selectedSkinType===type ? 'checked' : '' %>
+                      <% const skinTypes = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']; %>
+                      <% skinTypes.forEach((type, index) => { %>
+                        <label class="flex items-center cursor-pointer">
+                          <input
+                            id="skin<%= index + 1 %>"
+                            type="checkbox"
+                            name="skinType[]"
+                            value="<%= type %>"
+                            <%= (selectedSkinType && (Array.isArray(selectedSkinType) ? selectedSkinType.includes(type) : selectedSkinType === type)) ? 'checked' : '' %>
                             class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                            />
-                            <span class="ml-2 text-gray-600">
-                              <%= type %>
-                            </span>
-                          </label>
-                          <% }) %>
-                            <label class="flex items-center cursor-pointer">
-                              <input id="skinAll" type="radio" name="skinType" value="" <%=!selectedSkinType ? 'checked'
-                                : '' %>
-                              class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                              />
-                              <span class="ml-2 text-gray-600">All Types</span>
-                            </label>
+                          />
+                          <span class="ml-2 text-gray-600"><%= type %></span>
+                        </label>
+                      <% }) %>
+                      <label class="flex items-center cursor-pointer">
+                        <input
+                          id="skinAll"
+                          type="checkbox"
+                          name="skinType[]"
+                          value=""
+                          <%= !selectedSkinType || (Array.isArray(selectedSkinType) && selectedSkinType.length === 0) ? 'checked' : '' %>
+                          class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                        />
+                        <span class="ml-2 text-gray-600">All Types</span>
+                      </label>
                     </div>
                   </div>
+                  
+                  <!-- Skin Concerns Filter -->
                   <div class="filter-section border-b border-gray-100 pb-4">
                     <button type="button"
                       class="filter-toggle w-full flex justify-between items-center text-gray-700 py-2">
@@ -249,25 +259,31 @@
                       <i class="fas fa-chevron-down transform transition-transform duration-200"></i>
                     </button>
                     <div class="filter-content mt-2 space-y-2">
-                      <% const skinConcerns=['Acne', 'Dehydrating' , 'Aging' , 'Dark Spots' , 'Redness' , 'Dull' ]; %>
-                        <% skinConcerns.forEach((concern, index)=> { %>
-                          <label class="flex items-center cursor-pointer">
-                            <input id="concern<%= index+1 %>" type="radio" name="skinConcern" value="<%= concern %>"
-                              <%=selectedSkinConcern===concern ? 'checked' : '' %>
+                      <% const skinConcerns = ['Acne', 'Dehydrating', 'Aging', 'Dark Spots', 'Redness', 'Dull']; %>
+                      <% skinConcerns.forEach((concern, index) => { %>
+                        <label class="flex items-center cursor-pointer">
+                          <input
+                            id="concern<%= index + 1 %>"
+                            type="checkbox"
+                            name="skinConcern[]"
+                            value="<%= concern %>"
+                            <%= (selectedSkinConcern && (Array.isArray(selectedSkinConcern) ? selectedSkinConcern.includes(concern) : selectedSkinConcern === concern)) ? 'checked' : '' %>
                             class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                            />
-                            <span class="ml-2 text-gray-600">
-                              <%= concern %>
-                            </span>
-                          </label>
-                          <% }) %>
-                            <label class="flex items-center cursor-pointer">
-                              <input id="concernAll" type="radio" name="skinConcern" value="" <%=!selectedSkinConcern
-                                ? 'checked' : '' %>
-                              class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
-                              />
-                              <span class="ml-2 text-gray-600">All Concerns</span>
-                            </label>
+                          />
+                          <span class="ml-2 text-gray-600"><%= concern %></span>
+                        </label>
+                      <% }) %>
+                      <label class="flex items-center cursor-pointer">
+                        <input
+                          id="concernAll"
+                          type="checkbox"
+                          name="skinConcern[]"
+                          value=""
+                          <%= !selectedSkinConcern || (Array.isArray(selectedSkinConcern) && selectedSkinConcern.length === 0) ? 'checked' : '' %>
+                          class="w-4 h-4 text-gray-600 bg-gray-100 border-gray-300 focus:ring-gray-400"
+                        />
+                        <span class="ml-2 text-gray-600">All Concerns</span>
+                      </label>
                     </div>
                   </div>
                   <div class="filter-section border-b border-gray-100 pb-4">

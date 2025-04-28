@@ -7,7 +7,7 @@ const addressAdd = async (req, res) => {
         const user = req.session.user;
         const addresses = await Address.find({ userId: user._id });
         
-        res.render('Address', {
+        res.render('address', {
             user: user,
             addresses: addresses 
         });
