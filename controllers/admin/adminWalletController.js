@@ -41,7 +41,7 @@ exports.getWalletManagement = async (req, res) => {
         const totalPages = Math.ceil(totalTransactions / limit);
         const paginatedTransactions = transactions.slice(skip, skip + limit);
 
-        res.render('adminwallet', {
+        res.render('adminWallet', {
             transactions: paginatedTransactions,
             pageTitle: 'Wallet',
             currentPage: page,

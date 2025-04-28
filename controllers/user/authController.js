@@ -457,10 +457,9 @@ const loadShopPage = async (req, res) => {
             });
             if (selectedCategory) {
                 selectedCategoryId = selectedCategory._id.toString();
-                query.category = selectedCategory._id; // Filter by specific category
+                query.category = selectedCategory._id;
             }
         }
-        // If no category is selected, include all listed categories
         if (!query.category) {
             query.category = { $in: categoryIds };
         }
@@ -499,7 +498,7 @@ const loadShopPage = async (req, res) => {
 
         // Aggregation pipeline for products
         const pipeline = [
-            { $match: query }, // Apply initial filters
+            { $match: query },
             {
                 $lookup: {
                     from: 'categories',
@@ -550,7 +549,7 @@ const loadShopPage = async (req, res) => {
             }
         ];
 
-        // Apply price filter after calculating effectivePrice
+        // Apply price filter
         if (minPrice !== null || maxPrice !== null) {
             const priceMatch = {};
             if (minPrice !== null) priceMatch.$gte = minPrice;
@@ -572,14 +571,14 @@ const loadShopPage = async (req, res) => {
                 sortOption = { salesCount: -1 };
                 break;
             default:
-                sortOption = { createdAt: -1 }; // Newest first
+                sortOption = { createdAt: -1 };
         }
         pipeline.push({ $sort: sortOption });
 
         // Apply pagination
         pipeline.push({ $skip: skip }, { $limit: limit });
 
-        // Execute pipeline to get products
+        // Execute pipeline
         let products = await product.aggregate(pipeline);
 
         // Process products
@@ -660,18 +659,26 @@ const loadShopPage = async (req, res) => {
         const cartCount = cart ? cart.items.length : 0;
         const wishlistCount = userData?.wishlist?.length || 0;
 
-        // Save search history
+        // Save search history (atomic update)
         if (userData && (searchQuery || selectedCategoryId || selectedSkinType?.length || selectedSkinConcern?.length)) {
-            userData.searchHistory = userData.searchHistory || [];
-            userData.searchHistory.push({
-                query: searchQuery || null,
-                category: selectedCategoryId || null,
-                skinType: selectedSkinType?.join(', ') || null,
-                skinConcern: selectedSkinConcern?.join(', ') || null,
-                searchedOn: new Date()
-            });
-            userData.searchHistory = userData.searchHistory.slice(0, 10);
-            await userData.save();
+            await User.findOneAndUpdate(
+                { _id: userData._id },
+                {
+                    $push: {
+                        searchHistory: {
+                            $each: [{
+                                query: searchQuery || null,
+                                category: selectedCategoryId || null,
+                                skinType: selectedSkinType?.join(', ') || null,
+                                skinConcern: selectedSkinConcern?.join(', ') || null,
+                                searchedOn: new Date()
+                            }],
+                            $slice: -10 // Keep last 10 entries
+                        }
+                    }
+                },
+                { new: true }
+            );
         }
 
         // Render shop page
@@ -683,8 +690,8 @@ const loadShopPage = async (req, res) => {
             currentPage: page,
             totalPages,
             selectedCategoryId,
-            selectedSkinType, // Pass as array
-            selectedSkinConcern, // Pass as array
+            selectedSkinType,
+            selectedSkinConcern,
             minPrice,
             maxPrice,
             sortBy,
@@ -697,7 +704,6 @@ const loadShopPage = async (req, res) => {
         res.status(500).render("pageNotFound", { message: "Server Error" });
     }
 };
-
 const filterProduct = async (req, res) => {
     try {
         const user = req.session.user;
@@ -972,97 +978,112 @@ const filterProduct = async (req, res) => {
 // Get recent searches
 const getSearchHistory = async (req, res) => {
     try {
-      const userId = req.session.user?._id;
-      if (!userId) {
-        return res.status(401).json({ success: false, message: 'Please login' });
-      }
-  
-      const user = await User.findById(userId, 'searchHistory');
-      const searches = user.searchHistory
-        .filter(s => s.query) 
-        .sort((a, b) => b.searchedOn - a.searchedOn) 
-        .slice(0, 5); 
-  
-      res.json({ success: true, searches });
+        const userId = req.session.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Please login' });
+        }
+
+        const user = await User.findById(userId, 'searchHistory');
+        const searches = user.searchHistory
+            .sort((a, b) => b.searchedOn - a.searchedOn) // Sort by most recent
+            .slice(0, 5); // Limit to 5
+
+        res.json({ success: true, searches });
     } catch (error) {
-      console.error('Error fetching search history:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Error fetching search history:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-  };
-  
+};
   // Save search
   const saveSearch = async (req, res) => {
     try {
-      const userId = req.session.user?._id;
-      if (!userId) {
-        return res.status(401).json({ success: false, message: 'Please login' });
-      }
-  
-      const { query } = req.body;
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ success: false, message: 'Invalid query' });
-      }
-  
-      const user = await User.findById(userId);
-      user.searchHistory = user.searchHistory || [];
-    
-      user.searchHistory = user.searchHistory.filter(s => s.query !== query);
-    
-      user.searchHistory.unshift({ query, searchedOn: new Date() });
-    
-      user.searchHistory = user.searchHistory.slice(0, 10);
-      await user.save();
-  
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error saving search:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
-  };
-  
+        const userId = req.session.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Please login' });
+        }
 
-  const deleteSearch = async (req, res) => {
-    try {
-      const userId = req.session.user?._id;
-      if (!userId) {
-        return res.status(401).json({ success: false, message: 'Please login' });
-      }
-  
-      const { query } = req.body;
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ success: false, message: 'Invalid query' });
-      }
-  
-      await User.updateOne(
-        { _id: userId },
-        { $pull: { searchHistory: { query } } }
-      );
-  
-      res.json({ success: true });
+        const { query, category, skinType, skinConcern } = req.body;
+        if (!query && !category && !skinType && !skinConcern) {
+            return res.status(400).json({ success: false, message: 'At least one search parameter is required' });
+        }
+
+        await User.findOneAndUpdate(
+            { _id: userId },
+            {
+                $push: {
+                    searchHistory: {
+                        $each: [{
+                            query: query?.trim() || null,
+                            category: category || null,
+                            skinType: skinType || null,
+                            skinConcern: skinConcern || null,
+                            searchedOn: new Date()
+                        }],
+                        $position: 0, // Add to the start
+                        $slice: 10 // Keep only 10 entries
+                    }
+                }
+            },
+            { new: true }
+        );
+
+        res.json({ success: true });
     } catch (error) {
-      console.error('Error deleting search:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Error saving search:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-  };
+};
   
-  const clearSearchHistory = async (req, res) => {
+const deleteSearch = async (req, res) => {
     try {
-      const userId = req.session.user?._id;
-      if (!userId) {
-        return res.status(401).json({ success: false, message: 'Please login' });
-      }
-  
-      await User.updateOne(
-        { _id: userId },
-        { $set: { searchHistory: [] } }
-      );
-  
-      res.json({ success: true });
+        const userId = req.session.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Please login' });
+        }
+
+        const { query, category, skinType, skinConcern } = req.body;
+        if (!query && !category && !skinType && !skinConcern) {
+            return res.status(400).json({ success: false, message: 'At least one search parameter is required' });
+        }
+
+        await User.updateOne(
+            { _id: userId },
+            {
+                $pull: {
+                    searchHistory: {
+                        query: query || null,
+                        category: category || null,
+                        skinType: skinType || null,
+                        skinConcern: skinConcern || null
+                    }
+                }
+            }
+        );
+
+        res.json({ success: true });
     } catch (error) {
-      console.error('Error clearing search history:', error);
-      res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Error deleting search:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-  };
+};
+const clearSearchHistory = async (req, res) => {
+    try {
+        const userId = req.session.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Please login' });
+        }
+
+        await User.updateOne(
+            { _id: userId },
+            { $set: { searchHistory: [] } }
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing search history:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
 
 module.exports = {
     loadHomePage,

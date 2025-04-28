@@ -157,183 +157,182 @@
     const faScript = document.createElement('script');
     faScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js';
     document.head.appendChild(faScript);
-    
+
     // Search Dropdown Toggle
     const searchToggle = document.getElementById('search-toggle');
     const searchDropdown = document.getElementById('search-dropdown');
     const searchInput = document.getElementById('search-input');
     const recentSearchesList = document.getElementById('recent-searches');
     const clearAllButton = document.getElementById('clear-all-searches');
-    
+
     searchToggle.addEventListener('click', () => {
-      searchDropdown.classList.toggle('hidden');
-      if (!searchDropdown.classList.contains('hidden')) {
-        loadRecentSearches();
-      }
+        searchDropdown.classList.toggle('hidden');
+        if (!searchDropdown.classList.contains('hidden')) {
+            loadRecentSearches();
+        }
     });
-    
+
     // Handle search submission
     searchInput.addEventListener('keypress', async (e) => {
-      if (e.key === 'Enter' && searchInput.value.trim()) {
-        const query = searchInput.value.trim();
-        saveSearch(query);
-        window.location.href = `/shop?query=${encodeURIComponent(query)}`;
-        searchInput.value = '';
-        searchDropdown.classList.add('hidden');
-      }
+        if (e.key === 'Enter' && searchInput.value.trim()) {
+            const query = searchInput.value.trim();
+            await saveSearch({ query });
+            window.location.href = `/shop?query=${encodeURIComponent(query)}`;
+            searchInput.value = '';
+            searchDropdown.classList.add('hidden');
+        }
     });
-    
+
     // Load recent searches
     async function loadRecentSearches() {
-      recentSearchesList.innerHTML = '';
-      clearAllButton.classList.add('hidden');
-    
-      let searches = [];
-      const user = '<%= locals.user ? user._id : "" %>';
-      if (user) {
-        // Fetch from server for logged-in users
-        try {
-          const response = await fetch('/search/history');
-          const data = await response.json();
-          if (data.success) {
-            searches = data.searches.slice(0, 5); // Limit to 5
-          }
-        } catch (error) {
-          console.error('Error fetching search history:', error);
+        recentSearchesList.innerHTML = '';
+        clearAllButton.classList.add('hidden');
+
+        let searches = [];
+        const user = '<%= locals.user ? user._id : "" %>';
+        if (user) {
+            try {
+                const response = await fetch('/search/history');
+                const data = await response.json();
+                if (data.success) {
+                    searches = data.searches.slice(0, 5);
+                }
+            } catch (error) {
+                console.error('Error fetching search history:', error);
+            }
+        } else {
+            searches = JSON.parse(localStorage.getItem('recentSearches') || '[]').slice(0, 5);
         }
-      } else {
-        // Use localStorage for guests
-        searches = JSON.parse(localStorage.getItem('recentSearches') || '[]').slice(0, 5);
-      }
-    
-      if (searches.length > 0) {
-        clearAllButton.classList.remove('hidden');
-        searches.forEach(search => {
-          const li = document.createElement('li');
-          li.className = 'py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center';
-          li.innerHTML = `
-            <span class="flex-1" onclick="searchAgain('${search.query}')">${search.query}</span>
-            <i class="fas fa-times text-gray-400 hover:text-red-500" onclick="deleteSearch('${search.query}')"></i>
-          `;
-          recentSearchesList.appendChild(li);
-        });
-      } else {
-        recentSearchesList.innerHTML = '<li class="py-1 text-gray-500">No recent searches</li>';
-      }
+
+        if (searches.length > 0) {
+            clearAllButton.classList.remove('hidden');
+            searches.forEach(search => {
+                const li = document.createElement('li');
+                li.className = 'py-1 hover:bg-gray-100 cursor-pointer flex justify-between items-center';
+                const displayText = search.query || search.category || search.skinType || search.skinConcern || 'Search';
+                li.innerHTML = `
+                    <span class="flex-1" onclick="searchAgain(${JSON.stringify(search)})">${displayText}</span>
+                    <i class="fas fa-times text-gray-400 hover:text-red-500" onclick="deleteSearch(${JSON.stringify(search)})"></i>
+                `;
+                recentSearchesList.appendChild(li);
+            });
+        } else {
+            recentSearchesList.innerHTML = '<li class="py-1 text-gray-500">No recent searches</li>';
+        }
     }
-    
+
     // Save search
-    async function saveSearch(query) {
-      const user = '<%= locals.user ? user._id : "" %>';
-      if (user) {
-        // Save to server
-        try {
-          await fetch('/search/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
-          });
-        } catch (error) {
-          console.error('Error saving search:', error);
+    async function saveSearch(search) {
+        const user = '<%= locals.user ? user._id : "" %>';
+        if (user) {
+            try {
+                await fetch('/search/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(search)
+                });
+            } catch (error) {
+                console.error('Error saving search:', error);
+            }
+        } else {
+            let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+            searches = searches.filter(s => s.query !== search.query || s.category !== search.category);
+            searches.unshift({ ...search, searchedOn: new Date().toISOString() });
+            searches = searches.slice(0, 5);
+            localStorage.setItem('recentSearches', JSON.stringify(searches));
         }
-      } else {
-        // Save to localStorage
-        let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-        searches = searches.filter(s => s.query !== query); // Avoid duplicates
-        searches.unshift({ query, searchedOn: new Date().toISOString() });
-        searches = searches.slice(0, 5); // Limit to 5
-        localStorage.setItem('recentSearches', JSON.stringify(searches));
-      }
     }
-    
+
     // Delete single search
-    async function deleteSearch(query) {
-      const user = '<%= locals.user ? user._id : "" %>';
-      if (user) {
-        try {
-          await fetch('/search/delete', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query })
-          });
-        } catch (error) {
-          console.error('Error deleting search:', error);
+    async function deleteSearch(search) {
+        const user = '<%= locals.user ? user._id : "" %>';
+        if (user) {
+            try {
+                await fetch('/search/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(search)
+                });
+            } catch (error) {
+                console.error('Error deleting search:', error);
+            }
+        } else {
+            let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+            searches = searches.filter(s => s.query !== search.query || s.category !== search.category);
+            localStorage.setItem('recentSearches', JSON.stringify(searches));
         }
-      } else {
-        let searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-        searches = searches.filter(s => s.query !== query);
-        localStorage.setItem('recentSearches', JSON.stringify(searches));
-      }
-      loadRecentSearches();
+        loadRecentSearches();
     }
-    
+
     // Clear all searches
     async function clearAllSearches() {
-      const user = '<%= locals.user ? user._id : "" %>';
-      if (user) {
-        try {
-          await fetch('/search/clear', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-          });
-        } catch (error) {
-          console.error('Error clearing searches:', error);
+        const user = '<%= locals.user ? user._id : "" %>';
+        if (user) {
+            try {
+                await fetch('/search/clear', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error) {
+                console.error('Error clearing searches:', error);
+            }
+        } else {
+            localStorage.removeItem('recentSearches');
         }
-      } else {
-        localStorage.removeItem('recentSearches');
-      }
-      loadRecentSearches();
+        loadRecentSearches();
     }
-    
+
     clearAllButton.addEventListener('click', clearAllSearches);
-    
+
     // Search again
-    function searchAgain(query) {
-      window.location.href = `/shop?query=${encodeURIComponent(query)}`;
-      searchDropdown.classList.add('hidden');
+    function searchAgain(search) {
+        const params = new URLSearchParams();
+        if (search.query) params.append('query', search.query);
+        if (search.category) params.append('category', search.category);
+        if (search.skinType) params.append('skinType', search.skinType);
+        if (search.skinConcern) params.append('skinConcern', search.skinConcern);
+        window.location.href = `/shop?${params.toString()}`;
+        searchDropdown.classList.add('hidden');
     }
-    
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (event) => {
-      if (!searchToggle.contains(event.target) && !searchDropdown.contains(event.target)) {
-        searchDropdown.classList.add('hidden');
-      }
+        if (!searchToggle.contains(event.target) && !searchDropdown.contains(event.target)) {
+            searchDropdown.classList.add('hidden');
+        }
     });
-    
+
     // User Dropdown Toggle
     const userDropdownToggle = document.getElementById('user-dropdown-toggle');
     const userDropdown = document.getElementById('user-dropdown');
-    
+
     userDropdownToggle.addEventListener('click', () => {
-      userDropdown.classList.toggle('hidden');
+        userDropdown.classList.toggle('hidden');
     });
-    
-    // Close user dropdown when clicking outside
+
     document.addEventListener('click', (event) => {
-      if (!userDropdownToggle.contains(event.target) && !userDropdown.contains(event.target)) {
-        userDropdown.classList.add('hidden');
-      }
+        if (!userDropdownToggle.contains(event.target) && !userDropdown.contains(event.target)) {
+            userDropdown.classList.add('hidden');
+        }
     });
 
     // Mobile Menu Toggle
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
-    
+
     mobileMenuButton.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
+        mobileMenu.classList.toggle('hidden');
     });
 
-    // Close mobile menu when clicking on anchors
     function closeMobileMenu() {
-      mobileMenu.classList.add('hidden');
-    }
-    
-    // Close mobile menu when screen size changes to desktop
-    window.addEventListener('resize', () => {
-      if (window.innerWidth >= 768) { // md breakpoint
         mobileMenu.classList.add('hidden');
-      }
+    }
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            mobileMenu.classList.add('hidden');
+        }
     });
-  </script>
+</script>
 </body>
 </html>
