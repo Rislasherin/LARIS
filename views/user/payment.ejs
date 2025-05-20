@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
-    /* Existing styles remain unchanged */
     body { 
       font-family: 'Lato', sans-serif; 
       background-color: #f9fafb; 
@@ -71,7 +70,7 @@
       box-shadow: 0 0 0 1px pink;
     }
     input[type="radio"]:disabled + label {
-      color: #a0aec0; /* Gray text */
+      color: #a0aec0;
       cursor: not-allowed;
     }
   </style>
@@ -209,7 +208,7 @@
                   <p class="text-xs text-gray-600">x <%= item.quantity %></p>
                 </div>
                 <p class="font-medium">
-                  ₹<%= (item.product.regularPrice * (1 - Math.max(item.product.productOffer || 0, item.product.category.categoryOffer || 0) / 100) * item.quantity).toFixed(2) %>
+                  ₹<%= (item.product.salePrice * item.quantity).toFixed(2) %>
                 </p>
               </div>
             <% }); %>
@@ -297,7 +296,7 @@
           const data = await response.json();
           
           if (!response.ok) {
-            window.location.href = `/order-error?message=Payment%20Initiation%20Failed&details=${encodeURIComponent(data.message || 'Something went wrong')}&orderId=${data.orderId || ''}&finalAmount=${data.finalAmount || ''}`;
+            window.location.href = `/order-error?message=Payment%20Initiation%20Failed&details=${encodeURIComponent(data.message || 'Something went_wrong')}&orderId=${data.orderId || ''}&finalAmount=${data.finalAmount || ''}`;
             return;
           }
 
@@ -345,7 +344,6 @@
             const rzp = new Razorpay(options);
             rzp.open();
           } else if (paymentMethod === 'wallet') {
-            // Handle wallet payment
             const walletResponse = await fetch('/wallet/process-payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

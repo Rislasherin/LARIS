@@ -48,7 +48,6 @@
       font-size: 0.875rem;
       margin-top: 0.25rem;
     }
-  
   </style>
 </head>
 
@@ -80,6 +79,7 @@
             <div>
               <label class="block mb-2">How To Use *</label>
               <textarea name="howToUse" class="w-full p-2 bg-gray-700 rounded border border-gray-600 h-32"><%= product.howToUse %></textarea>
+              <div id="howToUse-error" class="error-message"></div>
             </div>
 
             <!-- Product Category -->
@@ -119,10 +119,11 @@
             <div>
               <label class="block mb-2">Skin Concern</label>
               <input name="skinConcern" class="w-full p-2 bg-gray-700 rounded border border-gray-600" value="<%= product.skinConcern || ''%>" type="text"/>
+              <div id="skinConcern-error" class="error-message"></div>
             </div>
 
             <div class="input-container">
-              <label class="block mb-1">Stock Quantity *</label>
+              <label class="block mb-2">Stock Quantity *</label>
               <input name="quantity" class="w-full p-2 bg-gray-700 rounded border border-gray-600" type="number" value="<%= product.quantity %>"/>
               <div id="quantity-error" class="error-message"></div>
             </div> 
@@ -138,8 +139,8 @@
               <% if (product.productImage && product.productImage.length > 0) { %>
                 <% product.productImage.forEach((image, i) => { %>
                   <div class="thumbnail">
-                    <img src="/uploads/product-images/<%= image %>" alt="Product Image <%= i %>" class="image-preview" 
-                         onerror="console.log('Failed to load image: /uploads/product-images/<%= image %>')" />
+                    <img src="/Uploads/product-images/<%= image %>" alt="Product Image <%= i %>" class="image-preview" 
+                         onerror="console.log('Failed to load image: /Uploads/product-images/<%= image %>')" />
                     <span class="remove-icon" onclick="removeExistingImage('<%= image %>', this)">×</span>
                   </div>
                 <% }) %>
@@ -184,12 +185,12 @@
     let uploadedImages = [];
     const MAX_IMAGES = 8;
     let cropper = null;
-  
+
     document.addEventListener('DOMContentLoaded', function () {
       setupExistingImageHandlers();
       const imageInput = document.getElementById('imageInput');
       imageInput.addEventListener('change', handleImageUpload);
-  
+
       document.getElementById('cancelCropButton').addEventListener('click', function () {
         document.getElementById('cropperContainer').style.display = 'none';
         if (cropper) {
@@ -199,7 +200,7 @@
         document.getElementById('imageInput').value = '';
       });
 
-      document.getElementById('variantContainer').addEventListener('click', function(e) {
+      document.getElementById('variantContainer')?.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-variant')) {
           e.target.parentElement.remove();
           checkVariantCount();
@@ -248,10 +249,10 @@
           });
           
           console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
+          console.log('Response headers:', response.headers);
           
-    const result = await response.json();
-    console.log('Parsed result:', result);
+          const result = await response.json();
+          console.log('Parsed result:', result);
 
           if (response.ok && result.success) {
             Swal.fire({
@@ -281,15 +282,16 @@
         }
       });
     });
-  
+
     function setupExistingImageHandlers() {
       const existingImages = document.querySelectorAll('.thumbnail img');
       uploadedImages = Array.from(existingImages).map(img => ({
         dataUrl: img.src,
         filename: img.alt || 'existing-image'
       }));
+      checkImageCount(); // Initial check
     }
-  
+
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -389,68 +391,69 @@
       };
       reader.readAsDataURL(file);
     }
-  
+
     function validateForm() {
-  clearErrorMessages();
-  const name = document.getElementsByName('productName')[0].value.trim();
-  const description = document.getElementById('descriptionid').value.trim();
-  const howToUse = document.getElementsByName('howToUse')[0].value.trim();
-  const price = document.getElementsByName('regularPrice')[0].value.trim();
-  const saleprice = document.getElementsByName('salePrice')[0].value.trim();
-  const quantity = document.getElementsByName('quantity')[0].value.trim();
-  let isValid = true;
+      clearErrorMessages();
+      const name = document.getElementsByName('productName')[0].value.trim();
+      const description = document.getElementById('descriptionid').value.trim();
+      const howToUse = document.getElementsByName('howToUse')[0].value.trim();
+      const price = document.getElementsByName('regularPrice')[0].value.trim();
+      const saleprice = document.getElementsByName('salePrice')[0].value.trim();
+      const quantity = document.getElementsByName('quantity')[0].value.trim();
+      let isValid = true;
 
-  if (!name) {
-    displayErrorMessage('productName-error', 'Please enter a product name.');
-    isValid = false;
-  }
-  if (!description) {
-    displayErrorMessage('description-error', 'Please enter a product description.');
-    isValid = false;
-  }
-  if (!howToUse) {
-    displayErrorMessage('howToUse-error', 'Please enter how to use instructions.');
-    isValid = false;
-  }
-  if (!price || !/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
-    displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99).');
-    isValid = false;
-  }
-  if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
-    displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99).');
-    isValid = false;
-  }
-  if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
-    displayErrorMessage('salePrice-error', 'Sale price must be less than regular price.');
-    isValid = false;
-  }
-  if (!quantity || !/^\d+$/.test(quantity) || parseInt(quantity) < 0) {
-    displayErrorMessage('quantity-error', 'Please enter a valid non-negative integer for quantity.');
-    isValid = false;
-  }
+      if (!name) {
+        displayErrorMessage('productName-error', 'Please enter a product name.');
+        isValid = false;
+      }
+      if (!description) {
+        displayErrorMessage('description-error', 'Please enter a product description.');
+        isValid = false;
+      }
+      if (!howToUse) {
+        displayErrorMessage('howToUse-error', 'Please enter how to use instructions.');
+        isValid = false;
+      }
+      if (!price || !/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) <= 0) {
+        displayErrorMessage('regularPrice-error', 'Please enter a valid positive price (e.g., 10 or 10.99).');
+        isValid = false;
+      }
+      if (saleprice && (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0)) {
+        displayErrorMessage('salePrice-error', 'Please enter a valid non-negative sale price (e.g., 8 or 8.99).');
+        isValid = false;
+      }
+      if (saleprice && parseFloat(price) <= parseFloat(saleprice)) {
+        displayErrorMessage('salePrice-error', 'Sale price must be less than regular price.');
+        isValid = false;
+      }
+      if (!quantity || !/^\d+$/.test(quantity) || parseInt(quantity) < 0) {
+        displayErrorMessage('quantity-error', 'Please enter a valid non-negative integer for quantity.');
+        isValid = false;
+      }
 
-  const imageCount = document.querySelectorAll('#image-preview-container .thumbnail').length;
-  if (imageCount < 3) {
-    displayErrorMessage('images-error', 'Please select at least 3 images.');
-    Swal.fire({
-      icon: 'error',
-      title: 'Image Required',
-      text: 'Please upload at least 3 product images.',
-      confirmButtonColor: '#d33',
-    });
-    isValid = false;
-  }
+      if (!checkImageCount()) {
+        displayErrorMessage('images-error', 'Please select at least 3 images.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Image Required',
+          text: 'Please upload at least 3 product images.',
+          confirmButtonColor: '#d33',
+        });
+        isValid = false;
+      }
 
-  return isValid;
-}
+      return isValid;
+    }
+
     function checkImageCount() {
       const imageCount = document.querySelectorAll('#image-preview-container .thumbnail').length;
-      if (imageCount < 3) {
+      const isValid = imageCount >= 3;
+      if (!isValid) {
         displayErrorMessage('images-error', 'Please select at least 3 images.');
       } else {
         document.getElementById('images-error').textContent = '';
       }
-      return imageCount >= 3;
+      return isValid;
     }
 
     function checkVariantCount() {
@@ -462,11 +465,11 @@
       }
       return variantCount >= 1;
     }
-  
+
     function removeExistingImage(imagePath, element) {
       const imagePreviewItem = element.closest('.thumbnail');
       const isNewImage = imagePreviewItem.dataset.isNew === 'true';
-  
+
       if (isNewImage) {
         uploadedImages = uploadedImages.filter(img => img.dataUrl !== imagePath);
       } else {
@@ -484,11 +487,11 @@
         }
         uploadedImages = uploadedImages.filter(img => img.dataUrl !== imagePath);
       }
-  
+
       imagePreviewItem.remove();
       checkImageCount();
     }
-  
+
     function getImagePathFromSrc(src) {
       if (typeof src !== 'string') return '';
       if (src.startsWith('/')) return src.split('/').slice(1).join('/');
@@ -498,12 +501,12 @@
       }
       return src;
     }
-  
+
     function displayErrorMessage(elementId, message) {
       const errorElement = document.getElementById(elementId);
       if (errorElement) errorElement.textContent = message;
     }
-  
+
     function clearErrorMessages() {
       const errorElements = document.getElementsByClassName('error-message');
       Array.from(errorElements).forEach(element => element.textContent = '');

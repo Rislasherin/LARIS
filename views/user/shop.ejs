@@ -379,9 +379,9 @@
             </div>
             <div class="flex items-center my-1">
               <p class="text-gray-800 font-bold">
-                ₹<%= product.effectivePrice.toFixed(2) %>
+                ₹<%= product.salePrice.toFixed(2) %>
               </p>
-              <% if (product.discountPercent && product.discountPercent > 0 && product.regularPrice > product.effectivePrice) { %>
+              <% if (product.discountPercent && product.discountPercent > 0 && product.regularPrice > product.salePrice) { %>
                 <p class="text-gray-500 line-through ml-2 text-xs">
                   ₹<%= product.regularPrice.toFixed(2) %>
                 </p>
