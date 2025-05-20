@@ -139,8 +139,8 @@
               <% if (product.productImage && product.productImage.length > 0) { %>
                 <% product.productImage.forEach((image, i) => { %>
                   <div class="thumbnail">
-                    <img src="/Uploads/product-images/<%= image %>" alt="Product Image <%= i %>" class="image-preview" 
-                         onerror="console.log('Failed to load image: /Uploads/product-images/<%= image %>')" />
+                    <img src="/uploads/product-images/<%= image %>" alt="Product Image <%= i %>" class="image-preview" 
+                         onerror="console.log('Failed to load image: /uploads/product-images/<%= image %>')" />
                     <span class="remove-icon" onclick="removeExistingImage('<%= image %>', this)">×</span>
                   </div>
                 <% }) %>
