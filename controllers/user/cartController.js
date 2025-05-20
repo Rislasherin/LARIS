@@ -297,7 +297,7 @@ const getCartContents = async (req, res) => {
       html += `
         <div class="flex items-center justify-between py-2">
           <div class="flex items-center">
-            <img src="/Uploads/product-images/${item.product?.productImage?.[0] || ''}" 
+            <img src="/uploads/product-images/${item.product?.productImage?.[0] || ''}" 
                  alt="${item.product?.productName || 'Product'}" 
                  class="w-12 h-12 object-cover rounded mr-2" 
                  onerror="this.src='/images/placeholder.jpg'">
