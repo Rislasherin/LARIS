@@ -414,240 +414,253 @@ const cancelProduct = async (req, res) => {
   
   }
 
-  const downloadInvoice = async (req, res) => {
-    try {
-      const { orderId } = req.params;
-      const userId = req.session.user?._id;
-      console.log(`Attempting to download invoice for orderId: ${orderId}, userId: ${userId}`);
-  
-      if (!userId) {
-        console.log('User not logged in');
-        return res.status(401).json({ success: false, message: 'User not logged in' });
-      }
-  
-      const order = await Order.findOne({ _id: orderId, user: userId })
-        .populate({
-          path: 'orderItems.productId',
-          select: 'productName regularPrice productOffer productImage',
-        })
-        .populate('address')
-        .populate('user', 'name email');
-  
-      if (!order) {
-        console.log(`Order not found for orderId: ${orderId}, userId: ${userId}`);
-        return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-  
-      console.log('Order data:', {
-        paymentMethod: order.paymentMethod,
-        paymentStatus: order.paymentStatus,
-        status: order.status,
-      });
-  
-      const canDownloadInvoice =
-        ((order.paymentMethod === 'razorpay' || order.paymentMethod === 'wallet') && order.paymentStatus === 'Paid') ||
-        (order.paymentMethod === 'cod' && order.status === 'Delivered');
-  
-      console.log(`Can download invoice: ${canDownloadInvoice}`);
-  
-      if (!canDownloadInvoice) {
-        console.log('Invoice not available for download');
-        return res.status(403).json({ success: false, message: 'Invoice not available for download' });
-      }
-  
-      // Create PDF document
-      const doc = new PDFDocument({ margin: 50 });
-      const fileName = `LARIS_invoice_${order.orderID}.pdf`;
-  
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-  
-      doc.pipe(res);
-  
-      // Define colors and styling
-      const colors = {
-        primary: '#212529',     // Brand primary color (black)
-        secondary: '#fd7e14',   // Accent color (orange from your CSS)
-        light: '#f8f9fa',       // Light background
-        text: '#212529',        // Text color
-        border: '#e9ecef'       // Border color
-      };
-  
-      // Add logo and header
-      doc.fontSize(28)
-         .fillColor(colors.primary)
-         .font('Helvetica-Bold')
-         .text('LARIS', 50, 50)
-         .fontSize(10)
-         .fillColor(colors.secondary)
-         .font('Helvetica')
-         .text('Premium Shopping Experience', 50, 85);
-      
-      // Draw a line
-      doc.moveTo(50, 100)
-         .lineTo(550, 100)
-         .strokeColor(colors.secondary)
-         .lineWidth(2)
-         .stroke();
-  
-      // Add document title and info
-      doc.moveDown(2);
-      doc.fontSize(20)
-         .fillColor(colors.primary)
-         .font('Helvetica-Bold')
-         .text('INVOICE', 50, 120, { align: 'center' });
-      
-      // Add invoice details box
-      doc.roundedRect(50, 160, 240, 100, 5)
-         .fillColor(colors.light)
-         .fill();
-      
-      doc.fillColor(colors.text)
-         .fontSize(10)
-         .font('Helvetica-Bold')
-         .text('INVOICE DETAILS', 70, 175);
-      
-      doc.fontSize(10)
-         .font('Helvetica')
-         .text(`Invoice Number: #${order.orderID}`, 70, 195)
-         .text(`Date: ${order.createdAt.toLocaleDateString()}`, 70, 215)
-         .text(`Payment Method: ${order.paymentMethod.toUpperCase()}`, 70, 235);
-      
-      // Add customer details box
-      doc.roundedRect(310, 160, 240, 100, 5)
-         .fillColor(colors.light)
-         .fill();
-      
-      doc.fillColor(colors.text)
-         .fontSize(10)
-         .font('Helvetica-Bold')
-         .text('BILLED TO', 330, 175);
-      
-      doc.fontSize(10)
-         .font('Helvetica')
-         .text(`${order.user.name}`, 330, 195)
-         .text(`${order.user.email}`, 330, 215)
-         .text(`${order.address.phone}`, 330, 235);
-      
-      // Add shipping address
-      doc.roundedRect(50, 280, 500, 80, 5)
-         .fillColor(colors.light)
-         .fill();
-      
-      doc.fillColor(colors.text)
-         .fontSize(10)
-         .font('Helvetica-Bold')
-         .text('SHIPPING ADDRESS', 70, 295);
-      
-      doc.fontSize(10)
-         .font('Helvetica')
-         .text(`${order.address.address}`, 70, 315)
-         .text(`${order.address.city}, ${order.address.state} ${order.address.pincode}`, 70, 335)
-         .text(`${order.address.country}`, 70, 355);
-  
-      // Add table header
-      const tableTop = 400;
-      const itemX = 50;
-      const descriptionX = 80;
-      const quantityX = 350;
-      const priceX = 420;
-      const totalX = 490;
-  
-      // Draw table header
-      doc.roundedRect(50, tableTop - 20, 500, 30, 5)
-         .fillColor(colors.primary)
-         .fill();
-      
-      doc.fillColor('#FFFFFF')
-         .fontSize(10)
-         .font('Helvetica-Bold')
-         .text('No.', itemX + 10, tableTop - 10)
-         .text('Item Description', descriptionX + 30, tableTop - 10)
-         .text('Qty', quantityX, tableTop - 10)
-         .text('Price', priceX, tableTop - 10)
-         .text('Total', totalX, tableTop - 10);
-  
-      // Draw table rows
-      let y = tableTop + 20;
-      order.orderItems.forEach((item, index) => {
-        // Alternate row background
-        if (index % 2 === 0) {
-          doc.rect(50, y - 15, 500, 30)
-             .fillColor('#f8f9fa')
-             .fill();
-        }
-  
-        doc.fillColor(colors.text)
-           .font('Helvetica')
-           .fontSize(10)
-           .text(index + 1, itemX + 10, y - 5)
-           .font('Helvetica')
-           .text(item.productId.productName, descriptionX, y - 5, { width: 240, ellipsis: true })
-           .text(item.quantity, quantityX, y - 5)
-           .text(`₹${item.price.toFixed(2)}`, priceX, y - 5)
-           .text(`₹${(item.price * item.quantity).toFixed(2)}`, totalX, y - 5);
-        
-        y += 30;
-      });
-  
-      // Draw table bottom line
-      doc.moveTo(50, y - 15)
-         .lineTo(550, y - 15)
-         .strokeColor(colors.border)
-         .lineWidth(1)
-         .stroke();
-  
-      // Add summary section
-      const summaryX = 400;
-      doc.font('Helvetica')
-         .fontSize(10)
-         .text('Subtotal:', summaryX, y + 10)
-         .text('Offer Discount:', summaryX, y + 30)
-         .text('Coupon Discount:', summaryX, y + 50)
-         .text('Shipping:', summaryX, y + 70)
-         .text('Tax:', summaryX, y + 90);
-         
-      doc.font('Helvetica-Bold')
-         .fontSize(12)
-         .text('TOTAL:', summaryX, y + 120);
-  
-      // Add summary values
-      doc.font('Helvetica')
-         .fontSize(10)
-         .text(`₹${(order.totalPrice - order.discount - order.couponDiscount).toFixed(2)}`, totalX, y + 10)
-         .text(`-₹${order.discount.toFixed(2)}`, totalX, y + 30)
-         .text(`-₹${order.couponDiscount.toFixed(2)}`, totalX, y + 50)
-         .text(`₹${order.shipping.toFixed(2)}`, totalX, y + 70)
-         .text(`₹${order.tax.toFixed(2)}`, totalX, y + 90);
-         
-      doc.font('Helvetica-Bold')
-         .fontSize(12)
-         .fillColor(colors.secondary)
-         .text(`₹${order.finalAmount.toFixed(2)}`, totalX, y + 120);
-  
-      // Add footer
-      const pageHeight = doc.page.height;
-      doc.moveTo(50, pageHeight - 100)
-         .lineTo(550, pageHeight - 100)
-         .strokeColor(colors.border)
-         .lineWidth(1)
-         .stroke();
-  
-      doc.fontSize(10)
-         .fillColor(colors.text)
-         .font('Helvetica')
-         .text('Thank you for shopping with LARIS. We appreciate your business!', 50, pageHeight - 80, { align: 'center' })
-         .font('Helvetica-Bold')
-         .fillColor(colors.secondary)
-         .text('www.larisshop.com', 50, pageHeight - 50, { align: 'center' });
-  
-      // Finalize the PDF and end the stream
-      doc.end();
-    } catch (error) {
-      console.error('Error generating invoice:', error);
-      res.status(500).json({ success: false, message: 'Internal Server Error' });
+const downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.session.user?._id;
+    console.log(`Attempting to download invoice for orderId: ${orderId}, userId: ${userId}`);
+
+    if (!userId) {
+      console.log('User not logged in');
+      return res.status(401).json({ success: false, message: 'User not logged in' });
     }
-  };
+
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate({
+        path: 'orderItems.productId',
+        select: 'productName regularPrice productOffer productImage',
+      })
+      .populate('address')
+      .populate('user', 'name email');
+
+    if (!order) {
+      console.log(`Order not found for orderId: ${orderId}, userId: ${userId}`);
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    console.log('Order data:', {
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      status: order.status,
+    });
+
+    const canDownloadInvoice =
+      ((order.paymentMethod === 'razorpay' || order.paymentMethod === 'wallet') && order.paymentStatus === 'Paid') ||
+      (order.paymentMethod === 'cod' && order.status === 'Delivered');
+
+    console.log(`Can download invoice: ${canDownloadInvoice}`);
+
+    if (!canDownloadInvoice) {
+      console.log('Invoice not available for download');
+      return res.status(403).json({ success: false, message: 'Invoice not available for download' });
+    }
+
+    // Create PDF document
+    const doc = new PDFDocument({ margin: 50 });
+    const fileName = `LARIS_invoice_${order.orderID}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+
+    doc.pipe(res);
+
+    // Define colors and styling
+    const colors = {
+      primary: '#212529',     // Brand primary color (black)
+      secondary: '#fd7e14',   // Accent color (orange from your CSS)
+      light: '#f8f9fa',       // Light background
+      text: '#212529',        // Text color
+      border: '#e9ecef'       // Border color
+    };
+
+    // Add logo and header
+    doc.fontSize(28)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text('LARIS', 50, 50)
+       .fontSize(10)
+       .fillColor(colors.secondary)
+       .font('Helvetica')
+       .text('Premium Shopping Experience', 50, 85);
+
+    // Draw a line
+    doc.moveTo(50, 100)
+       .lineTo(550, 100)
+       .strokeColor(colors.secondary)
+       .lineWidth(2)
+       .stroke();
+
+    // Add document title and info
+    doc.moveDown(2);
+    doc.fontSize(20)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text('INVOICE', 50, 120, { align: 'center' });
+
+    // Add invoice details box
+    doc.roundedRect(50, 160, 240, 100, 5)
+       .fillColor(colors.light)
+       .fill();
+
+    doc.fillColor(colors.text)
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('INVOICE DETAILS', 70, 175);
+
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Invoice Number: #${order.orderID}`, 70, 195)
+       .text(`Date: ${order.createdAt.toLocaleDateString()}`, 70, 215)
+       .text(`Payment Method: ${order.paymentMethod.toUpperCase()}`, 70, 235);
+
+    // Add customer details box
+    doc.roundedRect(310, 160, 240, 100, 5)
+       .fillColor(colors.light)
+       .fill();
+
+    doc.fillColor(colors.text)
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('BILLED TO', 330, 175);
+
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`${order.user.name}`, 330, 195)
+       .text(`${order.user.email}`, 330, 215)
+       .text(`${order.address.phone}`, 330, 235);
+
+    // Add shipping address
+    doc.roundedRect(50, 280, 500, 80, 5)
+       .fillColor(colors.light)
+       .fill();
+
+    doc.fillColor(colors.text)
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('SHIPPING ADDRESS', 70, 295);
+
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`${order.address.address}`, 70, 315)
+       .text(`${order.address.city}, ${order.address.state} ${order.address.pincode}`, 70, 335)
+       .text(`${order.address.country}`, 70, 355);
+
+    // Add table header
+    const tableTop = 400;
+    const itemX = 50;
+    const descriptionX = 80;
+    const quantityX = 350;
+    const priceX = 420;
+    const totalX = 490;
+
+    // Draw table header
+    doc.roundedRect(50, tableTop - 20, 500, 30, 5)
+       .fillColor(colors.primary)
+       .fill();
+
+    doc.fillColor('#FFFFFF')
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('No.', itemX + 10, tableTop - 10)
+       .text('Item Description', descriptionX + 30, tableTop - 10)
+       .text('Qty', quantityX, tableTop - 10)
+       .text('Price', priceX, tableTop - 10)
+       .text('Total', totalX, tableTop - 10);
+
+    // Draw table rows
+    let y = tableTop + 20;
+    order.orderItems.forEach((item, index) => {
+      // Check if there's enough space for the next row
+      if (y + 30 > doc.page.height - 150) { // Reserve space for footer
+        doc.addPage();
+        y = 50; // Reset y to top of new page
+      }
+
+      // Alternate row background
+      if (index % 2 === 0) {
+        doc.rect(50, y - 15, 500, 30)
+           .fillColor('#f8f9fa')
+           .fill();
+      }
+
+      doc.fillColor(colors.text)
+         .font('Helvetica')
+         .fontSize(10)
+         .text(index + 1, itemX + 10, y - 5)
+         .font('Helvetica')
+         .text(item.productId.productName, descriptionX, y - 5, { width: 240, ellipsis: true })
+         .text(item.quantity, quantityX, y - 5)
+         .text(`₹${item.price.toFixed(2)}`, priceX, y - 5)
+         .text(`₹${(item.price * item.quantity).toFixed(2)}`, totalX, y - 5);
+
+      y += 30;
+    });
+
+    // Draw table bottom line
+    doc.moveTo(50, y - 15)
+       .lineTo(550, y - 15)
+       .strokeColor(colors.border)
+       .lineWidth(1)
+       .stroke();
+
+    // Check if there's enough space for the summary section (150px estimated height)
+    if (y + 150 > doc.page.height - 100) {
+      doc.addPage();
+      y = 50; // Reset y to top of new page
+    }
+
+    // Add summary section
+    const summaryX = 400;
+    doc.font('Helvetica')
+       .fontSize(10)
+       .text('Subtotal:', summaryX, y + 10)
+       .text('Offer Discount:', summaryX, y + 30)
+       .text('Coupon Discount:', summaryX, y + 50)
+       .text('Shipping:', summaryX, y + 70)
+       .text('Tax:', summaryX, y + 90);
+
+    doc.font('Helvetica-Bold')
+       .fontSize(12)
+       .text('TOTAL:', summaryX, y + 110); // Adjusted to fit within page
+
+    // Add summary values
+    doc.font('Helvetica')
+       .fontSize(10)
+       .text(`₹${(order.totalPrice - order.discount - order.couponDiscount).toFixed(2)}`, totalX, y + 10)
+       .text(`-₹${order.discount.toFixed(2)}`, totalX, y + 30)
+       .text(`-₹${order.couponDiscount.toFixed(2)}`, totalX, y + 50)
+       .text(`₹${order.shipping.toFixed(2)}`, totalX, y + 70)
+       .text(`₹${order.tax.toFixed(2)}`, totalX, y + 90);
+
+    doc.font('Helvetica-Bold')
+       .fontSize(12)
+       .fillColor(colors.secondary)
+       .text(`₹${order.finalAmount.toFixed(2)}`, totalX, y + 110); // Adjusted to fit within page
+
+    // Add footer
+    const pageHeight = doc.page.height;
+    doc.moveTo(50, pageHeight - 100)
+       .lineTo(550, pageHeight - 100)
+       .strokeColor(colors.border)
+       .lineWidth(1)
+       .stroke();
+
+    doc.fontSize(10)
+       .fillColor(colors.text)
+       .font('Helvetica')
+       .text('Thank you for shopping with LARIS. We appreciate your business!', 50, pageHeight - 80, { align: 'center' })
+       .font('Helvetica-Bold')
+       .fillColor(colors.secondary)
+       .text('www.larisshop.com', 50, pageHeight - 50, { align: 'center' });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
     getOrdersPage, 
     getOrderDetailsPage,
